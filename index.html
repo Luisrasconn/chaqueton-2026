@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MHub — Manufactura Inteligente</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header__inner container">
+      <div class="header__logo">
+        <span class="header__logo-icon">&#9900;</span>
+        <span class="header__logo-text">M<span class="highlight">Hub</span></span>
+      </div>
+
+      <nav class="header__nav" id="mainNav">
+        <button class="nav__tab active" data-tab="inicio">Inicio</button>
+        <button class="nav__tab" data-tab="capacitacion">Capacitaci&#243;n</button>
+        <button class="nav__tab" data-tab="entrenamiento">Entrenamiento</button>
+        <button class="nav__tab" data-tab="retroalimentacion">Retroalimentaci&#243;n</button>
+        <button class="nav__tab" data-tab="almacen">Almac&#233;n Virtual</button>
+        <button class="nav__tab" data-tab="realidadvirtual">RV / RA</button>
+      </nav>
+
+      <div class="header__actions">
+        <button class="theme-toggle" id="themeToggle" aria-label="Modo oscuro">&#127769;</button>
+        <span class="user-badge" id="userBadge" style="display:none">&#128100; <span id="userName">Demo</span></span>
+        <button class="btn btn--outline btn--sm" id="loginBtn">Iniciar sesi&#243;n</button>
+      </div>
+
+      <button class="header__menu-toggle" id="menuToggle" aria-label="Men&#250;">&#9776;</button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main container">
+
+    <!-- ======== INICIO ======== -->
+    <section class="tab-content active" id="tab-inicio">
+      <div class="hero">
+        <h1 class="hero__title">Bienvenido a <span class="highlight">MHub</span></h1>
+        <p class="hero__subtitle">Plataforma de manufactura inteligente — capacitaci&#243;n VR, retroalimentaci&#243;n en tiempo real y control de herramientas IoT.</p>
+      </div>
+
+      <div class="cards-grid">
+        <div class="card card--metric">
+          <div class="card__icon">&#9881;</div>
+          <div class="card__value" data-target="87">0</div>
+          <div class="card__label">Productividad (%)</div>
+        </div>
+        <div class="card card--metric">
+          <div class="card__icon">&#127891;</div>
+          <div class="card__value" data-target="124">0</div>
+          <div class="card__label">Personal Capacitado</div>
+        </div>
+        <div class="card card--metric">
+          <div class="card__icon">&#128295;</div>
+          <div class="card__value" data-target="42">0</div>
+          <div class="card__label">Herramientas Disponibles</div>
+        </div>
+        <div class="card card--metric">
+          <div class="card__icon">&#9888;</div>
+          <div class="card__value" data-target="3">0</div>
+          <div class="card__label">Incidencias Abiertas</div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3 class="chart-card__title">Productividad &#250;ltimos 7 d&#237;as</h3>
+          <div class="chart-container"><canvas id="chartProductividad"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-card__title">Incidencias por tipo</h3>
+          <div class="chart-container"><canvas id="chartIncidencias"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3 class="chart-card__title">Capacitaci&#243;n por departamento</h3>
+          <div class="chart-container"><canvas id="chartCapacitacion"></canvas></div>
+        </div>
+      </div>
+
+      <div class="quick-actions">
+        <h2 class="section-title">Acciones r&#225;pidas</h2>
+        <div class="quick-actions__grid">
+          <button class="quick-action" data-tab="realidadvirtual">
+            <span class="quick-action__icon">&#127911;</span>
+            <span class="quick-action__text">Explorar planta VR</span>
+          </button>
+          <button class="quick-action" data-tab="capacitacion">
+            <span class="quick-action__icon">&#127891;</span>
+            <span class="quick-action__text">Capacitaci&#243;n personal</span>
+          </button>
+          <button class="quick-action" data-tab="entrenamiento">
+            <span class="quick-action__icon">&#128218;</span>
+            <span class="quick-action__text">Entrenar nuevo personal</span>
+          </button>
+          <button class="quick-action" data-tab="retroalimentacion">
+            <span class="quick-action__icon">&#128172;</span>
+            <span class="quick-action__text">Reportar incidencia</span>
+          </button>
+          <button class="quick-action" data-tab="almacen">
+            <span class="quick-action__icon">&#128230;</span>
+            <span class="quick-action__text">Consultar almac&#233;n</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== CAPACITACIÓN ======== -->
+    <section class="tab-content" id="tab-capacitacion">
+      <h1 class="section-title">Capacitaci&#243;n — Personal Establecido</h1>
+      <p class="section-desc">Programas de actualizaci&#243;n y retroalimentaci&#243;n de desempe&#241;o para operadores con experiencia.</p>
+
+      <div class="cards-grid">
+        <div class="card card--program">
+          <div class="card__badge">Nuevo</div>
+          <h3 class="card__title">Simulador VR — L&#237;nea de Ensamble</h3>
+          <p class="card__text">Entorno de realidad virtual para practicar procedimientos de ensamble sin detener la producci&#243;n.</p>
+          <div class="card__meta">
+            <span>&#9201; 45 min</span>
+            <span>&#11088; 4.8</span>
+          </div>
+          <button class="btn btn--primary" data-tab="realidadvirtual">Iniciar VR</button>
+        </div>
+        <div class="card card--program">
+          <h3 class="card__title">Actualizaci&#243;n: Normas de Seguridad 2026</h3>
+          <p class="card__text">Curso obligatorio actualizado con los nuevos protocolos de seguridad industrial.</p>
+          <div class="card__meta">
+            <span>&#9201; 30 min</span>
+            <span>&#11088; 4.5</span>
+          </div>
+          <button class="btn btn--primary">Iniciar</button>
+        </div>
+        <div class="card card--program">
+          <h3 class="card__title">Optimizaci&#243;n de Procesos</h3>
+          <p class="card__text">T&#233;cnicas avanzadas para reducir tiempos muertos y mejorar la eficiencia en la l&#237;nea.</p>
+          <div class="card__meta">
+            <span>&#9201; 60 min</span>
+            <span>&#11088; 4.9</span>
+          </div>
+          <button class="btn btn--primary">Iniciar</button>
+        </div>
+      </div>
+
+      <div class="progress-section">
+        <h2 class="section-title">Progreso del equipo</h2>
+        <div class="progress-list">
+          <div class="progress-item">
+            <span class="progress-item__name">Carlos M.</span>
+            <div class="progress-bar"><div class="progress-bar__fill" style="width:92%"></div></div>
+            <span class="progress-item__pct">92%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-item__name">Ana L.</span>
+            <div class="progress-bar"><div class="progress-bar__fill" style="width:78%"></div></div>
+            <span class="progress-item__pct">78%</span>
+          </div>
+          <div class="progress-item">
+            <span class="progress-item__name">Pedro R.</span>
+            <div class="progress-bar"><div class="progress-bar__fill" style="width:85%"></div></div>
+            <span class="progress-item__pct">85%</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======== ENTRENAMIENTO ======== -->
+    <section class="tab-content" id="tab-entrenamiento">
+      <h1 class="section-title">Entrenamiento — Nuevo Personal</h1>
+      <p class="section-desc">Programa de onboarding progresivo para integrar nuevo talento a la planta.</p>
+
+      <div class="cards-grid">
+        <div class="card card--program">
+          <div class="card__badge">Fundamental</div>
+          <h3 class="card__title">M&#243;dulo 1: Introducci&#243;n a la Planta</h3>
+          <p class="card__text">Conoce las &#225;reas, el personal clave y los procesos fundamentales de manufactura.</p>
+          <div class="card__meta"><span>&#9201; 20 min</span></div>
+          <button class="btn btn--primary" data-tab="realidadvirtual">Comenzar VR</button>
+        </div>
+        <div class="card card--program">
+          <div class="card__badge">VR</div>
+          <h3 class="card__title">M&#243;dulo 2: Simulador de Operaciones</h3>
+          <p class="card__text">Practica en un entorno virtual seguro antes de operar maquinaria real.</p>
+          <div class="card__meta"><span>&#9201; 40 min</span></div>
+          <button class="btn btn--primary" data-tab="realidadvirtual">Comenzar VR</button>
+        </div>
+        <div class="card card--program">
+          <div class="card__badge">RA</div>
+          <h3 class="card__title">M&#243;dulo 3: Realidad Aumentada en Planta</h3>
+          <p class="card__text">Superposici&#243;n de informaci&#243;n t&#233;cnica en maquinaria real mediante c&#225;mara.</p>
+          <div class="card__meta"><span>&#9201; 25 min</span></div>
+          <button class="btn btn--primary" data-tab="realidadvirtual">Abrir RA</button>
+        </div>
+      </div>
+
+      <div class="checklist">
+        <h2 class="section-title">Checklist de inducci&#243;n</h2>
+        <label class="checklist__item">
+          <input type="checkbox" class="checklist__input">
+          <span class="checklist__check"></span>
+          <span class="checklist__label">Bienvenida y reglamento interno</span>
+        </label>
+        <label class="checklist__item">
+          <input type="checkbox" class="checklist__input">
+          <span class="checklist__check"></span>
+          <span class="checklist__label">Equipo de protecci&#243;n personal (EPP)</span>
+        </label>
+        <label class="checklist__item">
+          <input type="checkbox" class="checklist__input">
+          <span class="checklist__check"></span>
+          <span class="checklist__label">Recorrido virtual de la planta (VR)</span>
+        </label>
+        <label class="checklist__item">
+          <input type="checkbox" class="checklist__input">
+          <span class="checklist__check"></span>
+          <span class="checklist__label">M&#243;dulo interactivo: seguridad en l&#237;nea de producci&#243;n</span>
+        </label>
+        <label class="checklist__item">
+          <input type="checkbox" class="checklist__input">
+          <span class="checklist__check"></span>
+          <span class="checklist__label">Evaluaci&#243;n de habilidades b&#225;sicas</span>
+        </label>
+      </div>
+    </section>
+
+    <!-- ======== RETROALIMENTACIÓN ======== -->
+    <section class="tab-content" id="tab-retroalimentacion">
+      <div class="retro-header">
+        <div>
+          <h1 class="section-title">Retroalimentaci&#243;n — L&#237;nea de Producci&#243;n</h1>
+          <p class="section-desc">Reporta problemas o mejoras. Todo queda registrado en la base de datos.</p>
+        </div>
+        <button class="btn btn--outline" id="exportPdfBtn">&#128196; Exportar PDF</button>
+      </div>
+
+      <div class="form-card">
+        <h2 class="section-title">Nuevo reporte</h2>
+        <form id="reportForm">
+          <div class="form-row">
+            <div class="form__group">
+              <label for="reportArea">&#193;rea</label>
+              <select id="reportArea" required>
+                <option value="">Seleccionar &#225;rea…</option>
+                <option value="Ensamble">Ensamble</option>
+                <option value="Pintura">Pintura</option>
+                <option value="Soldadura">Soldadura</option>
+                <option value="Empaque">Empaque</option>
+                <option value="Mantenimiento">Mantenimiento</option>
+              </select>
+            </div>
+            <div class="form__group">
+              <label for="reportType">Tipo</label>
+              <select id="reportType" required>
+                <option value="">Seleccionar tipo…</option>
+                <option value="Fallo t&#233;cnico">Fallo t&#233;cnico</option>
+                <option value="Cuello de botella">Cuello de botella</option>
+                <option value="Riesgo de seguridad">Riesgo de seguridad</option>
+                <option value="Mejora sugerida">Mejora sugerida</option>
+                <option value="Material faltante">Material faltante</option>
+              </select>
+            </div>
+          </div>
+          <div class="form__group">
+            <label for="reportDesc">Descripci&#243;n</label>
+            <textarea id="reportDesc" rows="3" placeholder="Describe el problema o mejora…" required></textarea>
+          </div>
+          <div class="form__group">
+            <label for="reportOperator">Reportado por</label>
+            <input type="text" id="reportOperator" placeholder="Nombre del operador" required>
+          </div>
+          <button type="submit" class="btn btn--primary">&#128228; Enviar reporte</button>
+        </form>
+        <div class="form__success" id="formSuccess">&#10003; Reporte enviado correctamente</div>
+      </div>
+
+      <div class="table-wrapper" id="reportesTable">
+        <h2 class="section-title">Reportes recientes</h2>
+        <div class="table-controls">
+          <input type="text" id="searchReport" class="table-search" placeholder="Buscar reportes…">
+          <span id="reportCount" class="table-count"></span>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>&#193;rea</th>
+              <th>Tipo</th>
+              <th>Descripci&#243;n</th>
+              <th>Operador</th>
+              <th>Estado</th>
+              <th>Acci&#243;n</th>
+            </tr>
+          </thead>
+          <tbody id="reportsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ======== ALMACÉN VIRTUAL ======== -->
+    <section class="tab-content" id="tab-almacen">
+      <h1 class="section-title">Almac&#233;n Virtual</h1>
+      <p class="section-desc">Inventario de herramientas en tiempo real detectado por sensores IoT. Escanea el QR de una herramienta para actualizar su estado.</p>
+
+      <div class="almacen-filters">
+        <button class="btn btn--outline active" data-filter="all">Todas</button>
+        <button class="btn btn--outline" data-filter="disponible">Disponibles</button>
+        <button class="btn btn--outline" data-filter="uso">En uso</button>
+        <button class="btn btn--outline" data-filter="mantenimiento">Mantenimiento</button>
+        <button class="btn btn--primary" id="qrScanBtn">&#128247; Escanear QR</button>
+      </div>
+
+      <div class="tools-grid" id="toolsGrid">
+        <div class="tool-card" data-status="disponible" data-id="T-102">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Taladro Industrial #T-102</h3>
+          <span class="tool-card__status status--disponible">&#9679; Disponible</span>
+          <span class="tool-card__qr">QR: T-102</span>
+        </div>
+        <div class="tool-card" data-status="uso" data-id="P-045">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Pulidora Angular #P-045</h3>
+          <span class="tool-card__status status--uso">&#9679; En uso — Estaci&#243;n 4</span>
+          <span class="tool-card__qr">QR: P-045</span>
+        </div>
+        <div class="tool-card" data-status="disponible" data-id="L-203">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Llave de Impacto #L-203</h3>
+          <span class="tool-card__status status--disponible">&#9679; Disponible</span>
+          <span class="tool-card__qr">QR: L-203</span>
+        </div>
+        <div class="tool-card" data-status="mantenimiento" data-id="M-089">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Mult&#237;metro Digital #M-089</h3>
+          <span class="tool-card__status status--mantenimiento">&#9679; En mantenimiento</span>
+          <span class="tool-card__qr">QR: M-089</span>
+        </div>
+        <div class="tool-card" data-status="disponible" data-id="S-117">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Sierra Circular #S-117</h3>
+          <span class="tool-card__status status--disponible">&#9679; Disponible</span>
+          <span class="tool-card__qr">QR: S-117</span>
+        </div>
+        <div class="tool-card" data-status="uso" data-id="C-056">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Compresor de Aire #C-056</h3>
+          <span class="tool-card__status status--uso">&#9679; En uso — &#193;rea de pintura</span>
+          <span class="tool-card__qr">QR: C-056</span>
+        </div>
+        <div class="tool-card" data-status="disponible" data-id="E-034">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Esmeril de Banco #E-034</h3>
+          <span class="tool-card__status status--disponible">&#9679; Disponible</span>
+          <span class="tool-card__qr">QR: E-034</span>
+        </div>
+        <div class="tool-card" data-status="mantenimiento" data-id="T-208">
+          <div class="tool-card__icon">&#9881;</div>
+          <h3 class="tool-card__name">Taladro Percutor #T-208</h3>
+          <span class="tool-card__status status--mantenimiento">&#9679; En mantenimiento</span>
+          <span class="tool-card__qr">QR: T-208</span>
+        </div>
+      </div>
+
+      <div class="almacen-stats">
+        <div class="stat-chip"><span class="dot dot--green"></span> Disponibles: <strong id="countDisponible">0</strong></div>
+        <div class="stat-chip"><span class="dot dot--orange"></span> En uso: <strong id="countUso">0</strong></div>
+        <div class="stat-chip"><span class="dot dot--red"></span> Mantenimiento: <strong id="countMantenimiento">0</strong></div>
+      </div>
+    </section>
+
+    <!-- ======== RV / RA ======== -->
+    <section class="tab-content" id="tab-realidadvirtual">
+      <h1 class="section-title">Realidad Virtual y Aumentada</h1>
+      <p class="section-desc">Explora la planta en 3D. Usa <strong>WASD</strong> para moverte y el <strong>mouse</strong> para mirar alrededor.</p>
+
+      <div class="vr-container" id="vrContainer">
+        <a-scene embedded loading-screen="enabled: false">
+          <a-sky color="#a8d8ea"></a-sky>
+
+          <!-- Ground -->
+          <a-plane rotation="-90 0 0" width="80" height="80" color="#5a5a5a" shadow></a-plane>
+
+          <!-- Main Factory Building -->
+          <a-box position="-5 3 -8" width="14" height="6" depth="10" color="#4a6fa5" shadow>
+            <a-box position="0 3.5 5.1" width="10" height="0.2" depth="0.2" color="#f1c40f"></a-box>
+          </a-box>
+
+          <!-- Warehouse -->
+          <a-box position="10 2.5 -10" width="8" height="5" depth="8" color="#2d6a4f" shadow>
+            <a-box position="0 3 4.1" width="6" height="0.2" depth="0.2" color="#f1c40f"></a-box>
+          </a-box>
+
+          <!-- Office -->
+          <a-box position="-10 1.5 -2" width="5" height="3" depth="5" color="#7f8c8d" shadow>
+            <a-box position="0 1.6 2.6" width="3.5" height="1" depth="0.2" color="#85c1e9"></a-box>
+          </a-box>
+
+          <!-- Conveyor Belt -->
+          <a-box position="0 0.3 -6" width="10" height="0.1" depth="1.5" color="#e67e22"></a-box>
+          <a-box class="conveyor-item" position="-4 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#f1c40f"></a-box>
+          <a-box class="conveyor-item" position="-1.5 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#e74c3c"></a-box>
+          <a-box class="conveyor-item" position="1.5 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#3498db"></a-box>
+          <a-box class="conveyor-item" position="4 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#2ecc71"></a-box>
+
+          <!-- Machines -->
+          <a-cylinder position="-6 1.5 -3" radius="1" height="1.5" color="#c0392b" shadow></a-cylinder>
+          <a-cylinder position="6 2 -4" radius="0.8" height="2" color="#8e44ad" shadow></a-cylinder>
+
+          <!-- Crane / Structure -->
+          <a-box position="-2 4 -12" width="0.3" height="7" depth="0.3" color="#f39c12"></a-box>
+          <a-box position="2 4 -12" width="0.3" height="7" depth="0.3" color="#f39c12"></a-box>
+          <a-box position="0 7.5 -12" width="4.5" height="0.3" depth="0.3" color="#f39c12"></a-box>
+
+          <!-- Smokestacks -->
+          <a-cylinder position="-8 5 -6" radius="0.4" height="3" color="#95a5a6"></a-cylinder>
+          <a-cylinder position="8 5 -8" radius="0.4" height="3" color="#95a5a6"></a-cylinder>
+
+          <!-- Storage Shelves -->
+          <a-box position="3 0.8 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
+          <a-box position="3 1.6 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
+          <a-box position="3 2.4 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
+          <a-box position="1 1.2 -13" width="0.2" height="2.4" depth="1.5" color="#8B4513"></a-box>
+          <a-box position="5 1.2 -13" width="0.2" height="2.4" depth="1.5" color="#8B4513"></a-box>
+
+          <!-- Labels using text -->
+          <a-entity position="0 5 -8" text="value: PLANTA MANUFACTURERA; color: white; align: center; width: 10; letter-spacing: 2;"></a-entity>
+          <a-entity position="-5 6.5 -8" text="value: Produccion; color: #f1c40f; align: center; width: 6;"></a-entity>
+          <a-entity position="10 5.5 -10" text="value: Almacen; color: #2ecc71; align: center; width: 6;"></a-entity>
+          <a-entity position="0 1.5 -4.5" text="value: Banda Transportadora; color: #e67e22; align: center; width: 8;"></a-entity>
+
+          <!-- Lights -->
+          <a-light type="ambient" color="#fff" intensity="0.6"></a-light>
+          <a-light type="directional" color="#fff" intensity="0.8" position="10 15 10"></a-light>
+
+          <!-- Camera with WASD controls -->
+          <a-entity camera position="0 1.6 12" wasd-controls look-controls></a-entity>
+        </a-scene>
+      </div>
+
+      <div class="vr-controls">
+        <p class="section-desc" style="margin-bottom:0">
+          &#9654; Arrastra con el mouse para mirar &bull; <strong>WASD</strong> para moverte &bull;
+          P&#225;rpadea si sientes mareo (simulaci&#243;n VR suave)
+        </p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== LOGIN MODAL ===== -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal">
+      <button class="modal__close" id="loginModalClose">&times;</button>
+      <h2 class="section-title">Iniciar sesi&#243;n</h2>
+      <p style="color:var(--text-light);margin-bottom:1.5rem">Selecciona un rol para ingresar al panel de control.</p>
+      <div class="modal__roles">
+        <button class="role-btn" data-role="supervisor">
+          <span class="role-btn__icon">&#128119;</span>
+          <span class="role-btn__title">Supervisor</span>
+          <span class="role-btn__desc">Acceso completo a reportes y configuraci&#243;n</span>
+        </button>
+        <button class="role-btn" data-role="operador">
+          <span class="role-btn__icon">&#128295;</span>
+          <span class="role-btn__title">Operador</span>
+          <span class="role-btn__desc">Reportar incidencias y consultar almac&#233;n</span>
+        </button>
+      </div>
+      <p class="modal__hint">Demo — sin registro real</p>
+    </div>
+  </div>
+
+  <!-- ===== QR MODAL ===== -->
+  <div class="modal-overlay" id="qrModal">
+    <div class="modal modal--wide">
+      <button class="modal__close" id="qrModalClose">&times;</button>
+      <h2 class="section-title">Escanear c&#243;digo QR</h2>
+      <p style="color:var(--text-light);margin-bottom:1rem">Coloca el c&#243;digo QR de la herramienta frente a la c&#225;mara.</p>
+      <div class="qr-reader">
+        <video id="qrVideo" autoplay playsinline></video>
+        <canvas id="qrCanvas" hidden></canvas>
+      </div>
+      <div id="qrResult" class="qr-result">
+        <p style="color:var(--text-light)">Esperando c&#243;digo QR...</p>
+      </div>
+      <button class="btn btn--outline" id="qrCancelBtn" style="margin-top:1rem">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer__inner container">
+      <p class="footer__text">MHub &mdash; Manufactura Inteligente &bull; Hackaton 2026</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
