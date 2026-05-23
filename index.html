@@ -472,11 +472,11 @@
 
             <!-- Conveyor belt -->
             <a-box id="conveyorBelt" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 0.2 0.5" width="3" height="0.15" depth="1" color="#566573" shadow
-              machine-info="title: BANDA TRANSPORTADORA; lines: Transporta piezas entre estaciones|Velocidad: 0.5 m/s|Longitud: 3 metros|Capacidad: 10 piezas/minuto"
+              toggle-panel="title: BANDA TRANSPORTADORA" data-lines="Transporta piezas entre estaciones|Velocidad: 0.5 m/s|Longitud: 3 metros|Capacidad: 10 piezas/minuto"
               animation__hoverenter="property: material.color; to: #2980b9; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: material.color; to: #566573; dur: 200; startEvents: mouseleave; easing: easeOutQuad"></a-box>
-            <a-text value="BANDA" position="0 1.0 0.5" color="#85c1e9" align="center" width="3" scale="0.5 0.5 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 1.15; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="BANDA" position="0 1.0 0.5" color="#85c1e9" align="center" width="3" scale="0.5 0.5 1" material="side: double"></a-text>
+            <a-text id="conveyorStatus" value="" position="0 0.6 0.5" color="#f1c40f" align="center" width="3" scale="0.4 0.4 1" material="side: double"></a-text>
             <a-box class="conveyor-item" position="-1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#f1c40f"></a-box>
             <a-box class="conveyor-item" position="0 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#e74c3c"></a-box>
             <a-box class="conveyor-item" position="1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#3498db"></a-box>
@@ -488,7 +488,8 @@
             <a-box position="1.3 -0.1 1" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
 
             <!-- Robotic arm (built with primitives) -->
-            <a-entity id="roboticArm" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="-0.5 0 -0.3" machine-info="title: BRAZO ROBOTICO; lines: 6 grados de libertad|Capacidad de carga: 5 kg|Presicion: +/- 0.1 mm|Alcance maximo: 1.2 metros"
+            <a-entity id="roboticArm" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="-0.5 0 -0.3"
+              toggle-panel="title: BRAZO ROBOTICO" data-lines="6 grados de libertad|Capacidad de carga: 5 kg|Presicion: +/- 0.1 mm|Alcance maximo: 1.2 metros"
               animation__hoverenter="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <!-- Base -->
@@ -497,42 +498,41 @@
               <a-cylinder position="0 0.9 0" radius="0.2" height="0.2" color="#34495e"
                 animation="property: rotation; to: 0 360 0; dur: 4000; loop: true; easing: linear"></a-cylinder>
               <!-- Arm segment 1 -->
-              <a-box position="0 1.3 0.35" width="0.1" height="0.6" depth="0.1" color="#0d9488"
+              <a-box id="armSegment1" position="0 1.3 0.35" width="0.1" height="0.6" depth="0.1" color="#0d9488"
                 animation="property: rotation; to: -30 0 0; dur: 2000; dir: alternate; loop: true; easing: easeInOutQuad"></a-box>
               <!-- Arm segment 2 -->
-              <a-box position="0.1 1.6 0.5" width="0.08" height="0.4" depth="0.08" color="#2980b9"
+              <a-box id="armSegment2" position="0.1 1.6 0.5" width="0.08" height="0.4" depth="0.08" color="#2980b9"
                 animation="property: rotation; to: 0 0 30; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-box>
               <!-- Gripper -->
-              <a-box position="0.15 1.9 0.5" width="0.12" height="0.05" depth="0.05" color="#e74c3c"></a-box>
-              <a-box position="0.05 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
-              <a-box position="0.25 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
+              <a-box id="armGripperBase" position="0.15 1.9 0.5" width="0.12" height="0.05" depth="0.05" color="#e74c3c"></a-box>
+              <a-box id="gripperLeft" position="0.05 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
+              <a-box id="gripperRight" position="0.25 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
             </a-entity>
-            <a-text value="BRAZO" position="-0.5 2.2 -0.3" color="#85c1e9" align="center" width="3" scale="0.5 0.5 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 2.35; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="BRAZO" position="-0.5 2.2 -0.3" color="#85c1e9" align="center" width="3" scale="0.5 0.5 1" material="side: double"></a-text>
             <!-- Arm glow ring -->
             <a-ring position="-0.5 0.02 -0.3" radius-inner="0.6" radius-outer="0.68" color="#2980b9" material="transparent: true; opacity: 0.25"
               animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
             <a-cylinder position="-0.5 0.5 -0.3" radius="0.4" height="0.2" color="#5d6d7e" shadow></a-cylinder>
 
             <!-- Parts bin -->
-            <a-entity id="partsBin" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="1.2 0.3 -0.5" machine-info="title: CONTENEDOR DE PIEZAS; lines: Almacena materiales de ensamble|Tipo A: Plastico (color amarillo)|Tipo B: Metal (color rojo)|Capacidad: 500 unidades"
+            <a-entity id="partsBin" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="1.2 0.3 -0.5"
+              toggle-panel="title: CONTENEDOR DE PIEZAS" data-lines="Almacena materiales de ensamble|Tipo A: Plastico (color amarillo)|Tipo B: Metal (color rojo)|Capacidad: 500 unidades"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-box width="0.6" height="0.5" depth="0.6" color="#2c3e50">
                 <a-box position="0 0.3 0" width="0.4" height="0.1" depth="0.4" color="#f1c40f"></a-box>
               </a-box>
             </a-entity>
-            <a-text value="PIEZAS" position="1.2 1.2 -0.5" color="#f1c40f" align="center" width="3" scale="0.45 0.45 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 1.35; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="PIEZAS" position="1.2 1.2 -0.5" color="#f1c40f" align="center" width="3" scale="0.45 0.45 1" material="side: double"></a-text>
 
             <!-- Info panel station 1 (front) -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 2.2 1.9" look-at="#playerCamera"
+            <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 2.2 1.9" rotation="0 180 0"
               animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-plane width="2" height="0.6" color="#1a2a3a" opacity="0.95" radius="0.08" shadow></a-plane>
               <a-plane position="0 0 0.01" width="2" height="0.6" color="#2980b9" opacity="0.15" radius="0.08"></a-plane>
-              <a-text value="E1  ENSAMBLE" position="0 0.1 0.02" color="#85c1e9" align="center" width="1.8" scale="0.65 0.65 1"></a-text>
-              <a-text value="▼" position="0 -0.15 0.02" color="#85c1e9" align="center" width="1.8" scale="0.4 0.4 1"></a-text>
+              <a-text value="E1  ENSAMBLE" position="0 0.1 0.02" color="#85c1e9" align="center" width="1.8" scale="0.65 0.65 1" material="side: double"></a-text>
+              <a-text value="▼" position="0 -0.15 0.02" color="#85c1e9" align="center" width="1.8" scale="0.4 0.4 1" material="side: double"></a-text>
             </a-entity>
           </a-entity>
 
@@ -550,15 +550,15 @@
             <a-entity position="0 3 0" text="value: E2 - SOLDADURA; color: #e74c3c; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
             <!-- Welding robot body -->
-            <a-entity id="weldingRobot" class="clickable" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 0.7 -0.3" machine-info="title: ROBOT SOLDADOR; lines: Soldadura por arco electrico|Temperatura: 850°C ideal|Proteccion: Usa careta de soldar|Tiempo por pieza: 12 segundos"
+            <a-entity id="weldingRobot" class="clickable" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 0.7 -0.3"
+              toggle-panel="title: ROBOT SOLDADOR" data-lines="Soldadura por arco electrico|Temperatura: 850°C ideal|Proteccion: Usa careta de soldar|Tiempo por pieza: 12 segundos"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-box width="1.2" height="1.2" depth="0.8" color="#5d6d7e" shadow>
                 <a-box position="0 0.7 0.5" width="0.3" height="0.3" depth="0.3" color="#34495e"></a-box>
               </a-box>
             </a-entity>
-            <a-text value="SOLDADURA" position="0 2.4 -0.3" color="#e74c3c" align="center" width="3" scale="0.5 0.5 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 2.55; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="SOLDADURA" position="0 2.4 -0.3" color="#e74c3c" align="center" width="3" scale="0.5 0.5 1" material="side: double"></a-text>
             <!-- Welding robot glow ring -->
             <a-ring position="0 0.02 -0.3" radius-inner="0.8" radius-outer="0.88" color="#e74c3c" material="transparent: true; opacity: 0.25"
               animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
@@ -578,13 +578,13 @@
             <a-box position="0.9 0.1 -0.3" width="0.5" height="0.1" depth="0.5" color="#566573"></a-box>
 
             <!-- Info panel station 2 (front) -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 2 - SOLDADURA" data-lines="Temp. arco: 850°C|Electrodos restantes: 12/24|Soldaduras/hora: 48|Operador: Maria" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 2.2 1.9" look-at="#playerCamera"
+            <a-entity class="clickable" toggle-panel="title: ESTACION 2 - SOLDADURA" data-lines="Temp. arco: 850°C|Electrodos restantes: 12/24|Soldaduras/hora: 48|Operador: Maria" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 2.2 1.9" rotation="0 180 0"
               animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-plane width="2" height="0.6" color="#1a2a3a" opacity="0.95" radius="0.08" shadow></a-plane>
               <a-plane position="0 0 0.01" width="2" height="0.6" color="#e74c3c" opacity="0.15" radius="0.08"></a-plane>
-              <a-text value="E2  SOLDADURA" position="0 0.1 0.02" color="#e74c3c" align="center" width="1.8" scale="0.65 0.65 1"></a-text>
-              <a-text value="▼" position="0 -0.15 0.02" color="#e74c3c" align="center" width="1.8" scale="0.4 0.4 1"></a-text>
+              <a-text value="E2  SOLDADURA" position="0 0.1 0.02" color="#e74c3c" align="center" width="1.8" scale="0.65 0.65 1" material="side: double"></a-text>
+              <a-text value="▼" position="0 -0.15 0.02" color="#e74c3c" align="center" width="1.8" scale="0.4 0.4 1" material="side: double"></a-text>
             </a-entity>
           </a-entity>
 
@@ -602,7 +602,8 @@
             <a-entity position="0 3 0" text="value: E3 - CONTROL CALIDAD; color: #27ae60; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
             <!-- Scanner base -->
-            <a-entity id="scanner" class="clickable" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 0 0" machine-info="title: ESCANER 3D; lines: Control de calidad automatizado|Tasa de aprobacion: 98.7%|Tecnologia: Vision artificial|Detecta defectos superficiales"
+            <a-entity id="scanner" class="clickable" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 0 0"
+              toggle-panel="title: ESCANER 3D" data-lines="Control de calidad automatizado|Tasa de aprobacion: 98.7%|Tecnologia: Vision artificial|Detecta defectos superficiales"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-cylinder position="0 0.4 0" radius="0.4" height="0.6" color="#5d6d7e" shadow></a-cylinder>
@@ -613,8 +614,7 @@
               <a-cylinder position="0 0.3 0.4" radius="0.02" height="0.4" color="#27ae60"
                 animation="property: material.color; to: #2ecc71; dur: 200; dir: alternate; loop: true"></a-cylinder>
             </a-entity>
-            <a-text value="ESCANER" position="0 1.5 0" color="#27ae60" align="center" width="3" scale="0.5 0.5 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 1.65; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="ESCANER" position="0 1.5 0" color="#27ae60" align="center" width="3" scale="0.5 0.5 1" material="side: double"></a-text>
             <!-- Scanner glow ring -->
             <a-ring position="0 0.02 0" radius-inner="0.55" radius-outer="0.63" color="#27ae60" material="transparent: true; opacity: 0.25"
               animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
@@ -633,13 +633,13 @@
             <a-box position="0 0.2 0.4" width="0.3" height="0.3" depth="0.3" color="#f1c40f" shadow></a-box>
 
             <!-- Info panel station 3 (front) -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 3 - CALIDAD" data-lines="Tasa aprobacion: 98.7%|Piezas inspeccionadas: 3,450|Defectos detectados: 45|Inspector: Lucia" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 2.2 1.9" look-at="#playerCamera"
+            <a-entity class="clickable" toggle-panel="title: ESTACION 3 - CALIDAD" data-lines="Tasa aprobacion: 98.7%|Piezas inspeccionadas: 3,450|Defectos detectados: 45|Inspector: Lucia" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 2.2 1.9" rotation="0 180 0"
               animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-plane width="2" height="0.6" color="#1a2a3a" opacity="0.95" radius="0.08" shadow></a-plane>
               <a-plane position="0 0 0.01" width="2" height="0.6" color="#27ae60" opacity="0.15" radius="0.08"></a-plane>
-              <a-text value="E3  CALIDAD" position="0 0.1 0.02" color="#27ae60" align="center" width="1.8" scale="0.65 0.65 1"></a-text>
-              <a-text value="▼" position="0 -0.15 0.02" color="#27ae60" align="center" width="1.8" scale="0.4 0.4 1"></a-text>
+              <a-text value="E3  CALIDAD" position="0 0.1 0.02" color="#27ae60" align="center" width="1.8" scale="0.65 0.65 1" material="side: double"></a-text>
+              <a-text value="▼" position="0 -0.15 0.02" color="#27ae60" align="center" width="1.8" scale="0.4 0.4 1" material="side: double"></a-text>
             </a-entity>
           </a-entity>
 
@@ -669,27 +669,27 @@
             <a-box position="-0.8 1.2 -0.5" width="0.4" height="0.3" depth="0.4" color="#d4a574"></a-box>
 
             <!-- Shrink wrap machine -->
-            <a-entity id="shrinkWrap" class="clickable" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0.8 0.4 -0.5" machine-info="title: EMPAQUETADORA; lines: Termoencogible automatico|Ciclo: 8 segundos por paquete|Capacidad: 120 unidades/hora|Protege contra humedad y polvo"
+            <a-entity id="shrinkWrap" class="clickable" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0.8 0.4 -0.5"
+              toggle-panel="title: EMPAQUETADORA" data-lines="Termoencogible automatico|Ciclo: 8 segundos por paquete|Capacidad: 120 unidades/hora|Protege contra humedad y polvo"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-box width="0.5" height="0.6" depth="0.5" color="#5d6d7e"></a-box>
               <a-cylinder position="0 0.4 0" radius="0.15" height="0.1" color="#0d9488"></a-cylinder>
             </a-entity>
-            <a-text value="EMPAQUE" position="0.8 1.3 -0.5" color="#8e44ad" align="center" width="3" scale="0.5 0.5 1" look-at="#playerCamera"
-              animation__float="property: position.y; to: 1.45; dur: 2500; dir: alternate; loop: true; easing: easeInOutQuad"></a-text>
+            <a-text value="EMPAQUE" position="0.8 1.3 -0.5" color="#8e44ad" align="center" width="3" scale="0.5 0.5 1" material="side: double"></a-text>
 
             <!-- Tape dispenser -->
             <a-box position="0.5 0.1 0" width="0.3" height="0.05" depth="0.15" color="#2c3e50"></a-box>
             <a-torus position="0.5 0.15 0" radius="0.08" radius-tubular="0.02" color="#95a5a6" rotation="90 0 0"></a-torus>
 
             <!-- Info panel station 4 (front) -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 4 - EMPAQUE" data-lines="Unidades empacadas: 3,210 cajas|Pallets preparados: 12/24|Peso total: 4,815 kg|Operador: Jose" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0 2.2 1.9" look-at="#playerCamera"
+            <a-entity class="clickable" toggle-panel="title: ESTACION 4 - EMPAQUE" data-lines="Unidades empacadas: 3,210 cajas|Pallets preparados: 12/24|Peso total: 4,815 kg|Operador: Jose" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0 2.2 1.9" rotation="0 180 0"
               animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-plane width="2" height="0.6" color="#1a2a3a" opacity="0.95" radius="0.08" shadow></a-plane>
               <a-plane position="0 0 0.01" width="2" height="0.6" color="#8e44ad" opacity="0.15" radius="0.08"></a-plane>
-              <a-text value="E4  EMPAQUE" position="0 0.1 0.02" color="#8e44ad" align="center" width="1.8" scale="0.65 0.65 1"></a-text>
-              <a-text value="▼" position="0 -0.15 0.02" color="#8e44ad" align="center" width="1.8" scale="0.4 0.4 1"></a-text>
+              <a-text value="E4  EMPAQUE" position="0 0.1 0.02" color="#8e44ad" align="center" width="1.8" scale="0.65 0.65 1" material="side: double"></a-text>
+              <a-text value="▼" position="0 -0.15 0.02" color="#8e44ad" align="center" width="1.8" scale="0.4 0.4 1" material="side: double"></a-text>
             </a-entity>
           </a-entity>
 
@@ -823,6 +823,7 @@
     <div class="hud-text" id="hudText">Preparando linea de ensamble...</div>
     <div id="choicePanel" class="hud-choices" style="display:none;margin-top:10px;gap:8px;flex-wrap:wrap;justify-content:center"></div>
     <div id="feedbackPanel" class="hud-feedback" style="display:none;margin-top:8px;padding:8px 12px;border-radius:8px;text-align:center;font-size:0.9rem"></div>
+    <button id="skipBtn" style="display:none;margin-top:6px;padding:4px 12px;background:rgba(231,76,60,0.2);border:1px solid #e74c3c;border-radius:6px;color:#e74c3c;cursor:pointer;font-size:0.75rem;font-family:inherit">Saltar paso</button>
   </div>
 
   <div id="assemblyComplete" class="assembly-complete">

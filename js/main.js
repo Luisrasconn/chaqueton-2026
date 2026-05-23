@@ -609,7 +609,9 @@ document.addEventListener('DOMContentLoaded', () => {
             z: scale.z * 0.75
           });
           // Flash emissive
-          const meshes = el.querySelectorAll('[material]');
+          const meshes = [];
+          if (el.hasAttribute('material')) meshes.push(el);
+          meshes.push(...el.querySelectorAll('[material]'));
           meshes.forEach(m => {
             const origEmissive = m.getAttribute('material').emissive || '#000000';
             m.setAttribute('material', 'emissive', '#f1c40f');
@@ -638,14 +640,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const intensity = this.data.intensity;
 
         el.addEventListener('mouseenter', () => {
-          const meshes = el.querySelectorAll('[material]');
+          const meshes = [];
+          if (el.hasAttribute('material')) meshes.push(el);
+          meshes.push(...el.querySelectorAll('[material]'));
           meshes.forEach(m => {
             m.setAttribute('material', 'emissive', color);
             m.setAttribute('material', 'emissiveIntensity', intensity);
           });
         });
         el.addEventListener('mouseleave', () => {
-          const meshes = el.querySelectorAll('[material]');
+          const meshes = [];
+          if (el.hasAttribute('material')) meshes.push(el);
+          meshes.push(...el.querySelectorAll('[material]'));
           meshes.forEach(m => {
             m.setAttribute('material', 'emissive', '#000000');
             m.setAttribute('material', 'emissiveIntensity', 0);
@@ -796,118 +802,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Machine info: show floating panel when clicking a machine (works outside simulation)
-    AFRAME.registerComponent('machine-info', {
-      schema: {
-        title: { type: 'string', default: 'Maquina' },
-        lines: { type: 'string', default: 'Sin informacion disponible' }
-      },
-      init: function () {
-        var self = this;
-        this.panelEl = null;
-        this.el.addEventListener('click', function () {
-          if (self.panelEl) { self.close(); return; }
-          self.open();
-        });
-      },
-      open: function () {
-        var rig = document.getElementById('playerRig');
-        if (!rig) return;
-        var rigPos = rig.getAttribute('position');
-
-        var panel = document.createElement('a-entity');
-        panel.setAttribute('class', 'clickable');
-        panel.setAttribute('position', { x: rigPos.x, y: rigPos.y + 0.2, z: rigPos.z - 2.5 });
-        panel.setAttribute('look-at', '#playerCamera');
-        panel.setAttribute('scale', '0 0 0');
-
-        var bg = document.createElement('a-plane');
-        bg.setAttribute('width', '2.5');
-        bg.setAttribute('height', '2');
-        bg.setAttribute('color', '#1a1a2e');
-        bg.setAttribute('opacity', '0.95');
-        bg.setAttribute('shadow', '');
-        bg.setAttribute('radius', '0.08');
-
-        var color = this.el.getAttribute('data-color') || '#0d9488';
-
-        var header = document.createElement('a-plane');
-        header.setAttribute('position', '0 0.85 0.01');
-        header.setAttribute('width', '2.3');
-        header.setAttribute('height', '0.3');
-        header.setAttribute('color', color);
-        header.setAttribute('radius', '0.05');
-
-        var titleText = document.createElement('a-text');
-        titleText.setAttribute('value', this.data.title);
-        titleText.setAttribute('position', '0 0.85 0.02');
-        titleText.setAttribute('color', 'white');
-        titleText.setAttribute('align', 'center');
-        titleText.setAttribute('width', '2.2');
-
-        panel.appendChild(bg);
-        panel.appendChild(header);
-        panel.appendChild(titleText);
-
-        var lines = this.data.lines.split('|').map(function (l) { return l.trim(); }).filter(function (l) { return l; });
-        lines.forEach(function (line, i) {
-          var yPos = 0.55 - (i * 0.25);
-          var lt = document.createElement('a-text');
-          lt.setAttribute('value', line);
-          lt.setAttribute('position', '-0.8 ' + yPos + ' 0.02');
-          lt.setAttribute('color', '#bdc3c7');
-          lt.setAttribute('align', 'left');
-          lt.setAttribute('width', '2.2');
-          lt.setAttribute('scale', '0.85 0.85 1');
-          panel.appendChild(lt);
-        });
-
-        var closeBg = document.createElement('a-plane');
-        closeBg.setAttribute('position', '0 -0.85 0.01');
-        closeBg.setAttribute('width', '2.3');
-        closeBg.setAttribute('height', '0.2');
-        closeBg.setAttribute('color', '#34495e');
-        closeBg.setAttribute('radius', '0.05');
-        closeBg.setAttribute('class', 'clickable');
-        var self2 = this;
-        closeBg.addEventListener('click', function () { self2.close(); });
-
-        var closeText = document.createElement('a-text');
-        closeText.setAttribute('value', '✕  Cerrar');
-        closeText.setAttribute('position', '0 -0.85 0.02');
-        closeText.setAttribute('color', '#7f8c8d');
-        closeText.setAttribute('align', 'center');
-        closeText.setAttribute('width', '2.2');
-        closeText.setAttribute('scale', '0.55 0.55 1');
-        closeText.setAttribute('class', 'clickable');
-        closeText.addEventListener('click', function () { self2.close(); });
-
-        panel.appendChild(closeBg);
-        panel.appendChild(closeText);
-
-        panel.setAttribute('animation', {
-          property: 'scale', from: '0 0 0', to: '1 1 1',
-          dur: 300, easing: 'easeOutBack'
-        });
-
-        document.querySelector('a-scene').appendChild(panel);
-        this.panelEl = panel;
-      },
-      close: function () {
-        if (!this.panelEl) return;
-        var panel = this.panelEl;
-        panel.setAttribute('animation', {
-          property: 'scale', from: '1 1 1', to: '0 0 0',
-          dur: 200, easing: 'easeInQuad'
-        });
-        var self = this;
-        setTimeout(function () {
-          if (panel.parentNode) panel.parentNode.removeChild(panel);
-          self.panelEl = null;
-        }, 250);
-      }
-    });
-
     // ======================================================================
     // OPERATION MANAGER: detailed 22-substep assembly simulation
     // ======================================================================
@@ -940,6 +834,7 @@ document.addEventListener('DOMContentLoaded', () => {
         var self = this;
         document.getElementById('resetBtn').addEventListener('click', function () { self.reset(); });
         document.getElementById('completeReset').addEventListener('click', function () { self.reset(); });
+        document.getElementById('skipBtn').addEventListener('click', function () { if (self.isActive) self.advance(); });
 
         var startBtn = document.querySelector('#startAssembly');
         if (startBtn) {
@@ -1013,6 +908,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 target: '#conveyorBelt',
                 action: function () {
                   self.conveyorRunning = true;
+                  var cs = document.querySelector('#conveyorStatus');
+                  if (cs) { cs.setAttribute('value', '▶ ENCENDIDA'); cs.setAttribute('color', '#27ae60'); }
                   self.flashElement('#conveyorBelt', '#2980b9');
                   self.advance();
                 }
@@ -1024,6 +921,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 action: function () {
                   if (!self.conveyorRunning) return;
                   self.conveyorRunning = false;
+                  var cs = document.querySelector('#conveyorStatus');
+                  if (cs) { cs.setAttribute('value', '⏸ DETENIDA'); cs.setAttribute('color', '#e74c3c'); }
                   // Move workpiece to conveyor end
                   var st1 = self.getWorldPos('#station1');
                   var endX = st1.x + 1.3, endZ = st1.z + 0.5;
@@ -1324,6 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
         this.startTime = Date.now();
         this.conveyorRunning = false;
         this.armPhase = 0;
+        this._choiceHadError = false;
         this.hudEl.style.display = 'block';
         this.completeEl.style.display = 'none';
         this.choicePanel.style.display = 'none';
@@ -1359,12 +1259,16 @@ document.addEventListener('DOMContentLoaded', () => {
         // Clear highlight
         this.clearHighlight();
 
+        var skipBtn = document.getElementById('skipBtn');
         if (sub.type === 'click') {
+          if (skipBtn) skipBtn.style.display = 'inline-block';
           this.highlightTarget(sub.target);
           this.wireClick(sub);
         } else if (sub.type === 'choice') {
+          if (skipBtn) skipBtn.style.display = 'none';
           this.showChoices(sub);
         } else if (sub.type === 'auto') {
+          if (skipBtn) skipBtn.style.display = 'none';
           this.hudText.textContent = sub.instruction;
           var self = this;
           setTimeout(function () {
@@ -1392,7 +1296,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
       wireClick: function (sub) {
         var self = this;
-        // Remove previous click handler
         if (this._clickTarget && this._clickHandler) {
           this._clickTarget.removeEventListener('click', this._clickHandler);
         }
@@ -1404,9 +1307,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (self._clickTarget) {
             self._clickTarget.removeEventListener('click', self._clickHandler);
           }
+          self._clickTarget = null;
+          self._clickHandler = null;
           sub.action();
         };
-        target.addEventListener('click', this._clickHandler, { once: true });
+        target.addEventListener('click', this._clickHandler);
       },
 
       showChoices: function (sub) {
@@ -1424,7 +1329,8 @@ document.addEventListener('DOMContentLoaded', () => {
           btn.addEventListener('click', function () {
             self.choicePanel.style.display = 'none';
             if (opt.correct) {
-              self.correctCount++;
+              if (!self._choiceHadError) self.correctCount++;
+              self._choiceHadError = false;
               self.feedbackPanel.style.cssText = 'display:block;margin-top:8px;padding:8px 12px;border-radius:8px;text-align:center;font-size:0.9rem;background:rgba(39,174,96,0.2);border:1px solid #27ae60;color:#27ae60';
               self.feedbackPanel.textContent = opt.feedback;
               setTimeout(function () {
@@ -1432,6 +1338,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 self.advance();
               }, 1800);
             } else {
+              self._choiceHadError = true;
               self.wrongCount++;
               self.feedbackPanel.style.cssText = 'display:block;margin-top:8px;padding:8px 12px;border-radius:8px;text-align:center;font-size:0.9rem;background:rgba(231,76,60,0.2);border:1px solid #e74c3c;color:#e74c3c';
               self.feedbackPanel.textContent = opt.feedback;
@@ -1480,7 +1387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Robotic arm animations
       animateArmSegment: function (dir) {
-        var armBox = document.querySelector('#roboticArm a-box[position="0 1.3 0.35"]');
+        var armBox = document.querySelector('#armSegment1');
         if (!armBox) return;
         var toRot = dir === 'bajar' ? '30 0 0' : '-30 0 0';
         armBox.setAttribute('animation__armseg', {
@@ -1489,8 +1396,8 @@ document.addEventListener('DOMContentLoaded', () => {
       },
 
       animateGripper: function (action) {
-        var g1 = document.querySelector('#roboticArm a-box[position="0.05 1.9 0.55"]');
-        var g2 = document.querySelector('#roboticArm a-box[position="0.25 1.9 0.55"]');
+        var g1 = document.querySelector('#gripperLeft');
+        var g2 = document.querySelector('#gripperRight');
         if (action === 'cerrar') {
           if (g1) g1.setAttribute('position', '0.12 1.9 0.55');
           if (g2) g2.setAttribute('position', '0.18 1.9 0.55');
@@ -1584,6 +1491,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function initVRScene() {
-    // Scene auto-initializes with A-Frame
+    requestAnimationFrame(() => {
+      const scene = document.querySelector('#vrScene');
+      if (!scene || !scene.canvas) return;
+      const container = document.getElementById('vrContainer');
+      if (container) {
+        scene.canvas.width = container.clientWidth;
+        scene.canvas.height = container.clientHeight;
+        scene.emit('resize');
+      }
+    });
   }
 });
