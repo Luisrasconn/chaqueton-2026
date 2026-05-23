@@ -411,9 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      const filter = btn.dataset.filter;
+      if (filter === 'authorized') return;
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      const filter = btn.dataset.filter;
       toolCards.forEach(card => {
         card.classList.toggle('tool-card--hidden', filter !== 'all' && card.dataset.status !== filter);
       });
@@ -587,7 +588,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', (e) => {
-      if (e.target === m) m.classList.remove('open');
+      if (e.target === m) {
+        if (m.id === 'faceRecModal') stopFaceRecCamera();
+        else if (m.id === 'registerPersonModal') stopRegisterCamera();
+        else if (m.id === 'personDetailModal') personDetailModal.classList.remove('open');
+        else m.classList.remove('open');
+      }
     });
   });
 
@@ -603,7 +609,501 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====================================
-  // 15. CONVEYOR BELT ANIMATION (AFRAME)
+  // 15. FACE RECOGNITION SYSTEM
+  // ====================================
+
+  const FACE_MODEL_URL = 'https://justadudewhohacks.github.io/face-api.js/models';
+  let faceApiReady = false;
+  let faceModelsLoading = false;
+  let recognizedPerson = null;
+
+  // --- Person management ---
+  function getPersons() {
+    return JSON.parse(localStorage.getItem('mhub-persons') || '[]');
+  }
+
+  function savePersons(persons) {
+    localStorage.setItem('mhub-persons', JSON.stringify(persons));
+  }
+
+  // --- Load face-api models ---
+  async function initFaceApi() {
+    if (faceApiReady || faceModelsLoading) return;
+    if (typeof faceapi === 'undefined') {
+      console.warn('face-api.js no disponible');
+      return;
+    }
+    faceModelsLoading = true;
+    try {
+      await faceapi.nets.tinyFaceDetector.loadFromUri(FACE_MODEL_URL);
+      await faceapi.nets.faceLandmark68Net.loadFromUri(FACE_MODEL_URL);
+      await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_MODEL_URL);
+      faceApiReady = true;
+      console.log('Face API listo');
+    } catch (e) {
+      console.warn('Error cargando modelos faciales:', e);
+    } finally {
+      faceModelsLoading = false;
+    }
+  }
+
+  // --- Get face descriptor from video ---
+  async function getFaceDescriptor(videoEl) {
+    if (!faceApiReady) return null;
+    const det = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+      .withFaceLandmarks().withFaceDescriptor();
+    return det ? det.descriptor : null;
+  }
+
+  // --- Match face against registered persons ---
+  function matchFace(descriptor) {
+    const persons = getPersons();
+    if (!persons.length) return null;
+    const threshold = 0.45;
+    let bestMatch = null;
+    let bestDistance = Infinity;
+    for (const p of persons) {
+      if (!p.descriptor) continue;
+      const d = new Float32Array(Object.values(p.descriptor));
+      const dist = faceapi.euclideanDistance(descriptor, d);
+      if (dist < bestDistance) {
+        bestDistance = dist;
+        bestMatch = p;
+      }
+    }
+    return bestDistance < threshold ? bestMatch : null;
+  }
+
+  // --- Draw face detection overlay ---
+  function drawFaceOverlay(videoEl, canvasEl) {
+    if (!faceApiReady) return;
+    const displaySize = { width: videoEl.clientWidth || videoEl.width, height: videoEl.clientHeight || videoEl.height };
+    canvasEl.width = displaySize.width;
+    canvasEl.height = displaySize.height;
+    const ctx = canvasEl.getContext('2d');
+    ctx.clearRect(0, 0, canvasEl.width, canvasEl.height);
+
+    faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions({ inputSize: 320 }))
+      .withFaceLandmarks().then(det => {
+        if (det) {
+          const resized = faceapi.resizeResults(det, displaySize);
+          const box = resized.detection.box;
+          ctx.strokeStyle = '#0d9488';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(box.x, box.y, box.width, box.height);
+          ctx.fillStyle = 'rgba(13,148,136,0.2)';
+          ctx.fillRect(box.x, box.y, box.width, box.height);
+        }
+      }).catch(() => {});
+  }
+
+  // --- Face Recognition Modal ---
+  const faceRecModal = document.getElementById('faceRecModal');
+  const faceRecVideo = document.getElementById('faceRecVideo');
+  const faceRecOverlay = document.getElementById('faceRecOverlay');
+  const faceRecStatus = document.getElementById('faceRecStatus');
+  const faceRecCaptureBtn = document.getElementById('faceRecCaptureBtn');
+  const faceRecCancelBtn = document.getElementById('faceRecCancelBtn');
+  const faceRecModalClose = document.getElementById('faceRecModalClose');
+  let faceRecStream = null;
+  let faceRecDrawInterval = null;
+
+  function startFaceRecCamera() {
+    faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Iniciando c&#225;mara...</span>';
+    faceRecCaptureBtn.disabled = true;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then(stream => {
+        faceRecStream = stream;
+        faceRecVideo.srcObject = stream;
+        faceRecVideo.play();
+        if (faceApiReady) {
+          faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Reconocer".</span>';
+          faceRecCaptureBtn.disabled = false;
+          faceRecDrawInterval = setInterval(() => drawFaceOverlay(faceRecVideo, faceRecOverlay), 200);
+        } else {
+          faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9203;</span><span>Cargando modelos faciales...</span>';
+          initFaceApi().then(() => {
+            faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Reconocer".</span>';
+            faceRecCaptureBtn.disabled = false;
+            faceRecDrawInterval = setInterval(() => drawFaceOverlay(faceRecVideo, faceRecOverlay), 200);
+          });
+        }
+      })
+      .catch(() => {
+        faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>No se pudo acceder a la c&#225;mara</span>';
+        faceRecCaptureBtn.disabled = true;
+      });
+  }
+
+  function stopFaceRecCamera() {
+    if (faceRecDrawInterval) { clearInterval(faceRecDrawInterval); faceRecDrawInterval = null; }
+    if (faceRecStream) {
+      faceRecStream.getTracks().forEach(t => t.stop());
+      faceRecStream = null;
+    }
+    faceRecVideo.srcObject = null;
+    faceRecModal.classList.remove('open');
+  }
+
+  function showFaceRecModal() {
+    faceRecModal.classList.add('open');
+    setTimeout(startFaceRecCamera, 300);
+  }
+
+  async function handleFaceRecognition() {
+    if (!faceApiReady) {
+      faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9203;</span><span>Cargando modelos...</span>';
+      await initFaceApi();
+      if (!faceApiReady) {
+        faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>Error: modelos faciales no disponibles</span>';
+        return;
+      }
+    }
+    const descriptor = await getFaceDescriptor(faceRecVideo);
+    if (!descriptor) {
+      faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9888;</span><span>No se detect&#243; un rostro. Aseg&#250;rate de estar frente a la c&#225;mara.</span>';
+      return;
+    }
+    const match = matchFace(descriptor);
+    if (match) {
+      recognizedPerson = match;
+      localStorage.setItem('mhub-recognized', JSON.stringify({ id: match.id, name: match.name }));
+      faceRecStatus.innerHTML = '<span class="face-status-msg__icon" style="font-size:2rem">&#9989;</span><span style="font-size:1.1rem;font-weight:700;color:var(--success)">&#161;Bienvenido, ' + match.name + '!</span>';
+      updateWarehouseAuthUI(match);
+      setTimeout(stopFaceRecCamera, 2000);
+    } else {
+      faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>Rostro no reconocido. No est&#225;s autorizado para acceder al almac&#233;n.</span>';
+    }
+  }
+
+  faceRecCaptureBtn.addEventListener('click', handleFaceRecognition);
+  faceRecCancelBtn.addEventListener('click', stopFaceRecCamera);
+  faceRecModalClose.addEventListener('click', stopFaceRecCamera);
+
+  // --- Register Person Modal ---
+  const registerPersonModal = document.getElementById('registerPersonModal');
+  const registerFaceVideo = document.getElementById('registerFaceVideo');
+  const registerFaceOverlay = document.getElementById('registerFaceOverlay');
+  const registerFaceStatus = document.getElementById('registerFaceStatus');
+  const registerFaceCaptureBtn = document.getElementById('registerFaceCaptureBtn');
+  const registerFaceCancelBtn = document.getElementById('registerFaceCancelBtn');
+  const registerPersonClose = document.getElementById('registerPersonClose');
+  const personNameInput = document.getElementById('personNameInput');
+  let registerStream = null;
+  let registerDrawInterval = null;
+
+  function startRegisterCamera() {
+    registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Iniciando c&#225;mara...</span>';
+    registerFaceCaptureBtn.disabled = true;
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then(stream => {
+        registerStream = stream;
+        registerFaceVideo.srcObject = stream;
+        registerFaceVideo.play();
+        if (faceApiReady) {
+          registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Capturar Rostro".</span>';
+          registerFaceCaptureBtn.disabled = false;
+          registerDrawInterval = setInterval(() => drawFaceOverlay(registerFaceVideo, registerFaceOverlay), 200);
+        } else {
+          registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9203;</span><span>Cargando modelos faciales...</span>';
+          initFaceApi().then(() => {
+            registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Capturar Rostro".</span>';
+            registerFaceCaptureBtn.disabled = false;
+            registerDrawInterval = setInterval(() => drawFaceOverlay(registerFaceVideo, registerFaceOverlay), 200);
+          });
+        }
+      })
+      .catch(() => {
+        registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>No se pudo acceder a la c&#225;mara</span>';
+        registerFaceCaptureBtn.disabled = true;
+      });
+  }
+
+  function stopRegisterCamera() {
+    if (registerDrawInterval) { clearInterval(registerDrawInterval); registerDrawInterval = null; }
+    if (registerStream) {
+      registerStream.getTracks().forEach(t => t.stop());
+      registerStream = null;
+    }
+    registerFaceVideo.srcObject = null;
+    registerPersonModal.classList.remove('open');
+  }
+
+  async function handleRegisterFace() {
+    const name = personNameInput.value.trim();
+    if (!name) {
+      registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9888;</span><span>Ingresa un nombre primero.</span>';
+      return;
+    }
+    if (!faceApiReady) {
+      registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9203;</span><span>Cargando modelos...</span>';
+      await initFaceApi();
+    }
+    const descriptor = await getFaceDescriptor(registerFaceVideo);
+    if (!descriptor) {
+      registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9888;</span><span>No se detect&#243; un rostro. Aseg&#250;rate de estar frente a la c&#225;mara.</span>';
+      return;
+    }
+
+    const persons = getPersons();
+    const newPerson = {
+      id: 'p_' + Date.now(),
+      name: name,
+      descriptor: Array.from(descriptor),
+      authorizedTools: [],
+      createdAt: new Date().toISOString()
+    };
+    persons.push(newPerson);
+    savePersons(persons);
+
+    registerFaceStatus.innerHTML = '<span class="face-status-msg__icon" style="font-size:2rem">&#9989;</span><span style="font-size:1.1rem;font-weight:700;color:var(--success)">' + name + ' registrado exitosamente!</span>';
+    renderPersonGrid();
+    setTimeout(stopRegisterCamera, 2000);
+  }
+
+  registerFaceCaptureBtn.addEventListener('click', handleRegisterFace);
+  registerFaceCancelBtn.addEventListener('click', stopRegisterCamera);
+  registerPersonClose.addEventListener('click', stopRegisterCamera);
+
+  // --- Person Grid ---
+  function renderPersonGrid() {
+    const grid = document.getElementById('personGrid');
+    const empty = document.getElementById('personnelEmpty');
+    const persons = getPersons();
+    if (!persons.length) {
+      grid.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    grid.innerHTML = persons.map(p => `
+      <div class="person-card" data-person-id="${p.id}">
+        <div class="person-card__avatar">&#128100;</div>
+        <div class="person-card__name">${p.name}</div>
+        <div class="person-card__tools">${p.authorizedTools.length} herramienta(s)</div>
+        <button class="btn btn--sm btn--outline person-card__edit" data-person-id="${p.id}">Editar</button>
+      </div>
+    `).join('');
+
+    grid.querySelectorAll('.person-card__edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        showPersonDetail(btn.dataset.personId);
+      });
+    });
+  }
+
+  // --- Person Detail Modal ---
+  const personDetailModal = document.getElementById('personDetailModal');
+  const personDetailClose = document.getElementById('personDetailClose');
+  const personDetailName = document.getElementById('personDetailName');
+  const personDetailFace = document.getElementById('personDetailFace');
+  const authToolsList = document.getElementById('authToolsList');
+  const deletePersonBtn = document.getElementById('deletePersonBtn');
+  let currentDetailPersonId = null;
+
+  function showPersonDetail(personId) {
+    const persons = getPersons();
+    const p = persons.find(x => x.id === personId);
+    if (!p) return;
+    currentDetailPersonId = personId;
+    personDetailName.textContent = p.name;
+    personDetailFace.innerHTML = '<span style="font-size:3rem">&#128100;</span>';
+
+    const allTools = document.querySelectorAll('.tool-card');
+    let html = '';
+    allTools.forEach(tool => {
+      const toolId = tool.dataset.id;
+      const toolName = tool.querySelector('.tool-card__name').textContent;
+      const checked = p.authorizedTools.includes(toolId) ? 'checked' : '';
+      html += `
+        <label class="auth-tool-item">
+          <input type="checkbox" class="auth-tool-checkbox" data-tool-id="${toolId}" ${checked}>
+          <span>${toolName}</span>
+        </label>
+      `;
+    });
+    authToolsList.innerHTML = html;
+
+    authToolsList.querySelectorAll('.auth-tool-checkbox').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const persons = getPersons();
+        const person = persons.find(x => x.id === currentDetailPersonId);
+        if (!person) return;
+        const toolId = cb.dataset.toolId;
+        if (cb.checked) {
+          if (!person.authorizedTools.includes(toolId)) person.authorizedTools.push(toolId);
+        } else {
+          person.authorizedTools = person.authorizedTools.filter(id => id !== toolId);
+        }
+        savePersons(persons);
+        renderPersonGrid();
+        if (recognizedPerson && recognizedPerson.id === currentDetailPersonId) {
+          recognizedPerson = person;
+          localStorage.setItem('mhub-recognized', JSON.stringify({ id: person.id, name: person.name }));
+          updateWarehouseAuthUI(person);
+        }
+      });
+    });
+
+    personDetailModal.classList.add('open');
+  }
+
+  deletePersonBtn.addEventListener('click', () => {
+    if (!currentDetailPersonId) return;
+    if (!confirm('Eliminar esta persona?')) return;
+    let persons = getPersons();
+    persons = persons.filter(p => p.id !== currentDetailPersonId);
+    savePersons(persons);
+    if (recognizedPerson && recognizedPerson.id === currentDetailPersonId) {
+      recognizedPerson = null;
+      localStorage.removeItem('mhub-recognized');
+      updateWarehouseAuthUI(null);
+    }
+    personDetailModal.classList.remove('open');
+    renderPersonGrid();
+  });
+
+  personDetailClose.addEventListener('click', () => personDetailModal.classList.remove('open'));
+
+  // --- Warehouse Auth UI ---
+  function updateWarehouseAuthUI(person) {
+    const icon = document.getElementById('faceAuthIcon');
+    const title = document.getElementById('faceAuthTitle');
+    const sub = document.getElementById('faceAuthSub');
+    const startBtn = document.getElementById('faceAuthStartBtn');
+    const logoutBtn = document.getElementById('faceAuthLogoutBtn');
+    const authMsg = document.getElementById('authToolsMsg');
+    const authText = document.getElementById('authToolsText');
+    const filterAuthBtn = document.getElementById('filterAuthorizedBtn');
+
+    if (person) {
+      icon.textContent = '\u2705';
+      title.textContent = 'Bienvenido, ' + person.name;
+      sub.textContent = 'Acceso verificado. Puedes sacar las herramientas autorizadas.';
+      startBtn.style.display = 'none';
+      logoutBtn.style.display = '';
+
+      const toolCount = person.authorizedTools.length;
+      authMsg.style.display = toolCount ? '' : 'none';
+      authText.textContent = toolCount ? 'Tienes ' + toolCount + ' herramienta(s) autorizada(s). Usa el filtro "Mis autorizadas" para verlas.' : '';
+      filterAuthBtn.style.display = toolCount ? '' : 'none';
+      filterAuthBtn.disabled = false;
+
+      updateAuthBadges(person);
+    } else {
+      icon.textContent = '\uD83D\uDD12';
+      title.textContent = 'Acceso no verificado';
+      sub.textContent = 'Presiona "Iniciar reconocimiento facial" para acceder al almac\u00e9n';
+      startBtn.style.display = '';
+      logoutBtn.style.display = 'none';
+      authMsg.style.display = 'none';
+      filterAuthBtn.style.display = 'none';
+      filterAuthBtn.disabled = true;
+
+      updateAuthBadges(null);
+    }
+    updateToolCounts();
+  }
+
+  function updateAuthBadges(person) {
+    document.querySelectorAll('.tool-card__auth-badge').forEach(badge => {
+      badge.style.display = 'none';
+    });
+    if (!person) return;
+    person.authorizedTools.forEach(toolId => {
+      const card = document.querySelector('.tool-card[data-id="' + toolId + '"]');
+      if (card) {
+        const badge = card.querySelector('.tool-card__auth-badge');
+        if (badge) badge.style.display = '';
+      }
+    });
+  }
+
+  // --- Face Auth Start ---
+  document.getElementById('faceAuthStartBtn').addEventListener('click', () => {
+    if (!getPersons().length) {
+      alert('No hay personal registrado. Agrega una persona primero.');
+      document.getElementById('addPersonBtn').click();
+      return;
+    }
+    initFaceApi().then(showFaceRecModal);
+  });
+
+  document.getElementById('faceAuthLogoutBtn').addEventListener('click', () => {
+    recognizedPerson = null;
+    localStorage.removeItem('mhub-recognized');
+    updateWarehouseAuthUI(null);
+    document.querySelectorAll('.tool-card').forEach(c => c.classList.remove('tool-card--hidden'));
+  });
+
+  document.getElementById('addPersonBtn').addEventListener('click', () => {
+    personNameInput.value = '';
+    registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Preparando c\u00e1mara...</span>';
+    registerPersonModal.classList.add('open');
+    setTimeout(startRegisterCamera, 300);
+  });
+
+  // --- Auto restore session ---
+  const savedPerson = localStorage.getItem('mhub-recognized');
+  if (savedPerson) {
+    try {
+      const data = JSON.parse(savedPerson);
+      const persons = getPersons();
+      const match = persons.find(p => p.id === data.id);
+      if (match) {
+        recognizedPerson = match;
+        initFaceApi();
+        setTimeout(() => updateWarehouseAuthUI(match), 500);
+      } else {
+        localStorage.removeItem('mhub-recognized');
+      }
+    } catch (e) {
+      localStorage.removeItem('mhub-recognized');
+    }
+  } else {
+    initFaceApi();
+  }
+
+  // Auto-trigger face rec on tab switch to almacen (if not recognized)
+  const almacenTabObserver = new MutationObserver(() => {
+    const almacen = document.getElementById('tab-almacen');
+    if (almacen && almacen.classList.contains('active') && !recognizedPerson) {
+      const startBtn = document.getElementById('faceAuthStartBtn');
+      if (startBtn.style.display !== 'none' && getPersons().length) {
+        startBtn.style.animation = 'pulse 1.5s ease infinite';
+      }
+    }
+  });
+  document.querySelectorAll('.tab-content').forEach(tc => {
+    almacenTabObserver.observe(tc, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // Authorized tools filter
+  document.getElementById('filterAuthorizedBtn').addEventListener('click', function () {
+    filterBtns.forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    const authorized = recognizedPerson ? recognizedPerson.authorizedTools : [];
+    toolCards.forEach(card => {
+      const isAuthorized = authorized.includes(card.dataset.id);
+      card.classList.toggle('tool-card--hidden', !isAuthorized);
+    });
+    updateToolCounts();
+  });
+
+  // Deactivate authorized filter when switching to other filters
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (btn.dataset.filter !== 'authorized') {
+        document.getElementById('filterAuthorizedBtn').classList.remove('active');
+      }
+    });
+  });
+
+  renderPersonGrid();
+
+  // ====================================
+  // 16. CONVEYOR BELT ANIMATION (AFRAME)
   // ====================================
   if (typeof AFRAME !== 'undefined') {
     AFRAME.registerComponent('conveyor-animation', {

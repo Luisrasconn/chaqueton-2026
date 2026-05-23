@@ -11,6 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -310,13 +311,32 @@
     <!-- ======== ALMACÉN VIRTUAL ======== -->
     <section class="tab-content" id="tab-almacen">
       <h1 class="section-title">Almac&#233;n Virtual</h1>
-      <p class="section-desc">Inventario de herramientas en tiempo real detectado por sensores IoT. Escanea el QR de una herramienta para actualizar su estado.</p>
+      <p class="section-desc">Control de acceso biom&#233;trico — el reconocimiento facial es obligatorio para sacar herramientas.</p>
+
+      <!-- Face Auth Status -->
+      <div class="face-auth-status" id="faceAuthStatus">
+        <div class="face-auth-status__inner">
+          <span class="face-auth-status__icon" id="faceAuthIcon">&#128274;</span>
+          <div>
+            <div class="face-auth-status__title" id="faceAuthTitle">Acceso no verificado</div>
+            <div class="face-auth-status__sub" id="faceAuthSub">Presiona "Iniciar reconocimiento facial" para acceder al almac&#233;n</div>
+          </div>
+          <button class="btn btn--primary" id="faceAuthStartBtn">&#128066; Iniciar reconocimiento facial</button>
+          <button class="btn btn--outline" id="faceAuthLogoutBtn" style="display:none">&#128682; Cerrar sesi&#243;n facial</button>
+        </div>
+      </div>
+
+      <!-- Authorized tools message -->
+      <div class="auth-tools-msg" id="authToolsMsg" style="display:none">
+        <span id="authToolsText"></span>
+      </div>
 
       <div class="almacen-filters">
         <button class="btn btn--outline active" data-filter="all">Todas</button>
         <button class="btn btn--outline" data-filter="disponible">Disponibles</button>
         <button class="btn btn--outline" data-filter="uso">En uso</button>
         <button class="btn btn--outline" data-filter="mantenimiento">Mantenimiento</button>
+        <button class="btn btn--outline" id="filterAuthorizedBtn" data-filter="authorized" disabled style="display:none">&#9989; Mis autorizadas</button>
         <button class="btn btn--primary" id="qrScanBtn">&#128247; Escanear QR</button>
       </div>
 
@@ -326,48 +346,56 @@
           <h3 class="tool-card__name">Taladro Industrial #T-102</h3>
           <span class="tool-card__status status--disponible">&#9679; Disponible</span>
           <span class="tool-card__qr">QR: T-102</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="uso" data-id="P-045">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Pulidora Angular #P-045</h3>
           <span class="tool-card__status status--uso">&#9679; En uso — Estaci&#243;n 4</span>
           <span class="tool-card__qr">QR: P-045</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="disponible" data-id="L-203">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Llave de Impacto #L-203</h3>
           <span class="tool-card__status status--disponible">&#9679; Disponible</span>
           <span class="tool-card__qr">QR: L-203</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="mantenimiento" data-id="M-089">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Mult&#237;metro Digital #M-089</h3>
           <span class="tool-card__status status--mantenimiento">&#9679; En mantenimiento</span>
           <span class="tool-card__qr">QR: M-089</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="disponible" data-id="S-117">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Sierra Circular #S-117</h3>
           <span class="tool-card__status status--disponible">&#9679; Disponible</span>
           <span class="tool-card__qr">QR: S-117</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="uso" data-id="C-056">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Compresor de Aire #C-056</h3>
           <span class="tool-card__status status--uso">&#9679; En uso — &#193;rea de pintura</span>
           <span class="tool-card__qr">QR: C-056</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="disponible" data-id="E-034">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Esmeril de Banco #E-034</h3>
           <span class="tool-card__status status--disponible">&#9679; Disponible</span>
           <span class="tool-card__qr">QR: E-034</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
         <div class="tool-card" data-status="mantenimiento" data-id="T-208">
           <div class="tool-card__icon">&#9881;</div>
           <h3 class="tool-card__name">Taladro Percutor #T-208</h3>
           <span class="tool-card__status status--mantenimiento">&#9679; En mantenimiento</span>
           <span class="tool-card__qr">QR: T-208</span>
+          <span class="tool-card__auth-badge" style="display:none">&#9989; Autorizada</span>
         </div>
       </div>
 
@@ -375,6 +403,16 @@
         <div class="stat-chip"><span class="dot dot--green"></span> Disponibles: <strong id="countDisponible">0</strong></div>
         <div class="stat-chip"><span class="dot dot--orange"></span> En uso: <strong id="countUso">0</strong></div>
         <div class="stat-chip"><span class="dot dot--red"></span> Mantenimiento: <strong id="countMantenimiento">0</strong></div>
+      </div>
+
+      <!-- Personnel Management -->
+      <div class="personnel-section">
+        <div class="personnel-header">
+          <h2 class="section-title">Personal Autorizado</h2>
+          <button class="btn btn--primary" id="addPersonBtn">&#128100; Agregar Persona</button>
+        </div>
+        <div class="person-grid" id="personGrid"></div>
+        <p class="personnel-empty" id="personnelEmpty">No hay personal registrado. Agrega una persona para habilitar el reconocimiento facial.</p>
       </div>
     </section>
 
@@ -493,6 +531,71 @@
         <p style="color:var(--text-light)">Esperando c&#243;digo QR...</p>
       </div>
       <button class="btn btn--outline" id="qrCancelBtn" style="margin-top:1rem">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- ===== FACE RECOGNITION MODAL ===== -->
+  <div class="modal-overlay" id="faceRecModal">
+    <div class="modal modal--wide">
+      <button class="modal__close" id="faceRecModalClose">&times;</button>
+      <h2 class="section-title">Reconocimiento Facial</h2>
+      <p style="color:var(--text-light);margin-bottom:1rem">M&#237;rate a la c&#225;mara y presiona "Reconocer" para verificar tu identidad.</p>
+      <div class="face-camera-container">
+        <video id="faceRecVideo" autoplay playsinline muted></video>
+        <canvas id="faceRecOverlay" class="face-overlay"></canvas>
+      </div>
+      <div class="face-status-msg" id="faceRecStatus">
+        <span class="face-status-msg__icon">&#128161;</span>
+        <span>Preparando c&#225;mara...</span>
+      </div>
+      <div class="face-rec-actions">
+        <button class="btn btn--primary" id="faceRecCaptureBtn">&#128247; Reconocer</button>
+        <button class="btn btn--outline" id="faceRecCancelBtn">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REGISTER PERSON MODAL ===== -->
+  <div class="modal-overlay" id="registerPersonModal">
+    <div class="modal modal--wide">
+      <button class="modal__close" id="registerPersonClose">&times;</button>
+      <h2 class="section-title">Registrar Persona</h2>
+      <p style="color:var(--text-light);margin-bottom:1rem">Ingresa el nombre y captura el rostro para registrar a una persona autorizada.</p>
+      <div class="form__group">
+        <label for="personNameInput">Nombre completo</label>
+        <input type="text" id="personNameInput" placeholder="Ej: Juan P&#233;rez">
+      </div>
+      <div class="form__group">
+        <label>Captura de rostro</label>
+        <div class="face-camera-container">
+          <video id="registerFaceVideo" autoplay playsinline muted></video>
+          <canvas id="registerFaceOverlay" class="face-overlay"></canvas>
+        </div>
+      </div>
+      <div class="face-status-msg" id="registerFaceStatus">
+        <span class="face-status-msg__icon">&#128161;</span>
+        <span>Preparando c&#225;mara...</span>
+      </div>
+      <div class="face-rec-actions">
+        <button class="btn btn--primary" id="registerFaceCaptureBtn">&#128247; Capturar Rostro</button>
+        <button class="btn btn--outline" id="registerFaceCancelBtn">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PERSON DETAIL MODAL ===== -->
+  <div class="modal-overlay" id="personDetailModal">
+    <div class="modal">
+      <button class="modal__close" id="personDetailClose">&times;</button>
+      <h2 class="section-title" id="personDetailName">Persona</h2>
+      <div class="person-detail-face" id="personDetailFace"></div>
+      <div class="form__group">
+        <label>Herramientas autorizadas</label>
+        <div class="auth-tools-list" id="authToolsList"></div>
+      </div>
+      <div class="person-detail-actions">
+        <button class="btn btn--danger" id="deletePersonBtn">&#128465; Eliminar persona</button>
+      </div>
     </div>
   </div>
 
