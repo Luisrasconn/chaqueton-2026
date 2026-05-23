@@ -395,6 +395,8 @@ function activateTab(tabId) {
   // ====================================
   document.getElementById('exportPdfBtn').addEventListener('click', () => {
     const visibleReports = document.querySelectorAll('#reportsBody tr');
+    const container = document.getElementById('reportesTable');
+    const origContent = container.innerHTML;
 
     let html = `
       <div style="font-family:sans-serif;padding:20px">
@@ -428,10 +430,7 @@ function activateTab(tabId) {
 
     html += '</tbody></table></div>';
 
-    const wrapper = document.createElement('div');
-    wrapper.innerHTML = html;
-    wrapper.style.cssText = 'position:absolute;left:0;top:0;width:210mm;background:#fff;opacity:0;pointer-events:none;z-index:-1';
-    document.body.appendChild(wrapper);
+    container.innerHTML = html;
 
     const opt = {
       margin: [10, 10, 10, 10],
@@ -440,10 +439,10 @@ function activateTab(tabId) {
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(wrapper).save().then(function () {
-      wrapper.parentNode.removeChild(wrapper);
+    html2pdf().set(opt).from(container).save().then(function () {
+      container.innerHTML = origContent;
     }, function () {
-      setTimeout(function () { if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); }, 2000);
+      container.innerHTML = origContent;
     });
   });
 
