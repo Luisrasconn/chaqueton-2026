@@ -2194,9 +2194,31 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====================================
-  // 11. TRAINING MODULES
+  // 11. TRAINING MODULES & EXAMS
   // ====================================
   const TRAINING_STORAGE_KEY = 'mhub-training';
+  const EXAM_STORAGE_KEY = 'mhub-exams';
+
+  const QUIZZES = {
+    seguridad: {
+      questions: [
+        { q: '¿Qué reduce el uso correcto de EPP hasta en un 60% según la OSHA?', options: ['Tiempo de producción', 'Accidentes graves', 'Costos de mantenimiento', 'Consumo de energía'], correct: 1 },
+        { q: '¿Cuál es el primer paso del procedimiento LOTO?', options: ['Aplicar candado', 'Liberar energía residual', 'Notificar a afectados', 'Verificar cero energía'], correct: 2 },
+        { q: '¿Qué significa el acrónimo PASS en el uso de extintores?', options: ['Push, Aim, Squeeze, Sweep', 'Pull, Aim, Squeeze, Sweep', 'Pull, Activate, Spray, Sweep', 'Push, Activate, Squeeze, Spray'], correct: 1 },
+        { q: '¿Cuál es la primera causa de incapacidad laboral según el módulo?', options: ['Caídas desde altura', 'Golpes por objetos', 'Trastornos musculoesqueléticos', 'Quemaduras químicas'], correct: 2 },
+        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', options: ['12', '14', '16', '18'], correct: 2 }
+      ]
+    },
+    optimizacion: {
+      questions: [
+        { q: '¿Cuál es el primer paso (Seiri) de la metodología 5S?', options: ['Ordenar', 'Clasificar', 'Limpiar', 'Estandarizar'], correct: 1 },
+        { q: '¿Qué significa la palabra japonesa "Kaizen"?', options: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
+        { q: '¿Cuál es el objetivo principal de SMED?', options: ['Aumentar velocidad de producción', 'Reducir cambios de herramienta a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
+        { q: '¿Qué representa un Kanban en el sistema Toyota?', options: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
+        { q: '¿Cuántos desperdicios (Muda) se identifican en el sistema Lean?', options: ['5', '6', '7', '8'], correct: 2 }
+      ]
+    }
+  };
 
   function getTrainingProgress(courseId) {
     const data = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || '{}');
@@ -2210,17 +2232,120 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCourseBadge(courseId);
   }
 
+  function getExamResult(courseId) {
+    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
+    return data[courseId] || null;
+  }
+
+  function saveExamResult(courseId, score, total, passed) {
+    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
+    data[courseId] = { score, total, passed, date: new Date().toISOString() };
+    localStorage.setItem(EXAM_STORAGE_KEY, JSON.stringify(data));
+  }
+
   function updateCourseBadge(courseId) {
-    const completed = getTrainingProgress(courseId);
-    const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
-    const total = list ? list.querySelectorAll('.training-check').length : 0;
-    const done = completed.length;
-    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const exam = getExamResult(courseId);
     const badge = document.getElementById('progress-' + courseId);
     if (badge) {
-      badge.textContent = pct + '%';
-      badge.setAttribute('data-complete', pct);
+      if (exam && exam.passed) {
+        badge.textContent = 'Aprobado';
+        badge.setAttribute('data-complete', '100');
+        badge.style.background = '#16a34a';
+      } else if (exam && !exam.passed) {
+        badge.textContent = 'Reprobado';
+        badge.setAttribute('data-complete', '0');
+        badge.style.background = '#dc2626';
+      } else {
+        const completed = getTrainingProgress(courseId);
+        const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
+        const total = list ? list.querySelectorAll('.training-check').length : 0;
+        const done = completed.length;
+        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+        badge.textContent = pct + '%';
+        badge.setAttribute('data-complete', pct);
+        badge.style.background = '';
+      }
     }
+  }
+
+  function switchTrainingView(courseId, showQuiz) {
+    const content = document.getElementById(courseId + '-content');
+    const quiz = document.getElementById(courseId + '-quiz');
+    if (content) content.style.display = showQuiz ? 'none' : '';
+    if (quiz) quiz.style.display = showQuiz ? '' : 'none';
+  }
+
+  function renderQuiz(courseId) {
+    const container = document.getElementById(courseId + '-questions');
+    const quizData = QUIZZES[courseId];
+    if (!container || !quizData) return;
+
+    container.innerHTML = quizData.questions.map((item, idx) => `
+      <div class="quiz-question" data-idx="${idx}">
+        <div class="quiz-question__text">${idx + 1}. ${item.q}</div>
+        <div class="quiz-question__options">
+          ${item.options.map((opt, oi) => `
+            <label class="quiz-option">
+              <input type="radio" name="q${idx}" value="${oi}">
+              <span class="quiz-option__label">${opt}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function gradeQuiz(courseId) {
+    const quizData = QUIZZES[courseId];
+    const container = document.getElementById(courseId + '-questions');
+    const resultEl = document.getElementById(courseId + '-quiz-result');
+    if (!quizData || !container || !resultEl) return;
+
+    const questions = container.querySelectorAll('.quiz-question');
+    let correct = 0;
+
+    questions.forEach((qEl, idx) => {
+      const selected = qEl.querySelector('input[type="radio"]:checked');
+      const options = qEl.querySelectorAll('.quiz-option');
+      const correctIdx = quizData.questions[idx].correct;
+
+      options.forEach((opt, oi) => {
+        opt.classList.remove('correct', 'wrong');
+        if (oi === correctIdx) opt.classList.add('correct');
+        if (selected && parseInt(selected.value) === oi && oi !== correctIdx) opt.classList.add('wrong');
+      });
+
+      if (selected && parseInt(selected.value) === correctIdx) correct++;
+    });
+
+    const total = questions.length;
+    const score = correct * 2;
+    const maxScore = total * 2;
+    const passed = score >= 7;
+
+    saveExamResult(courseId, score, maxScore, passed);
+
+    resultEl.innerHTML = `
+      <div class="quiz-result__score">${score}/${maxScore}</div>
+      <div style="font-size:1rem;margin-bottom:0.5rem">${correct} de ${total} respuestas correctas</div>
+      <div style="font-weight:700;font-size:1.3rem">${passed ? '&#9989; ¡APROBADO!' : '&#10060; REPROBADO'}</div>
+      ${passed ? '<p style="margin-top:0.5rem;color:#16a34a">Has completado la capacitación exitosamente.</p>' : '<p style="margin-top:0.5rem;color:#dc2626">Debes estudiar el contenido nuevamente y recursar el examen.</p>'}
+    `;
+    resultEl.className = 'quiz-result ' + (passed ? 'passed' : 'failed');
+    resultEl.style.display = '';
+
+    document.getElementById(courseId + '-submit-quiz').style.display = 'none';
+    document.getElementById(courseId + '-back-content').textContent = passed ? '&#8592; Cerrar' : '&#8592; Volver a estudiar';
+    updateCourseBadge(courseId);
+  }
+
+  function resetQuiz(courseId) {
+    const resultEl = document.getElementById(courseId + '-quiz-result');
+    const submitBtn = document.getElementById(courseId + '-submit-quiz');
+    const backBtn = document.getElementById(courseId + '-back-content');
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.className = 'quiz-result'; resultEl.innerHTML = ''; }
+    if (submitBtn) submitBtn.style.display = '';
+    if (backBtn) backBtn.innerHTML = '\u2190 Volver al contenido';
   }
 
   function openTrainingModal(courseId) {
@@ -2228,6 +2353,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById(map[courseId]);
     if (!modal) return;
     modal.classList.add('open');
+
+    switchTrainingView(courseId, false);
+    resetQuiz(courseId);
+    renderQuiz(courseId);
 
     const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
     const checks = list.querySelectorAll('.training-check');
@@ -2249,7 +2378,6 @@ document.addEventListener('DOMContentLoaded', () => {
       cb.addEventListener('change', update);
     });
 
-    // Accordion toggle
     const heads = list.querySelectorAll('.training-head');
     heads.forEach(head => {
       head.removeEventListener('click', toggleDetail);
@@ -2264,7 +2392,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = head.closest('.training-item');
     if (item) {
       const wasOpen = item.classList.contains('open');
-      // Close all others in same list
       const list = item.closest('.training-list');
       if (list) {
         list.querySelectorAll('.training-item.open').forEach(el => el.classList.remove('open'));
@@ -2298,6 +2425,25 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  // Exam buttons
+  function bindExamButton(courseId) {
+    const startBtn = document.getElementById(courseId + '-start-exam');
+    const submitBtn = document.getElementById(courseId + '-submit-quiz');
+    const backBtn = document.getElementById(courseId + '-back-content');
+
+    if (startBtn) startBtn.addEventListener('click', () => switchTrainingView(courseId, true));
+    if (submitBtn) submitBtn.addEventListener('click', () => gradeQuiz(courseId));
+    if (backBtn) backBtn.addEventListener('click', () => {
+      const exam = getExamResult(courseId);
+      if (exam && exam.passed) { closeAllTrainingModals(); return; }
+      switchTrainingView(courseId, false);
+      resetQuiz(courseId);
+    });
+  }
+
+  bindExamButton('seguridad');
+  bindExamButton('optimizacion');
 
   updateCourseBadge('seguridad');
   updateCourseBadge('optimizacion');
