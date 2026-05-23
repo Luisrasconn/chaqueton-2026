@@ -2829,7 +2829,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const EXAMS = {
     modulo4: {
       title: 'Examen de Certificación',
-      certName: 'Módulo 4: Evaluación y Certificado',
+      certName: 'Módulo 3: Evaluación y Certificado',
       questions: [
         { q: '¿Cuál es el propósito principal del Módulo 1?', opts: ['Conocer las áreas y procesos de la planta', 'Operar maquinaria pesada', 'Diseñar nuevos productos', 'Gestionar el personal'], correct: 0 },
         { q: '¿Cuál de las siguientes es un área clave en la planta?', opts: ['Ensamble', 'Marketing', 'Ventas', 'Recursos Humanos'], correct: 0 },
@@ -3081,6 +3081,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveExamHistory(correct, total, passed);
     renderHistory();
+    renderCapacitacionHistory();
     updateCourseBadge(examState.courseId);
   }
 
@@ -3114,12 +3115,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  function renderCapacitacionHistory() {
+    var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+    var list = document.getElementById('capacitacionHistoryList');
+    var empty = document.getElementById('capacitacionHistoryEmpty');
+    if (!list || !empty) return;
+    list.innerHTML = '';
+    var filtered = history.filter(function (h) { return h.courseId === 'capacitacion'; });
+    if (filtered.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    filtered.slice().reverse().forEach(function (h) {
+      var d = new Date(h.date);
+      var dateStr = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      var el = document.createElement('div');
+      el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--card-bg);border-radius:8px;border:1px solid var(--border);font-size:0.85rem';
+      el.innerHTML = '<span>' + dateStr + '</span><span style="font-weight:600;color:' + (h.passed ? '#16a34a' : '#dc2626') + '">' + h.correct + '/' + h.total + ' ' + (h.passed ? '\u2705 Aprobado' : '\u274c Reprobado') + '</span>';
+      list.appendChild(el);
+    });
+  }
+
   function downloadCertPDF() {
     var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
     var lastPassed = history.slice().reverse().find(function (h) { return h.passed; });
     if (!lastPassed) return;
 
-    var courseName = (lastPassed.courseId && EXAMS[lastPassed.courseId]) ? EXAMS[lastPassed.courseId].certName : 'Módulo 4: Evaluación y Certificado';
+    var courseName = (lastPassed.courseId && EXAMS[lastPassed.courseId]) ? EXAMS[lastPassed.courseId].certName : 'Módulo 3: Evaluación y Certificado';
     var name = currentUser && currentUser.uid ? (currentUser.role || 'Operador') : 'Operador';
     var d = new Date(lastPassed.date);
     var dateStr = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -3180,11 +3200,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Render history on load
   renderHistory();
+  renderCapacitacionHistory();
 
   document.getElementById('clearHistoryBtn').addEventListener('click', function () {
     if (confirm('¿Eliminar todo el historial de certificaciones?')) {
       localStorage.removeItem('mhub-exam-history');
       renderHistory();
+      renderCapacitacionHistory();
+    }
+  });
+
+  document.getElementById('capacitacionClearHistoryBtn').addEventListener('click', function () {
+    if (confirm('¿Eliminar el historial de certificaciones de capacitación?')) {
+      var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+      history = history.filter(function (h) { return h.courseId !== 'capacitacion'; });
+      localStorage.setItem('mhub-exam-history', JSON.stringify(history));
+      renderHistory();
+      renderCapacitacionHistory();
     }
   });
 });
