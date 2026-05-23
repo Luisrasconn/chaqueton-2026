@@ -2344,33 +2344,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderQuiz(courseId);
   }
 
-    checks.forEach(cb => {
-      cb.removeEventListener('change', update);
-      cb.addEventListener('change', update);
-    });
-
-    const heads = list.querySelectorAll('.training-head');
-    heads.forEach(head => {
-      head.removeEventListener('click', toggleDetail);
-      head.addEventListener('click', toggleDetail);
-    });
-
-    update();
-  }
-
-  function toggleDetail(e) {
-    const head = e.currentTarget;
-    const item = head.closest('.training-item');
-    if (item) {
-      const wasOpen = item.classList.contains('open');
-      const list = item.closest('.training-list');
-      if (list) {
-        list.querySelectorAll('.training-item.open').forEach(el => el.classList.remove('open'));
-      }
-      if (!wasOpen) item.classList.add('open');
-    }
-  }
-
   function closeAllTrainingModals() {
     document.querySelectorAll('.modal-overlay[id$="training-modal"]').forEach(m => m.classList.remove('open'));
   }
