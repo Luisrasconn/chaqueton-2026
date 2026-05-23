@@ -1574,3 +1574,783 @@ body.dark .auth-tools-msg {
   text-align: center;
   font-size: 0.9rem;
 }
+
+/* ===== AR SECTION ===== */
+.ar-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+}
+
+.ar-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.ar-divider::before,
+.ar-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.ar-scanner {
+  margin-bottom: 1.5rem;
+}
+
+.ar-scanner__video-wrap {
+  position: relative;
+  background: #000;
+  border-radius: var(--radius);
+  overflow: hidden;
+  max-height: 360px;
+}
+
+.ar-scanner__video-wrap video,
+.ar-scanner__video-wrap canvas {
+  width: 100%;
+  display: block;
+}
+
+.ar-scanner__video-wrap canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.ar-scanner__status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+  padding: 0.75rem;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.ar-scanner__icon {
+  font-size: 1.5rem;
+}
+
+.ar-scanner__result {
+  margin-bottom: 0.75rem;
+  text-align: center;
+  font-size: 0.95rem;
+  min-height: 2rem;
+}
+
+.ar-stations__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ar-station-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0.75rem;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.ar-station-btn:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(13,148,136,0.15);
+}
+
+.ar-station-btn__icon {
+  font-size: 1.8rem;
+}
+
+.ar-station-btn__qr {
+  width: 60px;
+  height: 60px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: #fff;
+  padding: 2px;
+}
+
+.clickable-qr {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clickable-qr:hover {
+  transform: scale(1.15);
+  box-shadow: 0 4px 16px rgba(13,148,136,0.3);
+}
+
+.clickable-qr:active {
+  transform: scale(0.95);
+}
+
+.ar-station-btn__name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--primary);
+}
+
+.ar-station-btn__status {
+  font-size: 0.7rem;
+  color: var(--text-light);
+}
+
+.ar-detail {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+
+.ar-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.ar-detail__icon {
+  font-size: 2.5rem;
+}
+
+.ar-detail__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.ar-detail__sub {
+  font-size: 0.85rem;
+  color: var(--text-light);
+}
+
+.ar-detail__info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.ar-detail__stat {
+  font-size: 0.85rem;
+  color: var(--text-light);
+  padding: 0.5rem;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+}
+
+.ar-detail__stat strong {
+  color: var(--primary);
+}
+
+.ar-print-qr {
+  margin-top: 1.5rem;
+}
+
+.ar-print-qr__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.ar-print-qr__item {
+  text-align: center;
+  padding: 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.ar-print-qr__item img {
+  width: 100%;
+  max-width: 100px;
+  display: block;
+  margin: 0 auto 0.35rem;
+}
+
+.ar-print-qr__item span {
+  font-size: 0.75rem;
+  color: var(--text-light);
+}
+
+@media (max-width: 768px) {
+  .ar-detail__info {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== MINI SIMULATION OVERLAY ===== */
+.mini-sim {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.6);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+  padding: 1rem;
+}
+
+.mini-sim__box {
+  background: var(--surface);
+  border-radius: var(--radius);
+  max-width: 480px;
+  width: 100%;
+  padding: 1.5rem;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  animation: modalIn 0.25s ease;
+}
+
+.mini-sim__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.mini-sim__badge {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: rgba(13,148,136,0.1);
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+.mini-sim__step {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.mini-sim__progress {
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.mini-sim__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--cyan));
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.mini-sim__text {
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  min-height: 3rem;
+}
+
+.mini-sim__choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.mini-sim__choice {
+  padding: 0.75rem 1rem;
+  background: var(--surface-alt);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.mini-sim__choice:hover {
+  border-color: var(--accent);
+  background: rgba(13,148,136,0.05);
+}
+
+.mini-sim__choice:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mini-sim__feedback {
+  display: none;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.mini-sim__feedback--correct {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.mini-sim__feedback--wrong {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.mini-sim__feedback--success {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+  text-align: center;
+  font-size: 1.05rem;
+}
+
+.mini-sim__retry {
+  margin-left: 0.5rem;
+  background: var(--danger);
+  color: white;
+  border: none;
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.mini-sim__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+body.dark .mini-sim__feedback--correct {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+body.dark .mini-sim__feedback--wrong {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+body.dark .mini-sim__feedback--success {
+  background: #064e3b;
+  color: #6ee7b7;
+}
+
+/* ===== SIMULATION 2D VISUAL PANEL ===== */
+.sim-visual {
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--border);
+  min-height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.sim-visual__inner {
+  width: 100%;
+  height: 130px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.sim-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-light);
+  font-size: 0.85rem;
+}
+
+.sim-placeholder span:first-child {
+  font-size: 2rem;
+}
+
+/* ---- E1: ENSAMBLE ---- */
+.sim-e1 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.sim-e1__bin {
+  width: 36px;
+  height: 44px;
+  background: #2c3e50;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  position: relative;
+}
+
+.sim-e1__bin-inner {
+  width: 20px;
+  height: 16px;
+  background: #f1c40f;
+  border-radius: 2px;
+  margin-bottom: 4px;
+}
+
+.sim-e1__conveyor {
+  flex: 1;
+  max-width: 120px;
+  height: 48px;
+  background: #566573;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-e1__belt {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, #7f8c8d 0, #7f8c8d 8px, #566573 8px, #566573 16px);
+  animation: simBeltScroll 0.8s linear infinite;
+}
+
+.sim-e1__part {
+  width: 14px;
+  height: 14px;
+  background: #f1c40f;
+  border-radius: 2px;
+  position: absolute;
+  top: 10px;
+}
+
+.sim-e1__part--1 { left: 10px; }
+.sim-e1__part--2 { left: 50px; }
+.sim-e1__part--3 { left: 90px; }
+
+.sim-e1__arm {
+  width: 28px;
+  height: 56px;
+  position: relative;
+}
+
+.sim-e1__arm-base {
+  width: 24px;
+  height: 10px;
+  background: #5d6d7e;
+  border-radius: 2px;
+  position: absolute;
+  bottom: 0;
+}
+
+.sim-e1__arm-seg1 {
+  width: 6px;
+  height: 28px;
+  background: #0d9488;
+  position: absolute;
+  bottom: 10px;
+  left: 9px;
+  border-radius: 2px;
+  transform-origin: bottom center;
+}
+
+.sim-e1__arm-seg2 {
+  width: 5px;
+  height: 18px;
+  background: #2980b9;
+  position: absolute;
+  bottom: 30px;
+  left: 10px;
+  border-radius: 2px;
+  transform-origin: bottom center;
+}
+
+.sim-e1__arm-grip {
+  width: 10px;
+  height: 4px;
+  background: #e74c3c;
+  position: absolute;
+  bottom: 46px;
+  left: 7px;
+  border-radius: 1px;
+}
+
+.sim-e1__table {
+  width: 32px;
+  height: 10px;
+  background: #7f8c8d;
+  border-radius: 2px;
+}
+
+/* ---- E2: SOLDADURA ---- */
+.sim-e2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.sim-e2__spark {
+  font-size: 2rem;
+  filter: drop-shadow(0 0 6px #f39c12);
+}
+
+.sim-e2__piece {
+  width: 36px;
+  height: 24px;
+  background: #95a5a6;
+  border: 2px solid #7f8c8d;
+  border-radius: 3px;
+}
+
+.sim-e2__arm {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sim-e2__arm-body {
+  width: 8px;
+  height: 32px;
+  background: #5d6d7e;
+  border-radius: 3px;
+}
+
+.sim-e2__arm-tip {
+  width: 14px;
+  height: 8px;
+  background: #95a5a6;
+  border-radius: 2px;
+  margin-top: 2px;
+}
+
+.sim-e2__temp {
+  font-size: 0.75rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+/* ---- E3: CONTROL CALIDAD ---- */
+.sim-e3 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.sim-e3__scanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.sim-e3__scan-head {
+  width: 20px;
+  height: 12px;
+  background: #0d9488;
+  border-radius: 3px;
+}
+
+.sim-e3__laser {
+  width: 3px;
+  height: 28px;
+  background: #27ae60;
+  border-radius: 1px;
+  box-shadow: 0 0 6px #27ae60;
+}
+
+.sim-e3__piece {
+  width: 28px;
+  height: 28px;
+  background: #f1c40f;
+  border-radius: 3px;
+  border: 2px solid #d4a017;
+}
+
+.sim-e3__monitor {
+  width: 50px;
+  height: 36px;
+  background: #0a1628;
+  border: 2px solid var(--border);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+}
+
+.sim-e3__monitor-val {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #27ae60;
+}
+
+.sim-e3__monitor-ok {
+  font-size: 0.55rem;
+  font-weight: 600;
+  color: #27ae60;
+}
+
+/* ---- E4: EMPAQUE ---- */
+.sim-e4 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 12px;
+  width: 100%;
+}
+
+.sim-e4__conveyor {
+  width: 90px;
+  height: 36px;
+  background: #566573;
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.sim-e4__belt {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: repeating-linear-gradient(90deg, #7f8c8d 0, #7f8c8d 6px, #566573 6px, #566573 12px);
+  animation: simBeltScroll 0.6s linear infinite;
+}
+
+.sim-e4__box {
+  width: 16px;
+  height: 14px;
+  background: #d4a574;
+  border-radius: 2px;
+  position: absolute;
+  top: 6px;
+}
+
+.sim-e4__box--1 { left: 8px; }
+.sim-e4__box--2 { left: 50px; }
+
+.sim-e4__wrapper {
+  font-size: 1.5rem;
+  color: #8e44ad;
+}
+
+.sim-e4__pallet {
+  width: 36px;
+  height: 48px;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 3px;
+}
+
+.sim-e4__pallet-box {
+  width: 28px;
+  height: 10px;
+  background: #d4a574;
+  border-radius: 2px;
+  opacity: 0;
+}
+
+.sim-e4__pallet-box--1 { opacity: 1; }
+.sim-e4__pallet-box--2 { opacity: 0.7; }
+
+/* ===== 2D ANIMATIONS KEYFRAMES ===== */
+@keyframes simBeltScroll {
+  from { background-position: 0 0; }
+  to { background-position: -16px 0; }
+}
+
+@keyframes simBeltMove {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(30px); }
+}
+
+@keyframes simArmDown {
+  0% { transform: rotate(0); }
+  100% { transform: rotate(25deg); }
+}
+
+@keyframes simArmUp {
+  0% { transform: rotate(25deg); }
+  100% { transform: rotate(-10deg); }
+}
+
+@keyframes simSparkPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.3); opacity: 0.7; }
+}
+
+@keyframes simSparkIntense {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.4) rotate(10deg); }
+  75% { transform: scale(1.2) rotate(-10deg); }
+}
+
+@keyframes simScanSpin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes simLaserSweep {
+  0%, 100% { transform: translateX(-10px); opacity: 0.5; }
+  50% { transform: translateX(10px); opacity: 1; }
+}
+
+@keyframes simBoxMove {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+}
+
+@keyframes simBoxToWrapper {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(40px); opacity: 0.3; }
+}
+
+@keyframes simWrapPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.3); }
+}
+
+@keyframes simPalletStack {
+  0% { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
