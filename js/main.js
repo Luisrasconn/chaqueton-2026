@@ -411,16 +411,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-<<<<<<< HEAD
       const filter = btn.dataset.filter;
       if (filter === 'authorized') return;
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-=======
-      filterBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const filter = btn.dataset.filter;
->>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
       toolCards.forEach(card => {
         card.classList.toggle('tool-card--hidden', filter !== 'all' && card.dataset.status !== filter);
       });
@@ -594,21 +588,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', (e) => {
-<<<<<<< HEAD
       if (e.target === m) {
         if (m.id === 'faceRecModal') stopFaceRecCamera();
         else if (m.id === 'registerPersonModal') stopRegisterCamera();
         else if (m.id === 'personDetailModal') personDetailModal.classList.remove('open');
         else m.classList.remove('open');
       }
-=======
-      if (e.target === m) m.classList.remove('open');
->>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
     });
   });
 
   // ====================================
-<<<<<<< HEAD
   // 14. VR SCENE INIT (trigger A-Frame)
   // ====================================
   function initVRScene() {
@@ -1114,17 +1103,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPersonGrid();
 
   // ====================================
-  // 16. CONVEYOR BELT ANIMATION (AFRAME)
-  // ====================================
-  if (typeof AFRAME !== 'undefined') {
-    AFRAME.registerComponent('conveyor-animation', {
-      tick: function (time, delta) {
-        const items = document.querySelectorAll('.conveyor-item');
-        items.forEach((item, i) => {
-          const pos = item.getAttribute('position');
-          let x = pos.x + (delta * 0.001);
-          if (x > 5) x = -5;
-=======
   // 14. VR COMPONENTS (A-Frame)
   // ====================================
   if (typeof AFRAME !== 'undefined') {
@@ -1753,7 +1731,6 @@ document.addEventListener('DOMContentLoaded', () => {
           const pos = item.getAttribute('position');
           let x = pos.x + (delta * 0.0006);
           if (x > 1) x = -1;
->>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
           item.setAttribute('position', { x, y: pos.y, z: pos.z });
         });
       }
@@ -1763,11 +1740,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const scene = document.querySelector('a-scene');
       if (scene) {
         scene.setAttribute('conveyor-animation', '');
-<<<<<<< HEAD
-      }
-    });
-  }
-=======
         scene.setAttribute('package-animation', '');
       }
     });
@@ -1776,5 +1748,4 @@ document.addEventListener('DOMContentLoaded', () => {
   function initVRScene() {
     // Scene auto-initializes with A-Frame
   }
->>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
 });
