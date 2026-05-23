@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MHub — Manufactura Inteligente</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-  <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.7.0/dist/aframe-extras.min.js"></script>
+  <script src="https://unpkg.com/aframe-event-set-component@3.4.0/dist/aframe-event-set-component.min.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -23,7 +25,7 @@
         <span class="header__logo-text">M<span class="highlight">Hub</span></span>
       </div>
 
-      <nav class="header__nav" id="mainNav">
+      <nav class="header__nav" id="mainNav" aria-label="Navegación principal">
         <button class="nav__tab active" data-tab="inicio">Inicio</button>
         <button class="nav__tab" data-tab="capacitacion">Capacitaci&#243;n</button>
         <button class="nav__tab" data-tab="entrenamiento">Entrenamiento</button>
@@ -46,7 +48,7 @@
   <main class="main container">
 
     <!-- ======== INICIO ======== -->
-    <section class="tab-content active" id="tab-inicio">
+    <section class="tab-content active" id="tab-inicio" role="tabpanel" aria-label="Inicio">
       <div class="hero">
         <h1 class="hero__title">Bienvenido a <span class="highlight">MHub</span></h1>
         <p class="hero__subtitle">Plataforma de manufactura inteligente — capacitaci&#243;n VR, retroalimentaci&#243;n en tiempo real y control de herramientas IoT.</p>
@@ -119,7 +121,7 @@
     </section>
 
     <!-- ======== CAPACITACIÓN ======== -->
-    <section class="tab-content" id="tab-capacitacion">
+    <section class="tab-content" id="tab-capacitacion" role="tabpanel" aria-label="Capacitación">
       <h1 class="section-title">Capacitaci&#243;n — Personal Establecido</h1>
       <p class="section-desc">Programas de actualizaci&#243;n y retroalimentaci&#243;n de desempe&#241;o para operadores con experiencia.</p>
 
@@ -177,7 +179,7 @@
     </section>
 
     <!-- ======== ENTRENAMIENTO ======== -->
-    <section class="tab-content" id="tab-entrenamiento">
+    <section class="tab-content" id="tab-entrenamiento" role="tabpanel" aria-label="Entrenamiento">
       <h1 class="section-title">Entrenamiento — Nuevo Personal</h1>
       <p class="section-desc">Programa de onboarding progresivo para integrar nuevo talento a la planta.</p>
 
@@ -236,7 +238,7 @@
     </section>
 
     <!-- ======== RETROALIMENTACIÓN ======== -->
-    <section class="tab-content" id="tab-retroalimentacion">
+    <section class="tab-content" id="tab-retroalimentacion" role="tabpanel" aria-label="Retroalimentación">
       <div class="retro-header">
         <div>
           <h1 class="section-title">Retroalimentaci&#243;n — L&#237;nea de Producci&#243;n</h1>
@@ -282,7 +284,7 @@
           </div>
           <button type="submit" class="btn btn--primary">&#128228; Enviar reporte</button>
         </form>
-        <div class="form__success" id="formSuccess">&#10003; Reporte enviado correctamente</div>
+        <div class="form__success" id="formSuccess" role="status">&#10003; Reporte enviado correctamente</div>
       </div>
 
       <div class="table-wrapper" id="reportesTable">
@@ -308,7 +310,7 @@
     </section>
 
     <!-- ======== ALMACÉN VIRTUAL ======== -->
-    <section class="tab-content" id="tab-almacen">
+    <section class="tab-content" id="tab-almacen" role="tabpanel" aria-label="Almacén Virtual">
       <h1 class="section-title">Almac&#233;n Virtual</h1>
       <p class="section-desc">Inventario de herramientas en tiempo real detectado por sensores IoT. Escanea el QR de una herramienta para actualizar su estado.</p>
 
@@ -379,78 +381,352 @@
     </section>
 
     <!-- ======== RV / RA ======== -->
-    <section class="tab-content" id="tab-realidadvirtual">
+    <section class="tab-content" id="tab-realidadvirtual" role="tabpanel" aria-label="Realidad Virtual y Aumentada">
       <h1 class="section-title">Realidad Virtual y Aumentada</h1>
-      <p class="section-desc">Explora la planta en 3D. Usa <strong>WASD</strong> para moverte y el <strong>mouse</strong> para mirar alrededor.</p>
+      <p class="section-desc">Explora la recepción de la planta en 3D. Usa <strong>WASD</strong> para moverte y haz <strong>click</strong> en los paneles para ver información.</p>
 
       <div class="vr-container" id="vrContainer">
-        <a-scene embedded loading-screen="enabled: false">
-          <a-sky color="#a8d8ea"></a-sky>
+        <a-scene id="vrScene" embedded loading-screen="enabled: false" shadow="type: pcfsoft">
+          <a-sky color="#1a1a2e"></a-sky>
 
-          <!-- Ground -->
-          <a-plane rotation="-90 0 0" width="80" height="80" color="#5a5a5a" shadow></a-plane>
+          <!-- ===== FLOOR ===== -->
+          <a-plane rotation="-90 0 0" width="30" height="30" color="#3a3a3a" shadow="receive: true"></a-plane>
 
-          <!-- Main Factory Building -->
-          <a-box position="-5 3 -8" width="14" height="6" depth="10" color="#4a6fa5" shadow>
-            <a-box position="0 3.5 5.1" width="10" height="0.2" depth="0.2" color="#f1c40f"></a-box>
-          </a-box>
+          <!-- SAFETY FLOOR LINES -->
+          <a-box position="0 0.02 -1" width="10" height="0.02" depth="0.15" color="#f39c12"></a-box>
+          <a-box position="-5 0.02 -5" width="0.15" height="0.02" depth="8" color="#f39c12"></a-box>
+          <a-box position="5 0.02 -5" width="0.15" height="0.02" depth="8" color="#f39c12"></a-box>
+          <a-box position="0 0.02 -9" width="10" height="0.02" depth="0.15" color="#f39c12"></a-box>
 
-          <!-- Warehouse -->
-          <a-box position="10 2.5 -10" width="8" height="5" depth="8" color="#2d6a4f" shadow>
-            <a-box position="0 3 4.1" width="6" height="0.2" depth="0.2" color="#f1c40f"></a-box>
-          </a-box>
+          <!-- ================================================================ -->
+          <!-- RECEPTION / INFO AREA                                           -->
+          <!-- ================================================================ -->
+          <a-entity id="receptionArea" position="0 0 -2">
+            <!-- MHub logo sign (floating) -->
+            <a-entity position="0 3.2 -0.2">
+              <a-plane width="3" height="0.8" color="#0d9488" radius="0.05"></a-plane>
+              <a-text value="MHub — Modulo 1" position="0 0 0.02" color="white" align="center" width="2.8"></a-text>
+            </a-entity>
+            <a-entity position="0 2.5 -0.2" text="value: Planta de Manufactura Inteligente; color: #bdc3c7; align: center; width: 5;"></a-entity>
 
-          <!-- Office -->
-          <a-box position="-10 1.5 -2" width="5" height="3" depth="5" color="#7f8c8d" shadow>
-            <a-box position="0 1.6 2.6" width="3.5" height="1" depth="0.2" color="#85c1e9"></a-box>
-          </a-box>
+            <!-- Reception desk -->
+            <a-box position="0 0.5 -0.5" width="3" height="0.8" depth="0.6" color="#5d6d7e" shadow>
+              <a-box position="0 -0.3 0.4" width="0.08" height="0.08" depth="0.4" color="#0d9488"></a-box>
+            </a-box>
 
-          <!-- Conveyor Belt -->
-          <a-box position="0 0.3 -6" width="10" height="0.1" depth="1.5" color="#e67e22"></a-box>
-          <a-box class="conveyor-item" position="-4 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#f1c40f"></a-box>
-          <a-box class="conveyor-item" position="-1.5 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#e74c3c"></a-box>
-          <a-box class="conveyor-item" position="1.5 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#3498db"></a-box>
-          <a-box class="conveyor-item" position="4 0.6 -6" width="0.8" height="0.5" depth="0.8" color="#2ecc71"></a-box>
+            <!-- Welcome text floating above desk -->
+            <a-entity position="0 1.5 -1" text="value: BIENVENIDO A LA PLANTA; color: #0d9488; align: center; width: 4; letter-spacing: 2;"></a-entity>
 
-          <!-- Machines -->
-          <a-cylinder position="-6 1.5 -3" radius="1" height="1.5" color="#c0392b" shadow></a-cylinder>
-          <a-cylinder position="6 2 -4" radius="0.8" height="2" color="#8e44ad" shadow></a-cylinder>
+            <!-- Instructions text -->
+            <a-entity position="0 0.8 -1" text="value: Usa WASD para caminar y Click en los paneles para ver informacion; color: #95a5a6; align: center; width: 5;" scale="0.7 0.7 1"></a-entity>
 
-          <!-- Crane / Structure -->
-          <a-box position="-2 4 -12" width="0.3" height="7" depth="0.3" color="#f39c12"></a-box>
-          <a-box position="2 4 -12" width="0.3" height="7" depth="0.3" color="#f39c12"></a-box>
-          <a-box position="0 7.5 -12" width="4.5" height="0.3" depth="0.3" color="#f39c12"></a-box>
+            <!-- INFO PANEL 1: Mapa general (left side) -->
+            <a-entity class="clickable" toggle-panel="title: MAPA DE PLANTA" data-lines="E1: Ensamble|E2: Soldadura|E3: Control de Calidad|E4: Empaque" click-feedback hover-glow="color: #0d9488" data-color="#0d9488" position="-4 2 1.5" look-at="[camera]"
+              animation__hoverenter="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="2" height="1.6" color="#2c3e50" opacity="0.95" shadow></a-plane>
+              <a-plane position="0 0.65 0.01" width="1.8" height="0.3" color="#0d9488" radius="0.05"></a-plane>
+              <a-text value="MAPA DE PLANTA" position="0 0.65 0.02" color="white" align="center" width="1.7"></a-text>
+              <a-text value="E1: Ensamble" position="-0.7 0.2 0.02" color="#85c1e9" align="left" width="1.7"></a-text>
+              <a-text value="E2: Soldadura" position="-0.7 -0.05 0.02" color="#e74c3c" align="left" width="1.7"></a-text>
+              <a-text value="E3: Calidad" position="-0.7 -0.3 0.02" color="#27ae60" align="left" width="1.7"></a-text>
+              <a-text value="E4: Empaque" position="-0.7 -0.55 0.02" color="#8e44ad" align="left" width="1.7"></a-text>
+              <a-plane position="0 -0.75 0.01" width="1.8" height="0.2" color="#34495e" radius="0.05"></a-plane>
+              <a-text value="Click para cerrar" position="0 -0.75 0.02" color="#7f8c8d" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
 
-          <!-- Smokestacks -->
-          <a-cylinder position="-8 5 -6" radius="0.4" height="3" color="#95a5a6"></a-cylinder>
-          <a-cylinder position="8 5 -8" radius="0.4" height="3" color="#95a5a6"></a-cylinder>
+            <!-- INFO PANEL 2: Seguridad (right side) -->
+            <a-entity class="clickable" toggle-panel="title: SEGURIDAD" data-lines="Usa EPP: casco, lentes, guantes y botas|No ingreses a zonas sin autorizacion|Reporta incidentes" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="4 2 1.5" look-at="[camera]"
+              animation__hoverenter="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="2" height="1.6" color="#2c3e50" opacity="0.95" shadow></a-plane>
+              <a-plane position="0 0.65 0.01" width="1.8" height="0.3" color="#e74c3c" radius="0.05"></a-plane>
+              <a-text value="SEGURIDAD" position="0 0.65 0.02" color="white" align="center" width="1.7"></a-text>
+              <a-text value="Usa EPP: casco, lentes," position="-0.7 0.2 0.02" color="#bdc3c7" align="left" width="1.7"></a-text>
+              <a-text value="guantes y botas" position="-0.7 0.0 0.02" color="#bdc3c7" align="left" width="1.7"></a-text>
+              <a-text value="No ingreses a zonas" position="-0.7 -0.2 0.02" color="#bdc3c7" align="left" width="1.7"></a-text>
+              <a-text value="sin autorizacion" position="-0.7 -0.4 0.02" color="#bdc3c7" align="left" width="1.7"></a-text>
+              <a-text value="Reporta incidentes" position="-0.7 -0.55 0.02" color="#f1c40f" align="left" width="1.7"></a-text>
+              <a-plane position="0 -0.75 0.01" width="1.8" height="0.2" color="#34495e" radius="0.05"></a-plane>
+              <a-text value="Click para cerrar" position="0 -0.75 0.02" color="#7f8c8d" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
 
-          <!-- Storage Shelves -->
-          <a-box position="3 0.8 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
-          <a-box position="3 1.6 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
-          <a-box position="3 2.4 -13" width="4" height="0.1" depth="1.5" color="#8B4513"></a-box>
-          <a-box position="1 1.2 -13" width="0.2" height="2.4" depth="1.5" color="#8B4513"></a-box>
-          <a-box position="5 1.2 -13" width="0.2" height="2.4" depth="1.5" color="#8B4513"></a-box>
+          </a-entity>
 
-          <!-- Labels using text -->
-          <a-entity position="0 5 -8" text="value: PLANTA MANUFACTURERA; color: white; align: center; width: 10; letter-spacing: 2;"></a-entity>
-          <a-entity position="-5 6.5 -8" text="value: Produccion; color: #f1c40f; align: center; width: 6;"></a-entity>
-          <a-entity position="10 5.5 -10" text="value: Almacen; color: #2ecc71; align: center; width: 6;"></a-entity>
-          <a-entity position="0 1.5 -4.5" text="value: Banda Transportadora; color: #e67e22; align: center; width: 8;"></a-entity>
+          <!-- ================================================================ -->
+          <!-- STATION 1: ENSAMBLE (left-front)                               -->
+          <!-- ================================================================ -->
+          <a-entity id="station1" position="-4 0 -5">
+            <!-- Floor marker -->
+            <a-plane rotation="-90 0 0" width="3.5" height="3.5" position="0 -0.03 0" color="#2980b9" material="transparent: true; opacity: 0.1"></a-plane>
+            <a-box position="0 0.02 1.7" width="3.5" height="0.02" depth="0.1" color="#2980b9"></a-box>
+            <a-box position="0 0.02 -1.7" width="3.5" height="0.02" depth="0.1" color="#2980b9"></a-box>
+            <a-box position="1.7 0.02 0" width="0.1" height="0.02" depth="3.5" color="#2980b9"></a-box>
 
-          <!-- Lights -->
-          <a-light type="ambient" color="#fff" intensity="0.6"></a-light>
-          <a-light type="directional" color="#fff" intensity="0.8" position="10 15 10"></a-light>
+            <!-- Station sign -->
+            <a-entity position="0 3 0" text="value: E1 - ENSAMBLE; color: #85c1e9; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
-          <!-- Camera with WASD controls -->
-          <a-entity camera position="0 1.6 12" wasd-controls look-controls></a-entity>
+            <!-- Conveyor belt -->
+            <a-box position="0 0.2 0.5" width="3" height="0.15" depth="1" color="#566573" shadow></a-box>
+            <a-box class="conveyor-item" position="-1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#f1c40f"></a-box>
+            <a-box class="conveyor-item" position="0 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#e74c3c"></a-box>
+            <a-box class="conveyor-item" position="1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#3498db"></a-box>
+
+            <!-- Conveyor legs -->
+            <a-box position="-1.3 -0.1 0" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
+            <a-box position="-1.3 -0.1 1" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
+            <a-box position="1.3 -0.1 0" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
+            <a-box position="1.3 -0.1 1" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
+
+            <!-- Robotic arm (built with primitives) -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="-0.5 0 -0.3"
+              animation__hoverenter="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <!-- Base -->
+              <a-cylinder position="0 0.6 0" radius="0.35" height="0.4" color="#5d6d7e" shadow></a-cylinder>
+              <!-- Rotating base -->
+              <a-cylinder position="0 0.9 0" radius="0.2" height="0.2" color="#34495e"
+                animation="property: rotation; to: 0 360 0; dur: 4000; loop: true; easing: linear"></a-cylinder>
+              <!-- Arm segment 1 -->
+              <a-box position="0 1.3 0.35" width="0.1" height="0.6" depth="0.1" color="#0d9488"
+                animation="property: rotation; to: -30 0 0; dur: 2000; dir: alternate; loop: true; easing: easeInOutQuad"></a-box>
+              <!-- Arm segment 2 -->
+              <a-box position="0.1 1.6 0.5" width="0.08" height="0.4" depth="0.08" color="#2980b9"
+                animation="property: rotation; to: 0 0 30; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-box>
+              <!-- Gripper -->
+              <a-box position="0.15 1.9 0.5" width="0.12" height="0.05" depth="0.05" color="#e74c3c"></a-box>
+              <a-box position="0.05 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
+              <a-box position="0.25 1.9 0.55" width="0.02" height="0.08" depth="0.02" color="#f1c40f"></a-box>
+            </a-entity>
+            <!-- Arm glow ring -->
+            <a-ring position="-0.5 0.02 -0.3" radius-inner="0.6" radius-outer="0.68" color="#2980b9" material="transparent: true; opacity: 0.25"
+              animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
+            <a-cylinder position="-0.5 0.5 -0.3" radius="0.4" height="0.2" color="#5d6d7e" shadow></a-cylinder>
+
+            <!-- Parts bin -->
+            <a-box position="1.2 0.3 -0.5" width="0.6" height="0.5" depth="0.6" color="#2c3e50">
+              <a-box position="0 0.3 0" width="0.4" height="0.1" depth="0.4" color="#f1c40f"></a-box>
+            </a-box>
+
+            <!-- Info panel station 1 -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 2 -1.2"
+              animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="1.8" height="0.6" color="#2c3e50" opacity="0.9" radius="0.08" shadow></a-plane>
+              <a-text value="Click: Datos de Ensamble" position="0 0 0.02" color="#85c1e9" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <!-- ================================================================ -->
+          <!-- STATION 2: SOLDADURA (right-front)                             -->
+          <!-- ================================================================ -->
+          <a-entity id="station2" position="4 0 -5">
+            <!-- Floor marker -->
+            <a-plane rotation="-90 0 0" width="3.5" height="3.5" position="0 -0.03 0" color="#e74c3c" material="transparent: true; opacity: 0.1"></a-plane>
+            <a-box position="0 0.02 1.7" width="3.5" height="0.02" depth="0.1" color="#e74c3c"></a-box>
+            <a-box position="0 0.02 -1.7" width="3.5" height="0.02" depth="0.1" color="#e74c3c"></a-box>
+            <a-box position="1.7 0.02 0" width="0.1" height="0.02" depth="3.5" color="#e74c3c"></a-box>
+
+            <!-- Station sign -->
+            <a-entity position="0 3 0" text="value: E2 - SOLDADURA; color: #e74c3c; align: center; width: 3; letter-spacing: 2;"></a-entity>
+
+            <!-- Welding robot body -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 2 - SOLDADURA" data-lines="Temp. arco: 850°C|Electrodos restantes: 12/24|Soldaduras/hora: 48|Operador: Maria" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 0.7 -0.3"
+              animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-box width="1.2" height="1.2" depth="0.8" color="#5d6d7e" shadow>
+                <a-box position="0 0.7 0.5" width="0.3" height="0.3" depth="0.3" color="#34495e"></a-box>
+              </a-box>
+            </a-entity>
+            <!-- Welding robot glow ring -->
+            <a-ring position="0 0.02 -0.3" radius-inner="0.8" radius-outer="0.88" color="#e74c3c" material="transparent: true; opacity: 0.25"
+              animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
+
+            <!-- Welding arm -->
+            <a-box position="0.6 1 -0.3" width="0.1" height="0.6" depth="0.1" color="#95a5a6" animation="property: rotation; to: 0 0 -45; dur: 2000; dir: alternate; loop: true; easing: easeInOutQuad"></a-box>
+            <a-box position="0.8 1.4 -0.3" width="0.3" height="0.1" depth="0.1" color="#e74c3c"></a-box>
+
+            <!-- Welding spark (glowing sphere) -->
+            <a-sphere id="weldingSpark" position="0.9 0.9 -0.3" radius="0.08" color="#f39c12"
+              animation="property: material.color; to: #f1c40f; dur: 100; dir: alternate; loop: true"
+              animation__glow="property: scale; to: 1.5 1.5 1.5; dur: 150; dir: alternate; loop: true"
+              animation__move="property: position; to: 0.9 0.7 -0.3; dur: 500; dir: alternate; loop: true"></a-sphere>
+
+            <!-- Workpiece table -->
+            <a-box position="0.9 0.2 -0.3" width="0.5" height="0.1" depth="0.5" color="#7f8c8d"></a-box>
+            <a-box position="0.9 0.1 -0.3" width="0.5" height="0.1" depth="0.5" color="#566573"></a-box>
+
+            <!-- Info panel station 2 -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 2 - SOLDADURA" data-lines="Temp. arco: 850°C|Electrodos restantes: 12/24|Soldaduras/hora: 48|Operador: Maria" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 2 -1.2"
+              animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="1.8" height="0.6" color="#2c3e50" opacity="0.9" radius="0.08" shadow></a-plane>
+              <a-text value="Click: Datos de Soldadura" position="0 0 0.02" color="#e74c3c" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <!-- ================================================================ -->
+          <!-- STATION 3: CONTROL DE CALIDAD (left-back)                      -->
+          <!-- ================================================================ -->
+          <a-entity id="station3" position="-4 0 -10">
+            <!-- Floor marker -->
+            <a-plane rotation="-90 0 0" width="3.5" height="3.5" position="0 -0.03 0" color="#27ae60" material="transparent: true; opacity: 0.1"></a-plane>
+            <a-box position="0 0.02 1.7" width="3.5" height="0.02" depth="0.1" color="#27ae60"></a-box>
+            <a-box position="0 0.02 -1.7" width="3.5" height="0.02" depth="0.1" color="#27ae60"></a-box>
+            <a-box position="1.7 0.02 0" width="0.1" height="0.02" depth="3.5" color="#27ae60"></a-box>
+
+            <!-- Station sign -->
+            <a-entity position="0 3 0" text="value: E3 - CONTROL CALIDAD; color: #27ae60; align: center; width: 3; letter-spacing: 2;"></a-entity>
+
+            <!-- Scanner base -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 3 - CALIDAD" data-lines="Tasa aprobacion: 98.7%|Piezas inspeccionadas: 3,450|Defectos detectados: 45|Inspector: Lucia" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 0 0"
+              animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-cylinder position="0 0.4 0" radius="0.4" height="0.6" color="#5d6d7e" shadow></a-cylinder>
+              <!-- Scanner rotating head -->
+              <a-cylinder id="scannerHead" position="0 0.8 0" radius="0.3" height="0.2" color="#0d9488"
+                animation="property: rotation; to: 0 360 0; dur: 3000; loop: true; easing: linear"></a-cylinder>
+              <!-- Scanner laser beam -->
+              <a-cylinder position="0 0.3 0.4" radius="0.02" height="0.4" color="#27ae60"
+                animation="property: material.color; to: #2ecc71; dur: 200; dir: alternate; loop: true"></a-cylinder>
+            </a-entity>
+            <!-- Scanner glow ring -->
+            <a-ring position="0 0.02 0" radius-inner="0.55" radius-outer="0.63" color="#27ae60" material="transparent: true; opacity: 0.25"
+              animation="property: material.opacity; to: 0.5; dur: 1500; dir: alternate; loop: true; easing: easeInOutQuad"></a-ring>
+
+            <!-- Inspection camera on tripod -->
+            <a-box position="-0.8 0.5 -0.5" width="0.08" height="0.8" depth="0.08" color="#7f8c8d"></a-box>
+            <a-box position="-0.8 0.9 -0.5" width="0.2" height="0.15" depth="0.1" color="#2c3e50"></a-box>
+            <a-sphere position="-0.8 0.9 -0.45" radius="0.04" color="#0d9488" animation="property: material.color; to: #2ecc71; dur: 500; dir: alternate; loop: true"></a-sphere>
+
+            <!-- Monitor/display -->
+            <a-plane position="0.8 0.8 -0.3" width="0.6" height="0.5" color="#0a1628"></a-plane>
+            <a-text value="98.7%" position="0.8 0.9 -0.2" color="#27ae60" align="center" width="0.5" scale="0.5 0.5 1"></a-text>
+            <a-text value="OK" position="0.8 0.7 -0.2" color="#27ae60" align="center" width="0.5" scale="0.6 0.6 1"></a-text>
+
+            <!-- Product being scanned -->
+            <a-box position="0 0.2 0.4" width="0.3" height="0.3" depth="0.3" color="#f1c40f" shadow></a-box>
+
+            <!-- Info panel station 3 -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 3 - CALIDAD" data-lines="Tasa aprobacion: 98.7%|Piezas inspeccionadas: 3,450|Defectos detectados: 45|Inspector: Lucia" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 2 -1.2"
+              animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="1.8" height="0.6" color="#2c3e50" opacity="0.9" radius="0.08" shadow></a-plane>
+              <a-text value="Click: Datos de Calidad" position="0 0 0.02" color="#27ae60" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <!-- ================================================================ -->
+          <!-- STATION 4: EMPAQUE (right-back)                                -->
+          <!-- ================================================================ -->
+          <a-entity id="station4" position="4 0 -10">
+            <!-- Floor marker -->
+            <a-plane rotation="-90 0 0" width="3.5" height="3.5" position="0 -0.03 0" color="#8e44ad" material="transparent: true; opacity: 0.1"></a-plane>
+            <a-box position="0 0.02 1.7" width="3.5" height="0.02" depth="0.1" color="#8e44ad"></a-box>
+            <a-box position="0 0.02 -1.7" width="3.5" height="0.02" depth="0.1" color="#8e44ad"></a-box>
+            <a-box position="1.7 0.02 0" width="0.1" height="0.02" depth="3.5" color="#8e44ad"></a-box>
+
+            <!-- Station sign -->
+            <a-entity position="0 3 0" text="value: E4 - EMPAQUE; color: #8e44ad; align: center; width: 3; letter-spacing: 2;"></a-entity>
+
+            <!-- Packaging conveyor -->
+            <a-box position="0 0.2 0.5" width="2.5" height="0.15" depth="1" color="#566573" shadow></a-box>
+            <a-box class="package-item" position="-0.8 0.5 0.5" width="0.35" height="0.35" depth="0.35" color="#d4a574"></a-box>
+            <a-box class="package-item" position="0 0.5 0.5" width="0.35" height="0.35" depth="0.35" color="#d4a574"></a-box>
+            <a-box class="package-item" position="0.8 0.5 0.5" width="0.35" height="0.35" depth="0.35" color="#d4a574"></a-box>
+
+            <!-- Pallet with stacked boxes -->
+            <a-box position="-0.8 0.3 -0.5" width="0.8" height="0.1" depth="0.8" color="#8B4513" shadow></a-box>
+            <a-box position="-0.8 0.6 -0.5" width="0.6" height="0.3" depth="0.6" color="#d4a574"></a-box>
+            <a-box position="-0.8 0.9 -0.5" width="0.6" height="0.3" depth="0.6" color="#d4a574"></a-box>
+            <a-box position="-0.8 1.2 -0.5" width="0.4" height="0.3" depth="0.4" color="#d4a574"></a-box>
+
+            <!-- Shrink wrap machine -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 4 - EMPAQUE" data-lines="Unidades empacadas: 3,210 cajas|Pallets preparados: 12/24|Peso total: 4,815 kg|Operador: Jose" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0.8 0.4 -0.5"
+              animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-box width="0.5" height="0.6" depth="0.5" color="#5d6d7e"></a-box>
+              <a-cylinder position="0 0.4 0" radius="0.15" height="0.1" color="#0d9488"></a-cylinder>
+            </a-entity>
+
+            <!-- Tape dispenser -->
+            <a-box position="0.5 0.1 0" width="0.3" height="0.05" depth="0.15" color="#2c3e50"></a-box>
+            <a-torus position="0.5 0.15 0" radius="0.08" radius-tubular="0.02" color="#95a5a6" rotation="90 0 0"></a-torus>
+
+            <!-- Info panel station 4 -->
+            <a-entity class="clickable" toggle-panel="title: ESTACION 4 - EMPAQUE" data-lines="Unidades empacadas: 3,210 cajas|Pallets preparados: 12/24|Peso total: 4,815 kg|Operador: Jose" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0 2 -1.2"
+              animation__hoverenter="property: scale; to: 1.15 1.15 1.15; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-plane width="1.8" height="0.6" color="#2c3e50" opacity="0.9" radius="0.08" shadow></a-plane>
+              <a-text value="Click: Datos de Empaque" position="0 0 0.02" color="#8e44ad" align="center" width="1.7" scale="0.6 0.6 1"></a-text>
+            </a-entity>
+          </a-entity>
+
+          <!-- ================================================================ -->
+          <!-- FACTORY BACKGROUND / DECORATIONS                               -->
+          <!-- ================================================================ -->
+          <!-- Factory background structures -->
+          <a-box position="-6 1.5 -16" width="4" height="3" depth="0.3" color="#566573" shadow></a-box>
+          <a-box position="6 1.5 -16" width="4" height="3" depth="0.3" color="#566573" shadow></a-box>
+          <a-box position="0 1.5 -16" width="4" height="3" depth="0.3" color="#6c7a89" shadow></a-box>
+
+          <!-- Back wall -->
+          <a-box position="0 2 -14" width="14" height="4" depth="0.3" color="#6c7a89" shadow></a-box>
+
+          <!-- Overhead industrial lights -->
+          <a-cone position="-3 3.5 -4" radius-bottom="0.15" radius-top="0.05" height="0.2" color="#7f8c8d"></a-cone>
+          <a-sphere position="-3 3.3 -4" radius="0.12" color="#f9e79f" animation="property: material.color; to: #f4d03f; dur: 3000; dir: alternate; loop: true"></a-sphere>
+          <a-cone position="3 3.5 -4" radius-bottom="0.15" radius-top="0.05" height="0.2" color="#7f8c8d"></a-cone>
+          <a-sphere position="3 3.3 -4" radius="0.12" color="#f9e79f" animation="property: material.color; to: #f4d03f; dur: 3000; dir: alternate; loop: true"></a-sphere>
+          <a-cone position="-3 3.5 -9" radius-bottom="0.15" radius-top="0.05" height="0.2" color="#7f8c8d"></a-cone>
+          <a-sphere position="-3 3.3 -9" radius="0.12" color="#f9e79f" animation="property: material.color; to: #f4d03f; dur: 3000; dir: alternate; loop: true"></a-sphere>
+          <a-cone position="3 3.5 -9" radius-bottom="0.15" radius-top="0.05" height="0.2" color="#7f8c8d"></a-cone>
+          <a-sphere position="3 3.3 -9" radius="0.12" color="#f9e79f" animation="property: material.color; to: #f4d03f; dur: 3000; dir: alternate; loop: true"></a-sphere>
+
+          <!-- Overhead cables / wires -->
+          <a-box position="-4 3.2 -4" width="0.02" height="0.02" depth="4" color="#2c3e50"></a-box>
+          <a-box position="4 3.2 -4" width="0.02" height="0.02" depth="4" color="#2c3e50"></a-box>
+          <a-box position="-4 3.2 -9" width="0.02" height="0.02" depth="4" color="#2c3e50"></a-box>
+          <a-box position="4 3.2 -9" width="0.02" height="0.02" depth="4" color="#2c3e50"></a-box>
+
+          <!-- Forklift (decorative, far back) -->
+          <a-box position="0 0.3 -13" width="0.8" height="0.3" depth="0.4" color="#e74c3c"></a-box>
+          <a-box position="0 0.5 -12.8" width="0.6" height="0.4" depth="0.3" color="#c0392b"></a-box>
+          <a-box position="0 0.7 -12.8" width="0.1" height="0.3" depth="0.3" color="#7f8c8d"></a-box>
+          <a-box position="-0.3 0 -12.7" width="0.05" height="0.3" depth="0.05" color="#2c3e50"></a-box>
+          <a-box position="0.3 0 -12.7" width="0.05" height="0.3" depth="0.05" color="#2c3e50"></a-box>
+          <a-box position="-0.3 0 -13.3" width="0.05" height="0.3" depth="0.05" color="#2c3e50"></a-box>
+          <a-box position="0.3 0 -13.3" width="0.05" height="0.3" depth="0.05" color="#2c3e50"></a-box>
+
+          <!-- ================================================================ -->
+          <!-- LIGHTING                                                        -->
+          <!-- ================================================================ -->
+          <a-light type="ambient" color="#404060" intensity="0.5"></a-light>
+          <a-light type="directional" color="#fff" intensity="0.9" position="5 15 5" shadow="cameraLeft: -10; cameraRight: 10; cameraTop: 10; cameraBottom: -10; mapSizeWidth: 2048; mapSizeHeight: 2048"></a-light>
+          <a-light type="point" color="#f9e79f" intensity="0.4" position="-3 4 -4"></a-light>
+          <a-light type="point" color="#f9e79f" intensity="0.4" position="3 4 -4"></a-light>
+          <a-light type="point" color="#f9e79f" intensity="0.4" position="-3 4 -9"></a-light>
+          <a-light type="point" color="#f9e79f" intensity="0.4" position="3 4 -9"></a-light>
+
+          <!-- CAMERA RIG -->
+          <a-entity id="playerRig" position="0 1.6 6" movement-controls="speed: 0.10">
+            <a-entity id="playerCamera" camera look-controls>
+              <a-entity cursor="rayOrigin: mouse; fuse: false" raycaster="objects: .clickable; far: 20">
+                <a-ring position="0 0 -1.5" radius-inner="0.003" radius-outer="0.008" color="#0d9488" material="transparent: true; opacity: 0.8"
+                  animation__hoverenter="property: scale; to: 2.5 2.5 2.5; startEvents: mouseenter; dur: 200; easing: easeOutQuad"
+                  animation__hoverleave="property: scale; to: 1 1 1; startEvents: mouseleave; dur: 200; easing: easeOutQuad"
+                  animation__pulse="property: scale; to: 1.3 1.3 1.3; dur: 1200; dir: alternate; loop: true; easing: easeInOutQuad">
+                </a-ring>
+              </a-entity>
+            </a-entity>
+          </a-entity>
         </a-scene>
       </div>
 
       <div class="vr-controls">
         <p class="section-desc" style="margin-bottom:0">
-          &#9654; Arrastra con el mouse para mirar &bull; <strong>WASD</strong> para moverte &bull;
-          P&#225;rpadea si sientes mareo (simulaci&#243;n VR suave)
+          &#9654; <strong>WASD</strong> para moverte &bull; <strong>Click</strong> en paneles para ver información &bull;
+          Arrastra con el mouse para mirar alrededor
         </p>
       </div>
     </section>
@@ -460,7 +736,7 @@
   <!-- ===== LOGIN MODAL ===== -->
   <div class="modal-overlay" id="loginModal">
     <div class="modal">
-      <button class="modal__close" id="loginModalClose">&times;</button>
+      <button class="modal__close" id="loginModalClose" aria-label="Cerrar modal de inicio de sesión">&times;</button>
       <h2 class="section-title">Iniciar sesi&#243;n</h2>
       <p style="color:var(--text-light);margin-bottom:1.5rem">Selecciona un rol para ingresar al panel de control.</p>
       <div class="modal__roles">
@@ -482,7 +758,7 @@
   <!-- ===== QR MODAL ===== -->
   <div class="modal-overlay" id="qrModal">
     <div class="modal modal--wide">
-      <button class="modal__close" id="qrModalClose">&times;</button>
+      <button class="modal__close" id="qrModalClose" aria-label="Cerrar escáner QR">&times;</button>
       <h2 class="section-title">Escanear c&#243;digo QR</h2>
       <p style="color:var(--text-light);margin-bottom:1rem">Coloca el c&#243;digo QR de la herramienta frente a la c&#225;mara.</p>
       <div class="qr-reader">

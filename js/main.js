@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${r.desc}</td>
         <td>${r.operator}</td>
         <td><span class="badge badge--${r.status === 'Resuelto' ? 'success' : 'info'}">${r.status}</span></td>
-        <td><button class="delete-btn" data-id="${r.id}">&times;</button></td>
+        <td><button class="delete-btn" data-id="${r.id}" aria-label="Eliminar reporte de ${r.area}">&times;</button></td>
       `;
       reportsBody.appendChild(tr);
     });
@@ -592,27 +592,232 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ====================================
-  // 14. VR SCENE INIT (trigger A-Frame)
-  // ====================================
-  function initVRScene() {
-    const container = document.getElementById('vrContainer');
-    if (container && !container.querySelector('a-scene')) {
-      // A-Frame auto-initializes when <a-scene> is in the DOM
-      // We just ensure the container exists and is visible
-    }
-  }
-
-  // ====================================
-  // 15. CONVEYOR BELT ANIMATION (AFRAME)
+  // 14. VR COMPONENTS (A-Frame)
   // ====================================
   if (typeof AFRAME !== 'undefined') {
+
+    // Click feedback: pulse + flash
+    AFRAME.registerComponent('click-feedback', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          const el = this.el;
+          // Get current scale at click time
+          const scale = el.getComputedAttribute('scale') || { x: 1, y: 1, z: 1 };
+          el.setAttribute('scale', {
+            x: scale.x * 0.75,
+            y: scale.y * 0.75,
+            z: scale.z * 0.75
+          });
+          // Flash emissive
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            const origEmissive = m.getAttribute('material').emissive || '#000000';
+            m.setAttribute('material', 'emissive', '#f1c40f');
+            m.setAttribute('material', 'emissiveIntensity', '0.6');
+            setTimeout(() => {
+              m.setAttribute('material', 'emissive', origEmissive);
+              m.setAttribute('material', 'emissiveIntensity', '0');
+            }, 200);
+          });
+          setTimeout(() => {
+            el.setAttribute('scale', scale);
+          }, 300);
+        });
+      }
+    });
+
+    // Hover emissive: adds glow on mouseenter/mouseleave for an entity and its children
+    AFRAME.registerComponent('hover-glow', {
+      schema: {
+        color: { type: 'color', default: '#0d9488' },
+        intensity: { type: 'number', default: 0.4 }
+      },
+      init: function () {
+        const el = this.el;
+        const color = this.data.color;
+        const intensity = this.data.intensity;
+
+        el.addEventListener('mouseenter', () => {
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            m.setAttribute('material', 'emissive', color);
+            m.setAttribute('material', 'emissiveIntensity', intensity);
+          });
+        });
+        el.addEventListener('mouseleave', () => {
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            m.setAttribute('material', 'emissive', '#000000');
+            m.setAttribute('material', 'emissiveIntensity', 0);
+          });
+        });
+      }
+    });
+
+    // Toggle panel: spawn a floating panel near the player
+    AFRAME.registerComponent('toggle-panel', {
+      schema: {
+        title: { type: 'string', default: 'Panel' }
+      },
+      init: function () {
+        this.panelEl = null;
+        this.el.addEventListener('click', () => {
+          this.toggle();
+        });
+      },
+      toggle: function () {
+        if (this.panelEl) {
+          this.close();
+        } else {
+          this.open();
+        }
+      },
+      open: function () {
+        const rig = document.getElementById('playerRig');
+        if (!rig) return;
+
+        const rigPos = rig.getAttribute('position');
+        const rigRot = rig.getAttribute('rotation');
+
+        // Create panel 2m in front of player
+        const panel = document.createElement('a-entity');
+        panel.setAttribute('class', 'clickable');
+        panel.setAttribute('position', { x: rigPos.x, y: rigPos.y + 0.2, z: rigPos.z - 2.5 });
+        panel.setAttribute('look-at', '#playerCamera');
+        panel.setAttribute('scale', '0 0 0');
+
+        const bg = document.createElement('a-plane');
+        bg.setAttribute('width', '2.5');
+        bg.setAttribute('height', '2');
+        bg.setAttribute('color', '#1a1a2e');
+        bg.setAttribute('opacity', '0.95');
+        bg.setAttribute('shadow', '');
+        bg.setAttribute('radius', '0.08');
+
+        const panelColor = this.el.getAttribute('data-color') || '#0d9488';
+
+        const header = document.createElement('a-plane');
+        header.setAttribute('position', '0 0.85 0.01');
+        header.setAttribute('width', '2.3');
+        header.setAttribute('height', '0.3');
+        header.setAttribute('color', panelColor);
+        header.setAttribute('radius', '0.05');
+
+        const titleText = document.createElement('a-text');
+        const titleAttr = this.data.title || 'INFORMACION';
+        titleText.setAttribute('value', titleAttr);
+        titleText.setAttribute('position', '0 0.85 0.02');
+        titleText.setAttribute('color', 'white');
+        titleText.setAttribute('align', 'center');
+        titleText.setAttribute('width', '2.2');
+
+        panel.appendChild(bg);
+        panel.appendChild(header);
+        panel.appendChild(titleText);
+
+        // Parse data-lines attribute manually (| separated, since A-Frame array schema splits on commas)
+        const raw = this.el.getAttribute('data-lines') || '';
+        const lines = raw.split('|').map(l => l.trim()).filter(l => l);
+
+        lines.forEach((line, i) => {
+          const yPos = 0.55 - (i * 0.25);
+          const lineText = document.createElement('a-text');
+          lineText.setAttribute('value', line);
+          lineText.setAttribute('position', `-0.8 ${yPos} 0.02`);
+          lineText.setAttribute('color', '#bdc3c7');
+          lineText.setAttribute('align', 'left');
+          lineText.setAttribute('width', '2.2');
+          lineText.setAttribute('scale', '0.85 0.85 1');
+          panel.appendChild(lineText);
+        });
+
+        // Close button text
+        const closeText = document.createElement('a-text');
+        closeText.setAttribute('value', 'Click para cerrar');
+        closeText.setAttribute('position', '0 -0.85 0.02');
+        closeText.setAttribute('color', '#7f8c8d');
+        closeText.setAttribute('align', 'center');
+        closeText.setAttribute('width', '2.2');
+        closeText.setAttribute('scale', '0.55 0.55 1');
+
+        // Close plane
+        const closeBg = document.createElement('a-plane');
+        closeBg.setAttribute('position', '0 -0.85 0.01');
+        closeBg.setAttribute('width', '2.3');
+        closeBg.setAttribute('height', '0.2');
+        closeBg.setAttribute('color', '#34495e');
+        closeBg.setAttribute('radius', '0.05');
+
+        panel.appendChild(closeBg);
+        panel.appendChild(closeText);
+
+        // Make the panel clickable to close (using raycaster)
+        panel.setAttribute('class', 'clickable');
+        panel.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.close();
+        });
+
+        // Entrance animation
+        panel.setAttribute('animation', {
+          property: 'scale',
+          from: '0 0 0',
+          to: '1 1 1',
+          dur: 300,
+          easing: 'easeOutBack'
+        });
+
+        document.querySelector('a-scene').appendChild(panel);
+
+        this.panelEl = panel;
+
+        // Keep reference for cleanup
+        this.el.emit('panel-opened', { panel: panel });
+      },
+      close: function () {
+        if (!this.panelEl) return;
+
+        const panel = this.panelEl;
+
+        // Exit animation then remove
+        panel.setAttribute('animation', {
+          property: 'scale',
+          from: '1 1 1',
+          to: '0 0 0',
+          dur: 200,
+          easing: 'easeInQuad'
+        });
+
+        setTimeout(() => {
+          if (panel.parentNode) panel.parentNode.removeChild(panel);
+        }, 250);
+
+        this.panelEl = null;
+        this.el.emit('panel-closed', {});
+      }
+    });
+
+    // Conveyor animation (station 1)
     AFRAME.registerComponent('conveyor-animation', {
       tick: function (time, delta) {
         const items = document.querySelectorAll('.conveyor-item');
-        items.forEach((item, i) => {
+        items.forEach((item) => {
           const pos = item.getAttribute('position');
-          let x = pos.x + (delta * 0.001);
-          if (x > 5) x = -5;
+          let x = pos.x + (delta * 0.0008);
+          if (x > 1.3) x = -1.3;
+          item.setAttribute('position', { x, y: pos.y, z: pos.z });
+        });
+      }
+    });
+
+    // Package animation (station 4)
+    AFRAME.registerComponent('package-animation', {
+      tick: function (time, delta) {
+        const items = document.querySelectorAll('.package-item');
+        items.forEach((item) => {
+          const pos = item.getAttribute('position');
+          let x = pos.x + (delta * 0.0006);
+          if (x > 1) x = -1;
           item.setAttribute('position', { x, y: pos.y, z: pos.z });
         });
       }
@@ -622,7 +827,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const scene = document.querySelector('a-scene');
       if (scene) {
         scene.setAttribute('conveyor-animation', '');
+        scene.setAttribute('package-animation', '');
       }
     });
+  }
+
+  function initVRScene() {
+    // Scene auto-initializes with A-Frame
   }
 });
