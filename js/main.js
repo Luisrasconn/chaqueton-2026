@@ -587,6 +587,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!qrJsAvailable) {
       qrResult.innerHTML = '<p style="color:var(--warning)">Biblioteca QR no disponible. Ingresa el ID manualmente abajo.</p>';
     }
+    if (!navigator.mediaDevices) {
+      qrResult.innerHTML = '<p style="color:var(--danger)">La c\u00e1mara solo funciona con HTTPS. Ingresa el ID manualmente.</p>';
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         qrStream = stream;
@@ -914,6 +918,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function startFaceRecCamera() {
     faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Iniciando c&#225;mara...</span>';
     faceRecCaptureBtn.disabled = true;
+    if (!navigator.mediaDevices) {
+      faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>La c&#225;mara solo funciona con HTTPS</span>';
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         faceRecStream = stream;
@@ -1019,6 +1027,10 @@ document.addEventListener('DOMContentLoaded', () => {
     pendingPersonData = null;
     registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Iniciando c&#225;mara...</span>';
     registerFaceCaptureBtn.disabled = true;
+    if (!navigator.mediaDevices) {
+      registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>La c&#225;mara solo funciona con HTTPS</span>';
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         registerStream = stream;
@@ -2397,6 +2409,10 @@ document.addEventListener('DOMContentLoaded', () => {
     arStatus.innerHTML = '<span class="ar-scanner__icon">\uD83D\uDCA1</span><span>Iniciando cámara...</span>';
     arScanner.style.display = '';
     arStations.style.display = 'none';
+    if (!navigator.mediaDevices) {
+      arStatus.innerHTML = '<span class="ar-scanner__icon">\u274C</span><span>La c\u00e1mara solo funciona con HTTPS</span>';
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } })
       .then(stream => {
         arStream = stream;
