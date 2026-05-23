@@ -43,11 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const contents = document.querySelectorAll('.tab-content');
 
 function activateTab(tabId) {
-  if (!currentUser) return;
   // Role-based gate
   if (currentUser) {
-    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen'];
-    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen'];
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
     const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
     if (!allowed.includes(tabId)) return;
   }
@@ -608,8 +607,8 @@ function activateTab(tabId) {
 
   function applyRoleRestrictions(role) {
     const tabIds = document.querySelectorAll('.nav__tab');
-    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen'];
-    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen'];
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
     const allowed = role === 'supervisor' ? allowedSupervisor : allowedOperador;
 
     tabIds.forEach(tab => {
@@ -679,10 +678,32 @@ function activateTab(tabId) {
       clearRoleRestrictions();
       loginForm.reset();
       loginError.style.display = 'none';
-      document.getElementById('loginOverlay').classList.remove('hidden');
     } else {
       loginModal.classList.add('open');
-      document.getElementById('loginOverlay').classList.add('modal-open');
+    }
+  });
+
+  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
+  loginModal.addEventListener('click', (e) => {
+    if (e.target === loginModal) loginModal.classList.remove('open');
+  });
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = loginUser.value.trim().toLowerCase();
+    const pass = loginPass.value;
+    const cred = CREDENTIALS[user];
+
+    if (cred && cred.password === pass) {
+      currentUser = { uid: 'demo-' + user, role: user };
+      document.getElementById('userBadge').style.display = 'inline-flex';
+      document.getElementById('userName').textContent = cred.label;
+      loginBtn.textContent = 'Cerrar sesión';
+      loginError.style.display = 'none';
+      loginModal.classList.remove('open');
+      applyRoleRestrictions(user);
+    } else {
+      loginError.style.display = '';
     }
   });
 
