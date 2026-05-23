@@ -1362,4 +1362,37 @@ body.dark .auth-tools-msg {
   margin-bottom: 20px;
   font-size: 1rem;
 }
+
+.hud-choices {
+  display: none;
+  margin-top: 10px;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.choice-btn {
+  padding: 8px 16px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  transition: all 0.2s;
+}
+
+.choice-btn:hover {
+  border-color: #0d9488;
+  background: rgba(13,148,136,0.15);
+}
+
+.hud-feedback {
+  display: none;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
 }
