@@ -2196,7 +2196,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ====================================
   // 11. TRAINING MODULES & EXAMS
   // ====================================
-  const TRAINING_STORAGE_KEY = 'mhub-training';
   const EXAM_STORAGE_KEY = 'mhub-exams';
 
   const QUIZZES = {
@@ -2206,7 +2205,12 @@ document.addEventListener('DOMContentLoaded', () => {
         { q: '¿Cuál es el primer paso del procedimiento LOTO?', options: ['Aplicar candado', 'Liberar energía residual', 'Notificar a afectados', 'Verificar cero energía'], correct: 2 },
         { q: '¿Qué significa el acrónimo PASS en el uso de extintores?', options: ['Push, Aim, Squeeze, Sweep', 'Pull, Aim, Squeeze, Sweep', 'Pull, Activate, Spray, Sweep', 'Push, Activate, Squeeze, Spray'], correct: 1 },
         { q: '¿Cuál es la primera causa de incapacidad laboral según el módulo?', options: ['Caídas desde altura', 'Golpes por objetos', 'Trastornos musculoesqueléticos', 'Quemaduras químicas'], correct: 2 },
-        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', options: ['12', '14', '16', '18'], correct: 2 }
+        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', options: ['12', '14', '16', '18'], correct: 2 },
+        { q: '¿Qué tipo de extintor se usa para fuegos eléctricos?', options: ['Tipo A', 'Tipo B', 'Tipo C', 'Tipo D'], correct: 2 },
+        { q: '¿Cada cuánto deben realizarse los simulacros de evacuación?', options: ['Mensuales', 'Bimestrales', 'Trimestrales', 'Semestrales'], correct: 2 },
+        { q: '¿Qué significa la sigla LOTO?', options: ['Lock-Out / Tag-Out', 'Load-Over / Turn-Off', 'Lift-Off / Take-Out', 'Lever-Over / Tool-Out'], correct: 0 },
+        { q: '¿Cuál es la técnica correcta al levantar una carga > 15 kg?', options: ['Doblar la cintura', 'Doblar rodillas y mantener espalda recta', 'Levantar con un solo brazo', 'Girar el tronco mientras levanta'], correct: 1 },
+        { q: '¿Qué debe tener un trabajador antes de operar maquinaria?', options: ['Autorización verbal', 'Entrenamiento documentado vigente', 'Experiencia previa no certificada', 'Solo supervisión remota'], correct: 1 }
       ]
     },
     optimizacion: {
@@ -2215,56 +2219,40 @@ document.addEventListener('DOMContentLoaded', () => {
         { q: '¿Qué significa la palabra japonesa "Kaizen"?', options: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
         { q: '¿Cuál es el objetivo principal de SMED?', options: ['Aumentar velocidad de producción', 'Reducir cambios de herramienta a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
         { q: '¿Qué representa un Kanban en el sistema Toyota?', options: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
-        { q: '¿Cuántos desperdicios (Muda) se identifican en el sistema Lean?', options: ['5', '6', '7', '8'], correct: 2 }
+        { q: '¿Cuántos desperdicios (Muda) se identifican en Lean?', options: ['5', '6', '7', '8'], correct: 2 },
+        { q: '¿Qué significa "Takt" en alemán?', options: ['Tiempo', 'Ritmo', 'Velocidad', 'Ciclo'], correct: 1 },
+        { q: '¿Qué ciclo sigue la metodología Kaizen?', options: ['DMAIC', 'PDCA', 'FMEA', '8D'], correct: 1 },
+        { q: '¿Qué significa Jidoka?', options: ['Producción en masa', 'Automatización con toque humano', 'Control estadístico', 'Mantenimiento preventivo'], correct: 1 },
+        { q: '¿Qué herramienta mapea todos los pasos desde materia prima hasta el cliente?', options: ['Diagrama de Pareto', 'Value Stream Mapping (VSM)', 'Diagrama de Ishikawa', 'Histograma'], correct: 1 },
+        { q: '¿Qué reduce el SMV (Standard Minute Value)?', options: ['El tiempo de entrega', 'El tiempo estándar por tarea', 'El costo de materiales', 'El número de operadores'], correct: 1 }
       ]
     }
   };
-
-  function getTrainingProgress(courseId) {
-    const data = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || '{}');
-    return data[courseId] || [];
-  }
-
-  function saveTrainingProgress(courseId, completed) {
-    const data = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || '{}');
-    data[courseId] = completed;
-    localStorage.setItem(TRAINING_STORAGE_KEY, JSON.stringify(data));
-    updateCourseBadge(courseId);
-  }
 
   function getExamResult(courseId) {
     const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
     return data[courseId] || null;
   }
 
-  function saveExamResult(courseId, score, total, passed) {
+  function saveExamResult(courseId, correct, total, passed) {
     const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
-    data[courseId] = { score, total, passed, date: new Date().toISOString() };
+    data[courseId] = { correct, total, passed, date: new Date().toISOString() };
     localStorage.setItem(EXAM_STORAGE_KEY, JSON.stringify(data));
   }
 
   function updateCourseBadge(courseId) {
     const exam = getExamResult(courseId);
     const badge = document.getElementById('progress-' + courseId);
-    if (badge) {
-      if (exam && exam.passed) {
-        badge.textContent = 'Aprobado';
-        badge.setAttribute('data-complete', '100');
-        badge.style.background = '#16a34a';
-      } else if (exam && !exam.passed) {
-        badge.textContent = 'Reprobado';
-        badge.setAttribute('data-complete', '0');
-        badge.style.background = '#dc2626';
-      } else {
-        const completed = getTrainingProgress(courseId);
-        const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
-        const total = list ? list.querySelectorAll('.training-check').length : 0;
-        const done = completed.length;
-        const pct = total > 0 ? Math.round((done / total) * 100) : 0;
-        badge.textContent = pct + '%';
-        badge.setAttribute('data-complete', pct);
-        badge.style.background = '';
-      }
+    if (!badge) return;
+    if (exam && exam.passed) {
+      badge.textContent = 'Aprobado';
+      badge.style.background = '#16a34a';
+    } else if (exam && !exam.passed) {
+      badge.textContent = 'Reprobado';
+      badge.style.background = '#dc2626';
+    } else {
+      badge.textContent = 'Pendiente';
+      badge.style.background = '';
     }
   }
 
@@ -2319,17 +2307,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const total = questions.length;
-    const score = correct * 2;
-    const maxScore = total * 2;
-    const passed = score >= 7;
+    const passed = correct >= 7;
 
-    saveExamResult(courseId, score, maxScore, passed);
+    saveExamResult(courseId, correct, total, passed);
 
     resultEl.innerHTML = `
-      <div class="quiz-result__score">${score}/${maxScore}</div>
+      <div class="quiz-result__score">${correct}/${total}</div>
       <div style="font-size:1rem;margin-bottom:0.5rem">${correct} de ${total} respuestas correctas</div>
       <div style="font-weight:700;font-size:1.3rem">${passed ? '&#9989; ¡APROBADO!' : '&#10060; REPROBADO'}</div>
-      ${passed ? '<p style="margin-top:0.5rem;color:#16a34a">Has completado la capacitación exitosamente.</p>' : '<p style="margin-top:0.5rem;color:#dc2626">Debes estudiar el contenido nuevamente y recursar el examen.</p>'}
+      ${passed ? '<p style="margin-top:0.5rem;color:#16a34a">Has completado la capacitaci\u00f3n exitosamente.</p>' : '<p style="margin-top:0.5rem;color:#dc2626">Debes estudiar el contenido nuevamente y recursar el examen.</p>'}
     `;
     resultEl.className = 'quiz-result ' + (passed ? 'passed' : 'failed');
     resultEl.style.display = '';
@@ -2353,25 +2339,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById(map[courseId]);
     if (!modal) return;
     modal.classList.add('open');
-
     switchTrainingView(courseId, false);
     resetQuiz(courseId);
     renderQuiz(courseId);
-
-    const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
-    const checks = list.querySelectorAll('.training-check');
-    const progressEl = document.getElementById(courseId === 'seguridad' ? 'safetyProgress' : 'optimizationProgress');
-
-    const saved = getTrainingProgress(courseId);
-    checks.forEach(cb => {
-      cb.checked = saved.includes(cb.dataset.key);
-    });
-
-    function update() {
-      const done = [...checks].filter(cb => cb.checked).map(cb => cb.dataset.key);
-      progressEl.textContent = done.length + '/' + checks.length;
-      saveTrainingProgress(courseId, done);
-    }
+  }
 
     checks.forEach(cb => {
       cb.removeEventListener('change', update);

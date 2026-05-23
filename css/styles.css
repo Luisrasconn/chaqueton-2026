@@ -902,105 +902,17 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
 
 .role-btn__icon { font-size: 2rem; }
 
-.training-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.training-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  background: var(--surface-alt);
-  border-radius: var(--radius);
-  overflow: hidden;
-  transition: background var(--transition);
-}
-
-.training-head {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  cursor: pointer;
-  transition: background var(--transition);
-  position: relative;
-  user-select: none;
-}
-
-.training-head:hover {
-  background: rgba(13,148,136,0.08);
-}
-
-.training-item:hover {
-  background: rgba(13,148,136,0.08);
-}
-
-.training-item .training-check {
-  display: none;
-}
-
-.training-checkmark {
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--border);
-  border-radius: 4px;
-  flex-shrink: 0;
-  margin-top: 1px;
-  position: relative;
-  transition: background var(--transition), border-color var(--transition);
-}
-
-.training-check:checked + .training-checkmark {
+.course-progress {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
   background: var(--accent);
-  border-color: var(--accent);
-}
-
-.training-check:checked + .training-checkmark::after {
-  content: '✓';
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   color: #fff;
-  font-size: 14px;
-  font-weight: 700;
 }
 
-.training-label {
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--text);
-  flex: 1;
-}
-
-.training-arrow {
-  font-size: 0.7rem;
-  color: var(--text-light);
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-  margin-top: 3px;
-}
-
-.training-item.open .training-arrow {
-  transform: rotate(180deg);
-}
-
-.training-detail {
-  display: none;
-  padding: 0 0.75rem 0.75rem 3.4rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: var(--text-light);
-  border-top: 1px solid var(--border);
-  margin-top: 0.2rem;
-  padding-top: 0.6rem;
-}
-
-.training-item.open .training-detail {
-  display: block;
+.card[data-course] .card__badge.course-progress {
+  top: 0.75rem;
+  right: 0.75rem;
 }
 
 .training-video {
