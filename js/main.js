@@ -394,15 +394,54 @@ function activateTab(tabId) {
   // 9. EXPORT PDF
   // ====================================
   document.getElementById('exportPdfBtn').addEventListener('click', () => {
-    const element = document.getElementById('reportesTable');
+    const visibleReports = document.querySelectorAll('#reportsBody tr');
+    let html = `
+      <div style="font-family:sans-serif;padding:20px">
+        <h1 style="font-size:22px;color:#0d9488;margin-bottom:4px">MHub — Reporte de Retroalimentaci&oacute;n</h1>
+        <p style="color:#666;font-size:13px;margin-bottom:20px">Generado el ${new Date().toLocaleDateString('es-MX')}</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#0d9488;color:#fff">
+              <th style="padding:8px;text-align:left">Supervisor</th>
+              <th style="padding:8px;text-align:left">Incidencia</th>
+              <th style="padding:8px;text-align:left">Soluci&oacute;n</th>
+              <th style="padding:8px;text-align:left">&Aacute;rea</th>
+              <th style="padding:8px;text-align:left">Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    visibleReports.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        html += '<tr style="border-bottom:1px solid #ddd">';
+        html += '<td style="padding:6px 8px">' + cells[4].textContent + '</td>';  // Operador = supervisor
+        html += '<td style="padding:6px 8px">' + cells[2].textContent + '</td>';  // Problema = incidencia
+        html += '<td style="padding:6px 8px">' + cells[3].textContent + '</td>';  // Solución
+        html += '<td style="padding:6px 8px">' + cells[0].textContent + '</td>';  // Área
+        html += '<td style="padding:6px 8px">' + cells[1].textContent + '</td>';  // Tipo
+        html += '</tr>';
+      }
+    });
+
+    html += '</tbody></table></div>';
+
+    const temp = document.createElement('div');
+    temp.innerHTML = html;
+    temp.style.position = 'fixed';
+    temp.style.left = '-9999px';
+    document.body.appendChild(temp);
+
     const opt = {
       margin: [10, 10, 10, 10],
-      filename: 'reportes-mhub-' + new Date().toISOString().slice(0, 10) + '.pdf',
+      filename: 'reporte-retroalimentacion-' + new Date().toISOString().slice(0, 10) + '.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(temp).save();
+    setTimeout(() => { if (temp.parentNode) temp.parentNode.removeChild(temp); }, 3000);
   });
 
   // ====================================
