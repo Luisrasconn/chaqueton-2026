@@ -938,6 +938,12 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
 }
 
 .training-content,
+.training-quiz {
+  overflow-y: auto;
+  max-height: 72vh;
+  padding-right: 0.25rem;
+}
+
 .course-progress {
   font-size: 0.75rem;
   padding: 0.15rem 0.5rem;
