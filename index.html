@@ -137,23 +137,25 @@
           </div>
           <button class="btn btn--primary" data-tab="realidadvirtual">Iniciar VR</button>
         </div>
-        <div class="card card--program">
+        <div class="card card--program" data-course="seguridad">
+          <span class="card__badge course-progress" id="progress-seguridad">0%</span>
           <h3 class="card__title">Actualizaci&#243;n: Normas de Seguridad 2026</h3>
           <p class="card__text">Curso obligatorio actualizado con los nuevos protocolos de seguridad industrial.</p>
           <div class="card__meta">
             <span>&#9201; 30 min</span>
             <span>&#11088; 4.5</span>
           </div>
-          <button class="btn btn--primary">Iniciar</button>
+          <button class="btn btn--primary" data-modal="safety-training-modal">Iniciar</button>
         </div>
-        <div class="card card--program">
+        <div class="card card--program" data-course="optimizacion">
+          <span class="card__badge course-progress" id="progress-optimizacion">0%</span>
           <h3 class="card__title">Optimizaci&#243;n de Procesos</h3>
           <p class="card__text">T&#233;cnicas avanzadas para reducir tiempos muertos y mejorar la eficiencia en la l&#237;nea.</p>
           <div class="card__meta">
             <span>&#9201; 60 min</span>
             <span>&#11088; 4.9</span>
           </div>
-          <button class="btn btn--primary">Iniciar</button>
+          <button class="btn btn--primary" data-modal="optimization-training-modal">Iniciar</button>
         </div>
       </div>
 
@@ -964,5 +966,118 @@
       <button class="hud-btn" id="completeReset" style="padding:10px 30px;font-size:1rem">Reiniciar</button>
     </div>
   </div>
+
+  <!-- ===== SAFETY TRAINING MODAL ===== -->
+  <div class="modal-overlay" id="safety-training-modal">
+    <div class="modal modal--wide">
+      <button class="modal__close safety-training-close">&times;</button>
+      <h2 class="section-title">&#128737; Normas de Seguridad 2026</h2>
+      <p style="color:var(--text-light);margin-bottom:1rem">Revisa y confirma cada norma para completar la capacitaci&#243;n.</p>
+      <div class="training-list" id="safetyList">
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="epp">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Usar EPP completo: casco, lentes, guantes, botas y chaleco reflectivo</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="bloqueo">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Aplicar procedimiento de bloqueo/etiquetado (LOTO) antes de mantenimiento</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="derrames">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Reportar y contener derrames inmediatamente usando el kit de absorci&#243;n</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="incendio">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Conocer ubicaci&#243;n de extintores, salidas de emergencia y puntos de reuni&#243;n</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="maquinaria">
+          <span class="training-checkmark"></span>
+          <span class="training-label">No operar maquinaria sin guardas de seguridad ni autorizaci&#243;n vigente</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="ergonomia">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Aplicar t&#233;cnicas ergon&#243;micas al levantar cargas > 15 kg</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="productos">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Identificar productos qu&#237;micos con la hoja de datos de seguridad (HDS)</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="emergencia">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Participar en simulacros de evacuaci&#243;n trimestrales obligatorios</span>
+        </label>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <span style="font-size:0.9rem;color:var(--text-light)">Progreso: <strong id="safetyProgress">0/8</strong></span>
+        <span style="flex:1"></span>
+        <button class="btn btn--primary safety-training-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== OPTIMIZATION TRAINING MODAL ===== -->
+  <div class="modal-overlay" id="optimization-training-modal">
+    <div class="modal modal--wide">
+      <button class="modal__close optimization-training-close">&times;</button>
+      <h2 class="section-title">&#128200; Optimizaci&#243;n de Procesos</h2>
+      <p style="color:var(--text-light);margin-bottom:1rem">Revisa y confirma cada t&#233;cnica para completar la capacitaci&#243;n.</p>
+      <div class="training-list" id="optimizationList">
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="lean">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Implementar 5S: Clasificar, Ordenar, Limpiar, Estandarizar, Disciplinar</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="takt">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Ajustar el tiempo takt para balancear la carga entre estaciones de trabajo</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="kaizen">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Aplicar kaizen: mejoras continuas e incrementales en cada proceso</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="smv">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Reducir SMV (Standard Minute Value) mediante an&#225;lisis de movimientos</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="smed">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Aplicar SMED para reducir tiempos de cambio de herramienta a minutos</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="jidoka">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Implementar jidoka: detener la l&#237;nea ante defectos para evitar lotes malos</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="kanban">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Establecer sistema kanban para control visual de inventario en proceso</span>
+        </label>
+        <label class="training-item">
+          <input type="checkbox" class="training-check" data-key="vsm">
+          <span class="training-checkmark"></span>
+          <span class="training-label">Mapear flujo de valor (VSM) para identificar y eliminar desperdicios</span>
+        </label>
+      </div>
+      <div style="margin-top:1rem;display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap">
+        <span style="font-size:0.9rem;color:var(--text-light)">Progreso: <strong id="optimizationProgress">0/8</strong></span>
+        <span style="flex:1"></span>
+        <button class="btn btn--primary optimization-training-close">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

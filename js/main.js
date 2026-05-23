@@ -2192,4 +2192,92 @@ document.addEventListener('DOMContentLoaded', () => {
   function initVRScene() {
     // Scene auto-initializes with A-Frame
   }
+
+  // ====================================
+  // 11. TRAINING MODULES
+  // ====================================
+  const TRAINING_STORAGE_KEY = 'mhub-training';
+
+  function getTrainingProgress(courseId) {
+    const data = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || '{}');
+    return data[courseId] || [];
+  }
+
+  function saveTrainingProgress(courseId, completed) {
+    const data = JSON.parse(localStorage.getItem(TRAINING_STORAGE_KEY) || '{}');
+    data[courseId] = completed;
+    localStorage.setItem(TRAINING_STORAGE_KEY, JSON.stringify(data));
+    updateCourseBadge(courseId);
+  }
+
+  function updateCourseBadge(courseId) {
+    const completed = getTrainingProgress(courseId);
+    const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
+    const total = list ? list.querySelectorAll('.training-check').length : 0;
+    const done = completed.length;
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const badge = document.getElementById('progress-' + courseId);
+    if (badge) {
+      badge.textContent = pct + '%';
+      badge.setAttribute('data-complete', pct);
+    }
+  }
+
+  function openTrainingModal(courseId) {
+    const map = { seguridad: 'safety-training-modal', optimizacion: 'optimization-training-modal' };
+    const modal = document.getElementById(map[courseId]);
+    if (!modal) return;
+    modal.classList.add('open');
+
+    const list = document.getElementById(courseId === 'seguridad' ? 'safetyList' : 'optimizationList');
+    const checks = list.querySelectorAll('.training-check');
+    const progressEl = document.getElementById(courseId === 'seguridad' ? 'safetyProgress' : 'optimizationProgress');
+
+    const saved = getTrainingProgress(courseId);
+    checks.forEach(cb => {
+      cb.checked = saved.includes(cb.dataset.key);
+    });
+
+    function update() {
+      const done = [...checks].filter(cb => cb.checked).map(cb => cb.dataset.key);
+      progressEl.textContent = done.length + '/' + checks.length;
+      saveTrainingProgress(courseId, done);
+    }
+
+    checks.forEach(cb => {
+      cb.removeEventListener('change', update);
+      cb.addEventListener('change', update);
+    });
+
+    update();
+  }
+
+  function closeAllTrainingModals() {
+    document.querySelectorAll('.modal-overlay[id$="training-modal"]').forEach(m => m.classList.remove('open'));
+  }
+
+  document.querySelectorAll('[data-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.modal;
+      const courseMap = { 'safety-training-modal': 'seguridad', 'optimization-training-modal': 'optimizacion' };
+      const courseId = courseMap[modalId];
+      if (courseId) openTrainingModal(courseId);
+    });
+  });
+
+  document.querySelectorAll('.safety-training-close, .optimization-training-close').forEach(btn => {
+    btn.addEventListener('click', closeAllTrainingModals);
+  });
+
+  ['safety-training-modal', 'optimization-training-modal'].forEach(id => {
+    const overlay = document.getElementById(id);
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAllTrainingModals();
+      });
+    }
+  });
+
+  updateCourseBadge('seguridad');
+  updateCourseBadge('optimizacion');
 });
