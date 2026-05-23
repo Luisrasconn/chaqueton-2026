@@ -394,6 +394,9 @@ body {
   border-color: var(--accent);
 }
 
+#loginBtn { color: #fff; }
+#loginBtn:hover { color: var(--accent); }
+
 /* ===== QUICK ACTIONS ===== */
 .quick-actions { margin-top: 1rem; }
 
