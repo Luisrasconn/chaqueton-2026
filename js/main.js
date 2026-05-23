@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function activateTab(tabId) {
     tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
     contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
-    history.replaceState(null, '', '#' + tabId);
+    try { history.replaceState(null, '', '#' + tabId); } catch (e) { /* file:// no permite modificar URL */ }
     if (tabId === 'inicio') initCharts();
     if (tabId === 'realidadvirtual') initVRScene();
   }
@@ -2072,6 +2072,553 @@ document.addEventListener('DOMContentLoaded', () => {
         scene.setAttribute('package-animation', '');
       }
     });
+  }
+
+  // ====================================
+  // 16. AR MODE - SCAN MACHINE QR + SIMULATIONS
+  // ====================================
+
+  const STATIONS = {
+    E1: {
+      id: 'M-E1', name: 'E1 - Ensamble', icon: '\u2699\uFE0F', color: '#2980b9',
+      vrPos: { x: -4, y: 1.6, z: -3 },
+      stats: ['1,247 piezas', '94%', 'Roberto', 'Operando'],
+      sim: [
+        { type: 'info', text: 'Bienvenido a la simulación de ensamble. Aprenderás el proceso completo.' },
+        { type: 'choice', text: 'Selecciona el tipo de pieza:', options: [
+          { label: 'Plástico', correct: true, feedback: '¡Correcto! La pieza de plástico es la adecuada.' },
+          { label: 'Metal', correct: false, feedback: 'Para esta línea usamos plástico, no metal.' }
+        ]},
+        { type: 'info', text: 'La pieza avanza por la banda transportadora hacia el brazo robótico.' },
+        { type: 'info', text: 'El brazo robótico coloca la pieza en la mesa de soldadura.' },
+        { type: 'choice', text: '¿Qué sigue después de soldar?', options: [
+          { label: 'Control de calidad', correct: true, feedback: '¡Correcto! Toda pieza debe pasar por control de calidad.' },
+          { label: 'Empaque directo', correct: false, feedback: 'No, primero debe inspeccionarse en control de calidad.' }
+        ]},
+        { type: 'complete', text: 'Proceso de ensamble completado con éxito.' }
+      ]
+    },
+    E2: {
+      id: 'M-E2', name: 'E2 - Soldadura', icon: '\u2699\uFE0F', color: '#e74c3c',
+      vrPos: { x: 4, y: 1.6, z: -3 },
+      stats: ['856 uniones', '91%', 'Maria', 'Operando'],
+      sim: [
+        { type: 'info', text: 'Simulación de soldadura. Vamos a soldar una junta de acero.' },
+        { type: 'choice', text: '¿Qué temperatura de soldadura es la correcta?', options: [
+          { label: '650°C', correct: false, feedback: 'Muy baja, el material no se fusionará correctamente.' },
+          { label: '850°C', correct: true, feedback: '¡Correcto! 850°C es la temperatura óptima.' },
+          { label: '1050°C', correct: false, feedback: 'Demasiado alta, puede deformar la pieza.' }
+        ]},
+        { type: 'info', text: 'Ajustando electrodo... Ángulo correcto: 15° respecto a la vertical.' },
+        { type: 'choice', text: '¿Qué EPP es obligatorio para soldar?', options: [
+          { label: 'Casco, guantes y careta', correct: true, feedback: '¡Correcto! La careta de soldadura es esencial.' },
+          { label: 'Solo lentes', correct: false, feedback: 'No es suficiente. La radiación UV requiere careta completa.' }
+        ]},
+        { type: 'complete', text: 'Soldadura completada. Cordón uniforme y sin porosidades.' }
+      ]
+    },
+    E3: {
+      id: 'M-E3', name: 'E3 - Control Calidad', icon: '\u2699\uFE0F', color: '#27ae60',
+      vrPos: { x: -4, y: 1.6, z: -8 },
+      stats: ['3,450 piezas', '98.7%', 'Lucia', 'Operando'],
+      sim: [
+        { type: 'info', text: 'Control de calidad — inspección visual y dimensional de la pieza.' },
+        { type: 'choice', text: 'La pieza mide 150mm ± 0.5mm. Mide 150.3mm. ¿Qué haces?', options: [
+          { label: 'Aprobar', correct: true, feedback: '¡Correcto! 150.3mm está dentro de la tolerancia.' },
+          { label: 'Rechazar', correct: false, feedback: 'Incorrecto. 150.3mm está dentro de la tolerancia de ±0.5mm.' }
+        ]},
+        { type: 'info', text: 'Escáner 3D detectando porosidades superficiales... Resultado: OK.' },
+        { type: 'choice', text: '¿Cuántos defectos se detectaron hoy?', options: [
+          { label: '45 defectos', correct: true, feedback: '¡Correcto! 45 defectos de 3,450 piezas inspeccionadas.' },
+          { label: '120 defectos', correct: false, feedback: 'No, fueron 45. La tasa de defectos es de solo 1.3%.' }
+        ]},
+        { type: 'complete', text: 'Inspección de calidad completada. Pieza certificada.' }
+      ]
+    },
+    E4: {
+      id: 'M-E4', name: 'E4 - Empaque', icon: '\u2699\uFE0F', color: '#8e44ad',
+      vrPos: { x: 4, y: 1.6, z: -8 },
+      stats: ['3,210 cajas', '96%', 'Jose', 'Operando'],
+      sim: [
+        { type: 'info', text: 'Simulación de empaque. Vamos a preparar un lote para envío.' },
+        { type: 'choice', text: '¿Qué material de empaque usas primero?', options: [
+          { label: 'Plástico termoencogible', correct: true, feedback: '¡Correcto! Protege contra humedad y golpes.' },
+          { label: 'Burbuja sin caja', correct: false, feedback: 'No es suficiente para envío industrial.' }
+        ]},
+        { type: 'info', text: 'Envolviendo la pieza con plástico termoencogible... Aplicando calor.' },
+        { type: 'choice', text: '¿Cuántas cajas van por pallet?', options: [
+          { label: '48 cajas', correct: true, feedback: '¡Correcto! 48 cajas por pallet estándar.' },
+          { label: '24 cajas', correct: false, feedback: 'No, caben 48 cajas por pallet en configuración estándar.' }
+        ]},
+        { type: 'complete', text: 'Empaque completado. Lote listo para enviar al cliente.' }
+      ]
+    }
+  };
+
+  let currentStation = null;
+  let currentSimStep = 0;
+  let simTimer = null;
+  let arStream = null;
+  let arScanning = false;
+  let arScanInterval = null;
+  let simScore = { correct: 0, wrong: 0 };
+
+  const arStartBtn = document.getElementById('arStartBtn');
+  const arScanner = document.getElementById('arScanner');
+  const arStations = document.getElementById('arStations');
+  const arDetail = document.getElementById('arDetail');
+  const arVideo = document.getElementById('arVideo');
+  const arCanvas = document.getElementById('arCanvas');
+  const arStatus = document.getElementById('arStatus');
+  const arResult = document.getElementById('arResult');
+  const arCancelBtn = document.getElementById('arCancelBtn');
+  const arSimulateBtn = document.getElementById('arSimulateBtn');
+  const arBackBtn = document.getElementById('arBackBtn');
+
+  function startARCamera() {
+    arResult.innerHTML = '';
+    arStatus.innerHTML = '<span class="ar-scanner__icon">\uD83D\uDCA1</span><span>Iniciando cámara...</span>';
+    arScanner.style.display = '';
+    arStations.style.display = 'none';
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then(stream => {
+        arStream = stream;
+        arVideo.srcObject = stream;
+        arVideo.setAttribute('playsinline', '');
+        arVideo.muted = true;
+        arVideo.play();
+        arScanning = true;
+        arStatus.innerHTML = '<span class="ar-scanner__icon">\uD83D\uDCF7</span><span>Enfoca el código QR de la máquina...</span>';
+        arScanInterval = setInterval(scanARCode, 300);
+      })
+      .catch(() => {
+        arStatus.innerHTML = '<span class="ar-scanner__icon">\u274C</span><span>No se pudo acceder a la cámara</span>';
+      });
+  }
+
+  function stopARCamera() {
+    arScanning = false;
+    if (arScanInterval) { clearInterval(arScanInterval); arScanInterval = null; }
+    if (arStream) {
+      arStream.getTracks().forEach(t => t.stop());
+      arStream = null;
+    }
+    arVideo.srcObject = null;
+    arScanner.style.display = 'none';
+    arStations.style.display = '';
+  }
+
+  function scanARCode() {
+    if (!arScanning || typeof jsQR === 'undefined') return;
+    try {
+      if (arVideo.readyState >= arVideo.HAVE_CURRENT_DATA) {
+        arCanvas.width = arVideo.videoWidth || 640;
+        arCanvas.height = arVideo.videoHeight || 480;
+        const ctx = arCanvas.getContext('2d');
+        ctx.drawImage(arVideo, 0, 0, arCanvas.width, arCanvas.height);
+        const imageData = ctx.getImageData(0, 0, arCanvas.width, arCanvas.height);
+        const code = jsQR(imageData.data, arCanvas.width, arCanvas.height, { inversionAttempts: 'dontInvert' });
+        if (code && code.data) {
+          processARCode(code.data);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function processARCode(data) {
+    data = data.trim();
+    const stationKey = Object.keys(STATIONS).find(k => STATIONS[k].id === data);
+    if (stationKey) {
+      arScanning = false;
+      showStationDetail(stationKey);
+    } else {
+      arResult.innerHTML = '<p style="color:var(--warning)">Código QR no reconocido: ' + data + '</p>';
+      setTimeout(() => { arResult.innerHTML = ''; }, 3000);
+    }
+  }
+
+  function showStationDetail(key) {
+    const station = STATIONS[key];
+    if (!station) return;
+    currentStation = key;
+    stopARCamera();
+    document.getElementById('arDetailIcon').textContent = station.icon;
+    document.getElementById('arDetailTitle').textContent = station.name;
+    document.getElementById('arDetailSub').textContent = 'Estación seleccionada';
+    const statEls = document.querySelectorAll('.ar-detail__stat strong');
+    station.stats.forEach((s, i) => { if (statEls[i]) statEls[i].textContent = s; });
+    arDetail.style.display = '';
+    arResult.innerHTML = '<p style="color:var(--success);font-weight:700">\u2713 Máquina identificada: ' + station.name + '</p>';
+  }
+
+  function teleportToStation(key) {
+    const station = STATIONS[key];
+    if (!station) return;
+    const rig = document.getElementById('playerRig');
+    if (!rig) return;
+    rig.setAttribute('animation__teleport', {
+      property: 'position',
+      to: station.vrPos.x + ' ' + station.vrPos.y + ' ' + station.vrPos.z,
+      dur: 800,
+      easing: 'easeInOutQuad'
+    });
+    const stationId = 'station' + key.slice(1);
+    const stationEl = document.getElementById(stationId);
+    if (stationEl) {
+      stationEl.setAttribute('animation__arrive', {
+        property: 'scale', to: '1.15 1.15 1.15',
+        dur: 600, dir: 'alternate', loop: 3, easing: 'easeInOutQuad'
+      });
+    }
+  }
+
+  // Station buttons
+  document.querySelectorAll('.ar-station-btn').forEach(btn => {
+    btn.addEventListener('click', () => showStationDetail(btn.dataset.station));
+  });
+
+  // QR images clickeables (simulan escaneo)
+  document.querySelectorAll('.clickable-qr').forEach(img => {
+    img.addEventListener('click', function () {
+      const station = this.dataset.station;
+      this.style.transform = 'scale(1.3)';
+      this.style.boxShadow = '0 0 0 4px var(--accent), 0 0 20px rgba(13,148,136,0.5)';
+      setTimeout(() => {
+        this.style.transform = '';
+        this.style.boxShadow = '';
+        const el = document.querySelector(`.ar-station-btn[data-station="${station}"]`);
+        if (el) el.click();
+      }, 400);
+    });
+  });
+
+  arStartBtn.addEventListener('click', startARCamera);
+  arCancelBtn.addEventListener('click', stopARCamera);
+
+  arBackBtn.addEventListener('click', () => {
+    arDetail.style.display = 'none';
+    currentStation = null;
+  });
+
+  arSimulateBtn.addEventListener('click', () => {
+    if (!currentStation) return;
+    const station = STATIONS[currentStation];
+    teleportToStation(currentStation);
+    startMiniSim(currentStation);
+    arDetail.style.display = 'none';
+  });
+
+  // ====================================
+  // 17. MINI SIMULATION SYSTEM
+  // ====================================
+
+  let miniSimEl = null;
+
+  function createMiniSimUI() {
+    if (document.getElementById('miniSim')) return;
+    const div = document.createElement('div');
+    div.id = 'miniSim';
+    div.className = 'mini-sim';
+    div.innerHTML = `
+      <div class="mini-sim__box">
+        <div class="mini-sim__header">
+          <span id="miniSimBadge" class="mini-sim__badge">Simulación</span>
+          <span id="miniSimStep" class="mini-sim__step">Paso 1/5</span>
+        </div>
+        <div class="mini-sim__progress"><div class="mini-sim__fill" id="miniSimFill"></div></div>
+        <div class="sim-visual" id="simVisual">
+          <div class="sim-visual__inner" id="simVisualInner">
+            <div class="sim-placeholder" id="simPlaceholder">
+              <span id="simIcon">&#9881;</span>
+              <span id="simVisualLabel">Preparando simulación...</span>
+            </div>
+          </div>
+        </div>
+        <p id="miniSimText" class="mini-sim__text">Preparando...</p>
+        <div id="miniSimChoices" class="mini-sim__choices"></div>
+        <div id="miniSimFeedback" class="mini-sim__feedback"></div>
+        <div class="mini-sim__actions">
+          <button class="btn btn--outline" id="miniSimClose">Cerrar</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(div);
+    miniSimEl = div;
+    document.getElementById('miniSimClose').addEventListener('click', closeMiniSim);
+  }
+
+  function clearSimTimer() {
+    if (simTimer) { clearTimeout(simTimer); simTimer = null; }
+  }
+
+  function startMiniSim(key) {
+    clearSimTimer();
+    createMiniSimUI();
+    const station = STATIONS[key];
+    if (!station) return;
+    currentStation = key;
+    currentSimStep = 0;
+    simScore = { correct: 0, wrong: 0 };
+    miniSimEl.style.display = 'flex';
+    document.getElementById('miniSimBadge').textContent = station.name;
+    buildStationVisual(key);
+    renderSimVisual(key, 0);
+    enterSimStep();
+  }
+
+  function buildStationVisual(key) {
+    const inner = document.getElementById('simVisualInner');
+    let html = '';
+    if (key === 'E1') {
+      html = `
+        <div class="sim-e1">
+          <div class="sim-e1__bin"><div class="sim-e1__bin-inner"></div></div>
+          <div class="sim-e1__conveyor">
+            <div class="sim-e1__belt"></div>
+            <div class="sim-e1__part sim-e1__part--1"></div>
+            <div class="sim-e1__part sim-e1__part--2"></div>
+            <div class="sim-e1__part sim-e1__part--3"></div>
+          </div>
+          <div class="sim-e1__arm">
+            <div class="sim-e1__arm-base"></div>
+            <div class="sim-e1__arm-seg1"></div>
+            <div class="sim-e1__arm-seg2"></div>
+            <div class="sim-e1__arm-grip"></div>
+          </div>
+          <div class="sim-e1__table"></div>
+        </div>`;
+    } else if (key === 'E2') {
+      html = `
+        <div class="sim-e2">
+          <div class="sim-e2__spark" id="simE2Spark">&#9889;</div>
+          <div class="sim-e2__piece" id="simE2Piece"></div>
+          <div class="sim-e2__arm">
+            <div class="sim-e2__arm-body"></div>
+            <div class="sim-e2__arm-tip" id="simE2ArmTip"></div>
+          </div>
+          <div class="sim-e2__temp" id="simE2Temp">&#127777; 850&deg;C</div>
+        </div>`;
+    } else if (key === 'E3') {
+      html = `
+        <div class="sim-e3">
+          <div class="sim-e3__scanner">
+            <div class="sim-e3__scan-head" id="simE3Head"></div>
+            <div class="sim-e3__laser" id="simE3Laser"></div>
+          </div>
+          <div class="sim-e3__piece"></div>
+          <div class="sim-e3__monitor" id="simE3Monitor">
+            <span class="sim-e3__monitor-val" id="simE3Val">98.7%</span>
+            <span class="sim-e3__monitor-ok" id="simE3Ok">OK</span>
+          </div>
+        </div>`;
+    } else if (key === 'E4') {
+      html = `
+        <div class="sim-e4">
+          <div class="sim-e4__conveyor">
+            <div class="sim-e4__belt"></div>
+            <div class="sim-e4__box sim-e4__box--1" id="simE4Box1"></div>
+            <div class="sim-e4__box sim-e4__box--2" id="simE4Box2"></div>
+          </div>
+          <div class="sim-e4__wrapper" id="simE4Wrapper">&#9881;</div>
+          <div class="sim-e4__pallet" id="simE4Pallet">
+            <div class="sim-e4__pallet-box sim-e4__pallet-box--1"></div>
+            <div class="sim-e4__pallet-box sim-e4__pallet-box--2"></div>
+            <div class="sim-e4__pallet-box sim-e4__pallet-box--3"></div>
+          </div>
+        </div>`;
+    }
+    inner.innerHTML = html;
+  }
+
+  function renderSimVisual(key, stepIdx) {
+    if (key === 'E1') renderE1Visual(stepIdx);
+    else if (key === 'E2') renderE2Visual(stepIdx);
+    else if (key === 'E3') renderE3Visual(stepIdx);
+    else if (key === 'E4') renderE4Visual(stepIdx);
+  }
+
+  function renderE1Visual(idx) {
+    const parts = document.querySelectorAll('.sim-e1__part');
+    const arm = document.querySelector('.sim-e1__arm');
+    const grip = document.querySelector('.sim-e1__arm-grip');
+    const table = document.querySelector('.sim-e1__table');
+    if (!parts.length) return;
+    parts.forEach(p => { p.style.background = '#f1c40f'; });
+    if (idx === 0) {
+      parts.forEach(p => p.style.animation = 'simBeltMove 1.2s linear infinite');
+    } else if (idx === 1) {
+      parts[0].style.background = '#0d9488';
+      arm.style.animation = 'simArmDown 0.6s ease forwards';
+    } else if (idx === 2) {
+      arm.style.animation = 'simArmUp 0.6s ease forwards';
+      grip.style.background = '#0d9488';
+    } else if (idx >= 3) {
+      parts.forEach(p => { p.style.animation = 'none'; p.style.opacity = '0.4'; });
+      table.style.background = '#0d9488';
+    }
+  }
+
+  function renderE2Visual(idx) {
+    const spark = document.getElementById('simE2Spark');
+    const piece = document.getElementById('simE2Piece');
+    const tip = document.getElementById('simE2ArmTip');
+    const temp = document.getElementById('simE2Temp');
+    if (!spark) return;
+    if (idx === 0) {
+      spark.style.animation = 'simSparkPulse 0.8s ease infinite';
+    } else if (idx === 1) {
+      spark.style.fontSize = '2.8rem';
+      spark.style.animation = 'simSparkIntense 0.15s ease infinite';
+      tip.style.background = '#e74c3c';
+    } else if (idx === 2) {
+      spark.style.animation = 'simSparkPulse 0.6s ease infinite';
+      spark.style.fontSize = '2rem';
+      piece.style.background = '#d97706';
+      piece.style.borderColor = '#e74c3c';
+    } else if (idx >= 3) {
+      spark.style.animation = 'none';
+      spark.style.opacity = '0.3';
+      piece.style.background = '#95a5a6';
+      if (temp) temp.innerHTML = '&#127777; 25&deg;C (Enfriado)';
+    }
+  }
+
+  function renderE3Visual(idx) {
+    const head = document.getElementById('simE3Head');
+    const laser = document.getElementById('simE3Laser');
+    const val = document.getElementById('simE3Val');
+    const ok = document.getElementById('simE3Ok');
+    if (!head) return;
+    if (idx === 0) {
+      head.style.animation = 'simScanSpin 1s linear infinite';
+      laser.style.animation = 'simLaserSweep 0.8s ease-in-out infinite';
+    } else if (idx === 1) {
+      laser.style.animation = 'simLaserSweep 0.3s ease-in-out infinite';
+      head.style.animation = 'simScanSpin 0.4s linear infinite';
+    } else if (idx === 2) {
+      if (val) val.textContent = '150.3mm';
+      if (ok) { ok.textContent = 'DENTRO RANGO'; ok.style.color = '#27ae60'; }
+      laser.style.animation = 'none';
+      laser.style.opacity = '0.8';
+      head.style.animation = 'none';
+    } else if (idx >= 3) {
+      if (val) val.textContent = '3,450 OK';
+      if (ok) { ok.textContent = '98.7% APROB'; }
+    }
+  }
+
+  function renderE4Visual(idx) {
+    const box1 = document.getElementById('simE4Box1');
+    const box2 = document.getElementById('simE4Box2');
+    const wrapper = document.getElementById('simE4Wrapper');
+    const pallet = document.getElementById('simE4Pallet');
+    if (!box1) return;
+    if (idx === 0) {
+      box1.style.animation = 'simBoxMove 1s ease-in-out infinite';
+      box2.style.animation = 'simBoxMove 1s ease-in-out 0.5s infinite';
+    } else if (idx === 1) {
+      box1.style.animation = 'simBoxToWrapper 1s ease forwards';
+      box2.style.animation = 'simBoxMove 1s ease-in-out infinite';
+    } else if (idx === 2) {
+      box1.style.animation = 'none';
+      box1.style.opacity = '0.3';
+      box2.style.animation = 'simBoxToWrapper 1s ease forwards';
+      wrapper.style.animation = 'simWrapPulse 0.4s ease 3';
+      pallet.style.animation = 'simPalletStack 0.6s ease forwards';
+    } else if (idx >= 3) {
+      box2.style.animation = 'none';
+      box2.style.opacity = '0.3';
+      wrapper.style.animation = 'none';
+      pallet.style.animation = 'none';
+      const palletBoxes = document.querySelectorAll('.sim-e4__pallet-box');
+      palletBoxes.forEach(b => b.style.opacity = '1');
+    }
+  }
+
+  function enterSimStep() {
+    const station = STATIONS[currentStation];
+    if (!station) return;
+    const steps = station.sim;
+    if (currentSimStep >= steps.length) { closeMiniSim(); return; }
+    const step = steps[currentSimStep];
+    const total = steps.length;
+    document.getElementById('miniSimStep').textContent = 'Paso ' + (currentSimStep + 1) + '/' + total;
+    document.getElementById('miniSimFill').style.width = ((currentSimStep / total) * 100) + '%';
+    document.getElementById('miniSimText').textContent = step.text;
+    document.getElementById('miniSimFeedback').style.display = 'none';
+    document.getElementById('miniSimFeedback').className = 'mini-sim__feedback';
+    const choices = document.getElementById('miniSimChoices');
+    choices.innerHTML = '';
+    renderSimVisual(currentStation, currentSimStep);
+    if (step.type === 'choice') {
+      choices.style.display = 'flex';
+      step.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn mini-sim__choice';
+        btn.textContent = opt.label;
+        btn.addEventListener('click', () => handleChoice(opt));
+        choices.appendChild(btn);
+      });
+    } else if (step.type === 'info') {
+      const nextBtn = document.createElement('button');
+      nextBtn.className = 'btn btn--primary';
+      nextBtn.textContent = 'Siguiente paso \u25B6';
+      nextBtn.style.marginTop = '0.5rem';
+      nextBtn.addEventListener('click', () => {
+        currentSimStep++;
+        enterSimStep();
+      });
+      choices.style.display = 'flex';
+      choices.appendChild(nextBtn);
+    } else if (step.type === 'complete') {
+      choices.style.display = 'none';
+      const fb = document.getElementById('miniSimFeedback');
+      fb.style.display = '';
+      fb.className = 'mini-sim__feedback mini-sim__feedback--success';
+      const totalQ = station.sim.filter(s => s.type === 'choice').length;
+      fb.innerHTML = '\u2713 ' + step.text + '<br><small>Aciertos: ' + simScore.correct + '/' + totalQ + '</small>';
+      document.getElementById('miniSimClose').textContent = 'Finalizar';
+    }
+  }
+
+  function resetStationVisual(key) {
+    const inner = document.getElementById('simVisualInner');
+    if (!inner) return;
+    const icons = inner.querySelectorAll('[style*="animation"]');
+    icons.forEach(el => { el.style.animation = ''; el.style.opacity = ''; });
+  }
+
+  function handleChoice(opt) {
+    const choices = document.getElementById('miniSimChoices');
+    choices.querySelectorAll('.mini-sim__choice').forEach(b => b.disabled = true);
+    const fb = document.getElementById('miniSimFeedback');
+    fb.style.display = '';
+    if (opt.correct) {
+      simScore.correct++;
+      fb.className = 'mini-sim__feedback mini-sim__feedback--correct';
+      fb.textContent = '\u2713 ' + opt.feedback;
+    } else {
+      simScore.wrong++;
+      fb.className = 'mini-sim__feedback mini-sim__feedback--wrong';
+      fb.innerHTML = '\u2717 ' + opt.feedback + ' <button class="btn btn--sm mini-sim__retry">Reintentar</button>';
+      fb.querySelector('.mini-sim__retry').addEventListener('click', () => {
+        choices.querySelectorAll('.mini-sim__choice').forEach(b => b.disabled = false);
+        fb.style.display = 'none';
+      });
+      return;
+    }
+    simTimer = setTimeout(() => {
+      simTimer = null;
+      currentSimStep++;
+      enterSimStep();
+    }, 1800);
+  }
+
+  function closeMiniSim() {
+    clearSimTimer();
+    if (miniSimEl) miniSimEl.style.display = 'none';
+    document.getElementById('miniSimClose').textContent = 'Cerrar';
+    resetStationVisual(currentStation);
   }
 
   function initVRScene() {

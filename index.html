@@ -782,6 +782,96 @@
           Arrastra con el mouse para mirar alrededor
         </p>
       </div>
+
+      <!-- ======== AR MODE: SCAN MACHINE QR ======== -->
+      <div class="ar-section">
+        <div class="ar-divider"><span>o</span></div>
+        <h2 class="section-title">&#128247; Modo Realidad Aumentada</h2>
+        <p class="section-desc">Activa la cámara para escanear un QR físico, o haz <strong>click en cualquier QR</strong> de abajo para simular el escaneo.</p>
+
+        <div class="ar-scanner" id="arScanner" style="display:none">
+          <div class="ar-scanner__video-wrap">
+            <video id="arVideo" autoplay playsinline muted></video>
+            <canvas id="arCanvas"></canvas>
+          </div>
+          <div class="ar-scanner__status" id="arStatus">
+            <span class="ar-scanner__icon">&#128161;</span>
+            <span>Iniciando cámara...</span>
+          </div>
+          <div class="ar-scanner__result" id="arResult"></div>
+          <button class="btn btn--outline" id="arCancelBtn">Cancelar</button>
+        </div>
+
+        <div class="ar-stations" id="arStations">
+          <p class="section-desc" style="margin-bottom:1rem">O selecciona una máquina manualmente:</p>
+          <div class="ar-stations__grid">
+            <button class="ar-station-btn" data-station="E1">
+              <img class="ar-station-btn__qr clickable-qr" data-station="E1" src="assets/qr/M-E1.png" alt="QR E1" title="Click para simular escaneo">
+              <span class="ar-station-btn__name">E1 - Ensamble</span>
+              <span class="ar-station-btn__status">Simulación completa</span>
+            </button>
+            <button class="ar-station-btn" data-station="E2">
+              <img class="ar-station-btn__qr clickable-qr" data-station="E2" src="assets/qr/M-E2.png" alt="QR E2" title="Click para simular escaneo">
+              <span class="ar-station-btn__name">E2 - Soldadura</span>
+              <span class="ar-station-btn__status">Simulación completa</span>
+            </button>
+            <button class="ar-station-btn" data-station="E3">
+              <img class="ar-station-btn__qr clickable-qr" data-station="E3" src="assets/qr/M-E3.png" alt="QR E3" title="Click para simular escaneo">
+              <span class="ar-station-btn__name">E3 - Control Calidad</span>
+              <span class="ar-station-btn__status">Simulación completa</span>
+            </button>
+            <button class="ar-station-btn" data-station="E4">
+              <img class="ar-station-btn__qr clickable-qr" data-station="E4" src="assets/qr/M-E4.png" alt="QR E4" title="Click para simular escaneo">
+              <span class="ar-station-btn__name">E4 - Empaque</span>
+              <span class="ar-station-btn__status">Simulación completa</span>
+            </button>
+          </div>
+          <button class="btn btn--primary" id="arStartBtn">&#128247; Activar cámara - Escanear QR</button>
+        </div>
+
+        <!-- Station detail panel (shown after detection) -->
+        <div class="ar-detail" id="arDetail" style="display:none">
+          <div class="ar-detail__header">
+            <span class="ar-detail__icon" id="arDetailIcon">&#9881;</span>
+            <div>
+              <h3 class="ar-detail__title" id="arDetailTitle">Máquina detectada</h3>
+              <p class="ar-detail__sub" id="arDetailSub">Estación de trabajo</p>
+            </div>
+          </div>
+          <div class="ar-detail__info" id="arDetailInfo">
+            <div class="ar-detail__stat"><span>Piezas procesadas:</span> <strong id="arStat1">--</strong></div>
+            <div class="ar-detail__stat"><span>Eficiencia:</span> <strong id="arStat2">--</strong></div>
+            <div class="ar-detail__stat"><span>Operador:</span> <strong id="arStat3">--</strong></div>
+            <div class="ar-detail__stat"><span>Estado:</span> <strong id="arStat4">--</strong></div>
+          </div>
+          <button class="btn btn--primary" id="arSimulateBtn">&#9654; Iniciar simulación</button>
+          <button class="btn btn--outline" id="arBackBtn">Volver</button>
+        </div>
+
+        <!-- QR codes for printing -->
+        <details class="ar-print-qr">
+          <summary style="cursor:pointer;color:var(--text-light);font-size:0.85rem">&#128424; Imprimir QR de máquinas</summary>
+          <p class="section-desc" style="font-size:0.85rem;margin-bottom:0.75rem">También puedes hacer click en cualquier QR para simular el escaneo:</p>
+          <div class="ar-print-qr__grid">
+            <div class="ar-print-qr__item">
+              <img class="clickable-qr" data-station="E1" src="assets/qr/M-E1.png" alt="QR E1" title="Click para simular escaneo">
+              <span>E1 - Ensamble</span>
+            </div>
+            <div class="ar-print-qr__item">
+              <img class="clickable-qr" data-station="E2" src="assets/qr/M-E2.png" alt="QR E2" title="Click para simular escaneo">
+              <span>E2 - Soldadura</span>
+            </div>
+            <div class="ar-print-qr__item">
+              <img class="clickable-qr" data-station="E3" src="assets/qr/M-E3.png" alt="QR E3" title="Click para simular escaneo">
+              <span>E3 - Calidad</span>
+            </div>
+            <div class="ar-print-qr__item">
+              <img class="clickable-qr" data-station="E4" src="assets/qr/M-E4.png" alt="QR E4" title="Click para simular escaneo">
+              <span>E4 - Empaque</span>
+            </div>
+          </div>
+        </details>
+      </div>
     </section>
 
   </main>
