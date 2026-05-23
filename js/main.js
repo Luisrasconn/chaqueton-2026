@@ -593,25 +593,17 @@ document.addEventListener('DOMContentLoaded', () => {
         qrVideo.srcObject = stream;
         qrVideo.setAttribute('playsinline', '');
         qrVideo.muted = true;
-        return qrVideo.play();
-      })
-      .then(() => {
+        qrVideo.play();
         qrScanning = true;
         if (qrJsAvailable) {
-          qrResult.innerHTML = '<p style="color:var(--text-light)">Escaneando QR...</p>';
-          qrScanInterval = setInterval(scanQRCode, 300);
+          qrVideo.addEventListener('playing', () => {
+            qrResult.innerHTML = '<p style="color:var(--text-light)">Escaneando QR...</p>';
+            qrScanInterval = setInterval(scanQRCode, 300);
+          });
         }
       })
-      .catch(err => {
-        const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
-          ? 'Permiso de c\u00e1mara denegado. Habilita el acceso en la configuraci\u00f3n del navegador.'
-          : err.name === 'NotFoundError'
-          ? 'No se encontr\u00f3 una c\u00e1mara en este dispositivo.'
-          : err.name === 'NotReadableError'
-          ? 'La c\u00e1mara est\u00e1 siendo usada por otra aplicaci\u00f3n.'
-          : 'No se pudo acceder a la c\u00e1mara. Ingresa el ID manualmente.';
-        qrResult.innerHTML = '<p style="color:var(--danger)">' + msg + '</p>';
-        console.warn('QR camera error:', err.name, err.message);
+      .catch(() => {
+        qrResult.innerHTML = '<p style="color:var(--danger)">No se pudo acceder a la c\u00e1mara. Ingresa el ID manualmente.</p>';
       });
   }
 
@@ -918,10 +910,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(stream => {
         faceRecStream = stream;
         faceRecVideo.srcObject = stream;
-        faceRecVideo.setAttribute('playsinline', '');
-        return faceRecVideo.play();
-      })
-      .then(() => {
+        faceRecVideo.play();
         if (faceApiReady) {
           faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Reconocer".</span>';
           faceRecCaptureBtn.disabled = false;
@@ -935,17 +924,9 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
       })
-      .catch(err => {
-        const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
-          ? 'Permiso de c\u00e1mara denegado. Habilita el acceso en la configuraci\u00f3n del navegador.'
-          : err.name === 'NotFoundError'
-          ? 'No se encontr\u00f3 una c\u00e1mara frontal en este dispositivo.'
-          : err.name === 'NotReadableError'
-          ? 'La c\u00e1mara est\u00e1 siendo usada por otra aplicaci\u00f3n.'
-          : 'No se pudo acceder a la c\u00e1mara. Verifica los permisos.';
-        faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>' + msg + '</span>';
+      .catch(() => {
+        faceRecStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>No se pudo acceder a la c&#225;mara</span>';
         faceRecCaptureBtn.disabled = true;
-        console.warn('FaceRec camera error:', err.name, err.message);
       });
   }
 
@@ -1023,10 +1004,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(stream => {
         registerStream = stream;
         registerFaceVideo.srcObject = stream;
-        registerFaceVideo.setAttribute('playsinline', '');
-        return registerFaceVideo.play();
-      })
-      .then(() => {
+        registerFaceVideo.play();
         if (faceApiReady) {
           registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#9989;</span><span>C&#225;mara lista. Presiona "Capturar Rostro".</span>';
           registerFaceCaptureBtn.disabled = false;
@@ -1040,17 +1018,9 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
       })
-      .catch(err => {
-        const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
-          ? 'Permiso de c\u00e1mara denegado. Habilita el acceso en la configuraci\u00f3n del navegador.'
-          : err.name === 'NotFoundError'
-          ? 'No se encontr\u00f3 una c\u00e1mara frontal en este dispositivo.'
-          : err.name === 'NotReadableError'
-          ? 'La c\u00e1mara est\u00e1 siendo usada por otra aplicaci\u00f3n.'
-          : 'No se pudo acceder a la c\u00e1mara. Verifica los permisos.';
-        registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>' + msg + '</span>';
+      .catch(() => {
+        registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#10060;</span><span>No se pudo acceder a la c&#225;mara</span>';
         registerFaceCaptureBtn.disabled = true;
-        console.warn('Register camera error:', err.name, err.message);
       });
   }
 
@@ -2403,23 +2373,13 @@ document.addEventListener('DOMContentLoaded', () => {
         arVideo.srcObject = stream;
         arVideo.setAttribute('playsinline', '');
         arVideo.muted = true;
-        return arVideo.play();
-      })
-      .then(() => {
+        arVideo.play();
         arScanning = true;
         arStatus.innerHTML = '<span class="ar-scanner__icon">\uD83D\uDCF7</span><span>Enfoca el código QR de la máquina...</span>';
         arScanInterval = setInterval(scanARCode, 300);
       })
-      .catch(err => {
-        const msg = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'
-          ? 'Permiso de c\u00e1mara denegado. Habilita el acceso en la configuraci\u00f3n del navegador.'
-          : err.name === 'NotFoundError'
-          ? 'No se encontr\u00f3 una c\u00e1mara en este dispositivo.'
-          : err.name === 'NotReadableError'
-          ? 'La c\u00e1mara est\u00e1 siendo usada por otra aplicaci\u00f3n.'
-          : 'No se pudo acceder a la c\u00e1mara. Verifica los permisos.';
-        arStatus.innerHTML = '<span class="ar-scanner__icon">\u274C</span><span>' + msg + '</span>';
-        console.warn('AR camera error:', err.name, err.message);
+      .catch(() => {
+        arStatus.innerHTML = '<span class="ar-scanner__icon">\u274C</span><span>No se pudo acceder a la cámara</span>';
       });
   }
 
