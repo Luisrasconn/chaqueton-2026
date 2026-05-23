@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const contents = document.querySelectorAll('.tab-content');
 
 function activateTab(tabId) {
+  if (!currentUser) return;
   // Role-based gate
   if (currentUser) {
     const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen'];
@@ -678,14 +679,22 @@ function activateTab(tabId) {
       clearRoleRestrictions();
       loginForm.reset();
       loginError.style.display = 'none';
+      document.getElementById('loginOverlay').classList.remove('hidden');
     } else {
       loginModal.classList.add('open');
+      document.getElementById('loginOverlay').classList.add('modal-open');
     }
   });
 
-  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
+  loginModalClose.addEventListener('click', () => {
+    loginModal.classList.remove('open');
+    document.getElementById('loginOverlay').classList.remove('modal-open');
+  });
   loginModal.addEventListener('click', (e) => {
-    if (e.target === loginModal) loginModal.classList.remove('open');
+    if (e.target === loginModal) {
+      loginModal.classList.remove('open');
+      document.getElementById('loginOverlay').classList.remove('modal-open');
+    }
   });
 
   loginForm.addEventListener('submit', (e) => {
@@ -701,10 +710,18 @@ function activateTab(tabId) {
       loginBtn.textContent = 'Cerrar sesión';
       loginError.style.display = 'none';
       loginModal.classList.remove('open');
+      document.getElementById('loginOverlay').classList.remove('modal-open');
+      document.getElementById('loginOverlay').classList.add('hidden');
       applyRoleRestrictions(user);
     } else {
       loginError.style.display = '';
     }
+  });
+
+  // Show login modal from overlay
+  document.getElementById('showLoginBtn').addEventListener('click', () => {
+    loginModal.classList.add('open');
+    document.getElementById('loginOverlay').classList.add('modal-open');
   });
 
   // Close modals on overlay click
