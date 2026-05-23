@@ -1198,6 +1198,15 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
 
   .header__menu-toggle { display: block; }
   .header__actions { gap: 0.5rem; }
+  .header__menu-toggle { margin-left: auto; }
+
+@media (max-width: 420px) {
+  .header__logo-text { font-size: 1.1rem; }
+  .header__logo-icon { font-size: 1.3rem; }
+  .header__actions .btn--sm { font-size: 0.7rem; padding: 0.3rem 0.6rem; }
+  .user-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; }
+  .header__actions { gap: 0.25rem; }
+}
 
   .hero__title { font-size: 1.8rem; }
   .hero__subtitle { font-size: 1rem; }
