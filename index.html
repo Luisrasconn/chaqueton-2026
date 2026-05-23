@@ -813,13 +813,20 @@
     <div class="modal modal--wide">
       <button class="modal__close" id="qrModalClose" aria-label="Cerrar escáner QR">&times;</button>
       <h2 class="section-title">Escanear c&#243;digo QR</h2>
-      <p style="color:var(--text-light);margin-bottom:1rem">Coloca el c&#243;digo QR de la herramienta frente a la c&#225;mara.</p>
+      <p style="color:var(--text-light);margin-bottom:1rem">Enfoca el c&#243;digo QR de la herramienta con la c&#225;mara, o ingresa el ID manualmente.</p>
       <div class="qr-reader">
-        <video id="qrVideo" autoplay playsinline></video>
-        <canvas id="qrCanvas" hidden></canvas>
+        <video id="qrVideo" autoplay playsinline muted></video>
+        <canvas id="qrCanvas"></canvas>
       </div>
       <div id="qrResult" class="qr-result">
         <p style="color:var(--text-light)">Esperando c&#243;digo QR...</p>
+      </div>
+      <div class="qr-manual">
+        <span style="color:var(--text-light);font-size:0.85rem">&#243; ingresa el ID manual:</span>
+        <div style="display:flex;gap:0.5rem;margin-top:0.5rem">
+          <input type="text" id="qrManualInput" placeholder="Ej: T-102" style="flex:1;padding:0.5rem 0.75rem;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:0.9rem">
+          <button class="btn btn--primary" id="qrManualBtn">Usar</button>
+        </div>
       </div>
       <button class="btn btn--outline" id="qrCancelBtn" style="margin-top:1rem">Cancelar</button>
     </div>

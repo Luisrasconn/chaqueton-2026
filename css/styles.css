@@ -927,6 +927,18 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
   display: block;
 }
 
+.qr-reader canvas {
+  display: none;
+}
+
+.qr-manual {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--surface-alt);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition);
+}
+
 .qr-result {
   margin-top: 1rem;
   text-align: center;

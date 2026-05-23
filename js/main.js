@@ -461,44 +461,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const qrVideo = document.getElementById('qrVideo');
   const qrCanvas = document.getElementById('qrCanvas');
   const qrResult = document.getElementById('qrResult');
+  const qrManualInput = document.getElementById('qrManualInput');
+  const qrManualBtn = document.getElementById('qrManualBtn');
   let qrStream = null;
   let qrScanning = false;
-
-  function startQRScanner() {
-    qrResult.innerHTML = '<p style="color:var(--text-light)">Iniciando cámara...</p>';
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        qrStream = stream;
-        qrVideo.srcObject = stream;
-        qrVideo.play();
-        qrScanning = true;
-        scanQRCode();
-      })
-      .catch(() => {
-        qrResult.innerHTML = '<p style="color:var(--danger)">No se pudo acceder a la cámara</p>';
-      });
-  }
-
-  function scanQRCode() {
-    if (!qrScanning) return;
-    if (qrVideo.readyState === qrVideo.HAVE_ENOUGH_DATA) {
-      const canvas = qrCanvas;
-      canvas.width = qrVideo.videoWidth;
-      canvas.height = qrVideo.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(qrVideo, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      try {
-        const code = jsQR(imageData.data, canvas.width, canvas.height);
-        if (code) {
-          processQRCode(code.data);
-          return;
-        }
-      } catch (e) {}
-    }
-    requestAnimationFrame(scanQRCode);
-  }
+  let qrScanInterval = null;
+  let qrJsAvailable = false;
 
   function processQRCode(data) {
     qrScanning = false;
@@ -532,20 +500,78 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => stopQRScanner(), 2000);
   }
 
+  function scanQRCode() {
+    if (!qrScanning || !qrJsAvailable) return;
+    try {
+      if (qrVideo.readyState >= qrVideo.HAVE_CURRENT_DATA) {
+        const canvas = qrCanvas;
+        canvas.width = qrVideo.videoWidth || 640;
+        canvas.height = qrVideo.videoHeight || 480;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(qrVideo, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, canvas.width, canvas.height, { inversionAttempts: 'dontInvert' });
+        if (code && code.data) {
+          processQRCode(code.data);
+        }
+      }
+    } catch (e) {}
+  }
+
+  function startQRScanner() {
+    qrResult.innerHTML = '<p style="color:var(--text-light)">Iniciando c\u00e1mara...</p>';
+    qrJsAvailable = typeof jsQR !== 'undefined';
+    if (!qrJsAvailable) {
+      qrResult.innerHTML = '<p style="color:var(--warning)">Biblioteca QR no disponible. Ingresa el ID manualmente abajo.</p>';
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 480 } } })
+      .then(stream => {
+        qrStream = stream;
+        qrVideo.srcObject = stream;
+        qrVideo.setAttribute('playsinline', '');
+        qrVideo.muted = true;
+        qrVideo.play();
+        qrScanning = true;
+        if (qrJsAvailable) {
+          qrVideo.addEventListener('playing', () => {
+            qrResult.innerHTML = '<p style="color:var(--text-light)">Escaneando QR...</p>';
+            qrScanInterval = setInterval(scanQRCode, 300);
+          });
+        }
+      })
+      .catch(() => {
+        qrResult.innerHTML = '<p style="color:var(--danger)">No se pudo acceder a la c\u00e1mara. Ingresa el ID manualmente.</p>';
+      });
+  }
+
   function stopQRScanner() {
     qrScanning = false;
+    if (qrScanInterval) { clearInterval(qrScanInterval); qrScanInterval = null; }
     if (qrStream) {
       qrStream.getTracks().forEach(t => t.stop());
       qrStream = null;
     }
+    qrVideo.srcObject = null;
     qrModal.classList.remove('open');
   }
 
+  function handleManualQR() {
+    const id = qrManualInput.value.trim().toUpperCase();
+    if (!id) {
+      qrResult.innerHTML = '<p style="color:var(--warning)">Ingresa un ID de herramienta (ej: T-102)</p>';
+      return;
+    }
+    processQRCode(id);
+  }
+
   qrScanBtn.addEventListener('click', () => {
+    qrManualInput.value = '';
     qrModal.classList.add('open');
     startQRScanner();
   });
 
+  qrManualBtn.addEventListener('click', handleManualQR);
+  qrManualInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleManualQR(); });
   qrModalClose.addEventListener('click', stopQRScanner);
   qrCancelBtn.addEventListener('click', stopQRScanner);
 
