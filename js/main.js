@@ -2249,7 +2249,28 @@ document.addEventListener('DOMContentLoaded', () => {
       cb.addEventListener('change', update);
     });
 
+    // Accordion toggle
+    const heads = list.querySelectorAll('.training-head');
+    heads.forEach(head => {
+      head.removeEventListener('click', toggleDetail);
+      head.addEventListener('click', toggleDetail);
+    });
+
     update();
+  }
+
+  function toggleDetail(e) {
+    const head = e.currentTarget;
+    const item = head.closest('.training-item');
+    if (item) {
+      const wasOpen = item.classList.contains('open');
+      // Close all others in same list
+      const list = item.closest('.training-list');
+      if (list) {
+        list.querySelectorAll('.training-item.open').forEach(el => el.classList.remove('open'));
+      }
+      if (!wasOpen) item.classList.add('open');
+    }
   }
 
   function closeAllTrainingModals() {
