@@ -42,13 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs = document.querySelectorAll('.nav__tab');
   const contents = document.querySelectorAll('.tab-content');
 
-  function activateTab(tabId) {
-    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-    contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
-    history.replaceState(null, '', '#' + tabId);
-    if (tabId === 'inicio') initCharts();
-    if (tabId === 'realidadvirtual') initVRScene();
+function activateTab(tabId) {
+  // Role-based gate
+  if (currentUser) {
+    const allowedSupervisor = ['inicio', 'entrenamiento', 'retroalimentacion'];
+    const allowedOperador = ['capacitacion', 'entrenamiento'];
+    const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
+    if (!allowed.includes(tabId)) return;
   }
+
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
+  history.replaceState(null, '', '#' + tabId);
+  if (tabId === 'inicio') initCharts();
+  if (tabId === 'realidadvirtual') initVRScene();
+}
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => activateTab(tab.dataset.tab));
@@ -433,6 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ====================================
   toolCards.forEach(card => {
     card.addEventListener('dblclick', () => {
+      if (currentUser && currentUser.role === 'supervisor') return;
       const statuses = ['disponible', 'uso', 'mantenimiento'];
       const current = card.dataset.status;
       const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
@@ -473,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let qrJsAvailable = false;
 
   function processQRCode(data) {
+    if (currentUser && currentUser.role === 'supervisor') return;
     qrScanning = false;
     const toolId = data.trim();
 
@@ -585,15 +595,89 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginBtn = document.getElementById('loginBtn');
   const loginModal = document.getElementById('loginModal');
   const loginModalClose = document.getElementById('loginModalClose');
+  const loginForm = document.getElementById('loginForm');
+  const loginUser = document.getElementById('loginUser');
+  const loginPass = document.getElementById('loginPass');
+  const loginError = document.getElementById('loginError');
+
+  const CREDENTIALS = {
+    supervisor: { password: 'sup123', label: 'Supervisor' },
+    operador: { password: 'ope123', label: 'Operador' }
+  };
+
+  function applyRoleRestrictions(role) {
+    const tabIds = document.querySelectorAll('.nav__tab');
+    const allowedSupervisor = ['inicio', 'entrenamiento', 'retroalimentacion'];
+    const allowedOperador = ['capacitacion', 'entrenamiento'];
+    const allowed = role === 'supervisor' ? allowedSupervisor : allowedOperador;
+
+    tabIds.forEach(tab => {
+      const tabId = tab.dataset.tab;
+      const isAllowed = allowed.includes(tabId);
+      tab.style.display = isAllowed ? '' : 'none';
+      if (tab.classList.contains('active') && !isAllowed) {
+        tab.classList.remove('active');
+      }
+    });
+
+    // Activate first allowed tab
+    const firstAllowed = [...tabIds].find(t => allowed.includes(t.dataset.tab));
+    if (firstAllowed) activateTab(firstAllowed.dataset.tab);
+
+    // Warehouse restrictions
+    const qrScanBtn = document.getElementById('qrScanBtn');
+    const faceAuthStartBtn = document.getElementById('faceAuthStartBtn');
+    const toolCards = document.querySelectorAll('.tool-card');
+    const addPersonBtn = document.getElementById('addPersonBtn');
+    const personnelSection = document.querySelector('.personnel-section');
+
+    if (role === 'supervisor') {
+      // Can only register persons, NOT check out tools
+      if (qrScanBtn) qrScanBtn.style.display = 'none';
+      if (faceAuthStartBtn) faceAuthStartBtn.style.display = 'none';
+      toolCards.forEach(c => c.style.pointerEvents = 'none');
+      if (addPersonBtn) addPersonBtn.style.display = '';
+      if (personnelSection) personnelSection.style.display = '';
+    } else {
+      // Can only check out tools, NOT register persons
+      if (qrScanBtn) qrScanBtn.style.display = '';
+      if (faceAuthStartBtn) faceAuthStartBtn.style.display = '';
+      toolCards.forEach(c => c.style.pointerEvents = '');
+      if (addPersonBtn) addPersonBtn.style.display = 'none';
+      if (personnelSection) personnelSection.style.display = 'none';
+    }
+  }
+
+  function clearRoleRestrictions() {
+    document.querySelectorAll('.nav__tab').forEach(t => {
+      t.style.display = '';
+      if (!t.classList.contains('active') && t.dataset.tab === 'inicio') {
+        t.classList.add('active');
+      }
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const inicio = document.getElementById('tab-inicio');
+    if (inicio) inicio.classList.add('active');
+
+    const qrScanBtn = document.getElementById('qrScanBtn');
+    const faceAuthStartBtn = document.getElementById('faceAuthStartBtn');
+    if (qrScanBtn) qrScanBtn.style.display = '';
+    if (faceAuthStartBtn) faceAuthStartBtn.style.display = '';
+    document.querySelectorAll('.tool-card').forEach(c => c.style.pointerEvents = '');
+    const addPersonBtn = document.getElementById('addPersonBtn');
+    const personnelSection = document.querySelector('.personnel-section');
+    if (addPersonBtn) addPersonBtn.style.display = '';
+    if (personnelSection) personnelSection.style.display = '';
+  }
 
   loginBtn.addEventListener('click', () => {
     if (currentUser) {
-      if (auth) {
-        auth.signOut().catch(() => {});
-      }
       currentUser = null;
       document.getElementById('userBadge').style.display = 'none';
       loginBtn.textContent = 'Iniciar sesión';
+      clearRoleRestrictions();
+      loginForm.reset();
+      loginError.style.display = 'none';
     } else {
       loginModal.classList.add('open');
     }
@@ -604,15 +688,23 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === loginModal) loginModal.classList.remove('open');
   });
 
-  document.querySelectorAll('.role-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const role = btn.dataset.role;
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = loginUser.value.trim().toLowerCase();
+    const pass = loginPass.value;
+    const cred = CREDENTIALS[user];
+
+    if (cred && cred.password === pass) {
+      currentUser = { uid: 'demo-' + user, role: user };
       document.getElementById('userBadge').style.display = 'inline-flex';
-      document.getElementById('userName').textContent = role === 'supervisor' ? 'Supervisor' : 'Operador';
+      document.getElementById('userName').textContent = cred.label;
       loginBtn.textContent = 'Cerrar sesión';
-      currentUser = { uid: 'demo-' + role, role: role };
+      loginError.style.display = 'none';
       loginModal.classList.remove('open');
-    });
+      applyRoleRestrictions(user);
+    } else {
+      loginError.style.display = '';
+    }
   });
 
   // Close modals on overlay click

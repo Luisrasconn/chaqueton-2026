@@ -814,20 +814,19 @@
     <div class="modal">
       <button class="modal__close" id="loginModalClose" aria-label="Cerrar modal de inicio de sesión">&times;</button>
       <h2 class="section-title">Iniciar sesi&#243;n</h2>
-      <p style="color:var(--text-light);margin-bottom:1.5rem">Selecciona un rol para ingresar al panel de control.</p>
-      <div class="modal__roles">
-        <button class="role-btn" data-role="supervisor">
-          <span class="role-btn__icon">&#128119;</span>
-          <span class="role-btn__title">Supervisor</span>
-          <span class="role-btn__desc">Acceso completo a reportes y configuraci&#243;n</span>
-        </button>
-        <button class="role-btn" data-role="operador">
-          <span class="role-btn__icon">&#128295;</span>
-          <span class="role-btn__title">Operador</span>
-          <span class="role-btn__desc">Reportar incidencias y consultar almac&#233;n</span>
-        </button>
-      </div>
-      <p class="modal__hint">Demo — sin registro real</p>
+      <p style="color:var(--text-light);margin-bottom:1.5rem">Ingresa tus credenciales.</p>
+      <form id="loginForm" style="display:flex;flex-direction:column;gap:1rem">
+        <div class="form__group">
+          <label for="loginUser">Usuario</label>
+          <input type="text" id="loginUser" placeholder="supervisor o operador" required>
+        </div>
+        <div class="form__group">
+          <label for="loginPass">Contrase&#241;a</label>
+          <input type="password" id="loginPass" placeholder="••••••" required>
+        </div>
+        <div id="loginError" style="color:var(--danger);font-size:0.85rem;display:none">Credenciales incorrectas</div>
+        <button type="submit" class="btn btn--primary">Ingresar</button>
+      </form>
     </div>
   </div>
 
