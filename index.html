@@ -137,23 +137,25 @@
           </div>
           <button class="btn btn--primary" data-tab="realidadvirtual">Iniciar VR</button>
         </div>
-        <div class="card card--program">
+        <div class="card card--program" data-course="seguridad">
+          <span class="card__badge course-progress" id="progress-seguridad">0%</span>
           <h3 class="card__title">Actualizaci&#243;n: Normas de Seguridad 2026</h3>
           <p class="card__text">Curso obligatorio actualizado con los nuevos protocolos de seguridad industrial.</p>
           <div class="card__meta">
             <span>&#9201; 30 min</span>
             <span>&#11088; 4.5</span>
           </div>
-          <button class="btn btn--primary">Iniciar</button>
+          <button class="btn btn--primary" data-modal="safety-training-modal">Iniciar</button>
         </div>
-        <div class="card card--program">
+        <div class="card card--program" data-course="optimizacion">
+          <span class="card__badge course-progress" id="progress-optimizacion">0%</span>
           <h3 class="card__title">Optimizaci&#243;n de Procesos</h3>
           <p class="card__text">T&#233;cnicas avanzadas para reducir tiempos muertos y mejorar la eficiencia en la l&#237;nea.</p>
           <div class="card__meta">
             <span>&#9201; 60 min</span>
             <span>&#11088; 4.9</span>
           </div>
-          <button class="btn btn--primary">Iniciar</button>
+          <button class="btn btn--primary" data-modal="optimization-training-modal">Iniciar</button>
         </div>
       </div>
 
@@ -276,8 +278,12 @@
             </div>
           </div>
           <div class="form__group">
-            <label for="reportDesc">Descripci&#243;n</label>
-            <textarea id="reportDesc" rows="3" placeholder="Describe el problema o mejora…" required></textarea>
+            <label for="reportProblem">Problema</label>
+            <textarea id="reportProblem" rows="2" placeholder="Describe el problema…" required></textarea>
+          </div>
+          <div class="form__group">
+            <label for="reportSolution">Soluci&#243;n propuesta</label>
+            <textarea id="reportSolution" rows="2" placeholder="Describe la soluci&#243;n que propones…"></textarea>
           </div>
           <div class="form__group">
             <label for="reportOperator">Reportado por</label>
@@ -294,17 +300,18 @@
           <input type="text" id="searchReport" class="table-search" placeholder="Buscar reportes…">
           <span id="reportCount" class="table-count"></span>
         </div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>&#193;rea</th>
-              <th>Tipo</th>
-              <th>Descripci&#243;n</th>
-              <th>Operador</th>
-              <th>Estado</th>
-              <th>Acci&#243;n</th>
-            </tr>
-          </thead>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>&#193;rea</th>
+                <th>Tipo</th>
+                <th>Problema</th>
+                <th>Soluci&#243;n</th>
+                <th>Operador</th>
+                <th>Estado</th>
+                <th>Acci&#243;n</th>
+              </tr>
+            </thead>
           <tbody id="reportsBody"></tbody>
         </table>
       </div>
@@ -807,20 +814,19 @@
     <div class="modal">
       <button class="modal__close" id="loginModalClose" aria-label="Cerrar modal de inicio de sesión">&times;</button>
       <h2 class="section-title">Iniciar sesi&#243;n</h2>
-      <p style="color:var(--text-light);margin-bottom:1.5rem">Selecciona un rol para ingresar al panel de control.</p>
-      <div class="modal__roles">
-        <button class="role-btn" data-role="supervisor">
-          <span class="role-btn__icon">&#128119;</span>
-          <span class="role-btn__title">Supervisor</span>
-          <span class="role-btn__desc">Acceso completo a reportes y configuraci&#243;n</span>
-        </button>
-        <button class="role-btn" data-role="operador">
-          <span class="role-btn__icon">&#128295;</span>
-          <span class="role-btn__title">Operador</span>
-          <span class="role-btn__desc">Reportar incidencias y consultar almac&#233;n</span>
-        </button>
-      </div>
-      <p class="modal__hint">Demo — sin registro real</p>
+      <p style="color:var(--text-light);margin-bottom:1.5rem">Ingresa tus credenciales.</p>
+      <form id="loginForm" style="display:flex;flex-direction:column;gap:1rem">
+        <div class="form__group">
+          <label for="loginUser">Usuario</label>
+          <input type="text" id="loginUser" placeholder="supervisor o operador" required>
+        </div>
+        <div class="form__group">
+          <label for="loginPass">Contrase&#241;a</label>
+          <input type="password" id="loginPass" placeholder="••••••" required>
+        </div>
+        <div id="loginError" style="color:var(--danger);font-size:0.85rem;display:none">Credenciales incorrectas</div>
+        <button type="submit" class="btn btn--primary">Ingresar</button>
+      </form>
     </div>
   </div>
 
@@ -960,5 +966,70 @@
       <button class="hud-btn" id="completeReset" style="padding:10px 30px;font-size:1rem">Reiniciar</button>
     </div>
   </div>
+
+  <!-- ===== SAFETY TRAINING MODAL ===== -->
+  <div class="modal-overlay" id="safety-training-modal">
+    <div class="modal modal--training">
+      <button class="modal__close safety-training-close">&times;</button>
+      <h2 class="section-title">&#128737; Normas de Seguridad 2026</h2>
+
+      <!-- CONTENT VIEW -->
+      <div class="training-content" id="seguridad-content">
+        <p style="color:var(--text-light);margin-bottom:1rem">Mira el video completo sobre normas de seguridad industrial antes de presentar el examen.</p>
+        <div class="training-video">
+          <iframe width="100%" height="200" src="https://www.youtube.com/embed/ZLX7gz82iU0" title="Seguridad Industrial" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="training-footer">
+          <span style="flex:1"></span>
+          <button class="btn btn--primary" id="seguridad-start-exam">&#128221; Tomar examen</button>
+        </div>
+      </div>
+
+      <!-- QUIZ VIEW -->
+      <div class="training-quiz" id="seguridad-quiz" style="display:none">
+        <p style="color:var(--text-light);margin-bottom:1rem">Responde correctamente al menos <strong>7 de 10</strong> preguntas para aprobar.</p>
+        <div class="quiz-questions" id="seguridad-questions"></div>
+        <div class="quiz-result" id="seguridad-quiz-result" style="display:none"></div>
+        <div class="training-footer">
+          <button class="btn btn--outline" id="seguridad-back-content">&#8592; Volver al contenido</button>
+          <span style="flex:1"></span>
+          <button class="btn btn--primary" id="seguridad-submit-quiz">&#9989; Entregar examen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== OPTIMIZATION TRAINING MODAL ===== -->
+  <div class="modal-overlay" id="optimization-training-modal">
+    <div class="modal modal--training">
+      <button class="modal__close optimization-training-close">&times;</button>
+      <h2 class="section-title">&#128200; Optimizaci&#243;n de Procesos</h2>
+
+      <!-- CONTENT VIEW -->
+      <div class="training-content" id="optimizacion-content">
+        <p style="color:var(--text-light);margin-bottom:1rem">Mira el video completo sobre Lean Manufacturing antes de presentar el examen.</p>
+        <div class="training-video">
+          <iframe width="100%" height="200" src="https://www.youtube.com/embed/3N89JJ991pE" title="Lean Manufacturing - Toast Kaizen" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div class="training-footer">
+          <span style="flex:1"></span>
+          <button class="btn btn--primary" id="optimizacion-start-exam">&#128221; Tomar examen</button>
+        </div>
+      </div>
+
+      <!-- QUIZ VIEW -->
+      <div class="training-quiz" id="optimizacion-quiz" style="display:none">
+        <p style="color:var(--text-light);margin-bottom:1rem">Responde correctamente al menos <strong>7 de 10</strong> preguntas para aprobar.</p>
+        <div class="quiz-questions" id="optimizacion-questions"></div>
+        <div class="quiz-result" id="optimizacion-quiz-result" style="display:none"></div>
+        <div class="training-footer">
+          <button class="btn btn--outline" id="optimizacion-back-content">&#8592; Volver al contenido</button>
+          <span style="flex:1"></span>
+          <button class="btn btn--primary" id="optimizacion-submit-quiz">&#9989; Entregar examen</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

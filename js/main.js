@@ -42,13 +42,21 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabs = document.querySelectorAll('.nav__tab');
   const contents = document.querySelectorAll('.tab-content');
 
-  function activateTab(tabId) {
-    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
-    contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
-    history.replaceState(null, '', '#' + tabId);
-    if (tabId === 'inicio') initCharts();
-    if (tabId === 'realidadvirtual') initVRScene();
+function activateTab(tabId) {
+  // Role-based gate
+  if (currentUser) {
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
+    const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
+    if (!allowed.includes(tabId)) return;
   }
+
+  tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
+  contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
+  history.replaceState(null, '', '#' + tabId);
+  if (tabId === 'inicio') initCharts();
+  if (tabId === 'realidadvirtual') initVRScene();
+}
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => activateTab(tab.dataset.tab));
@@ -295,9 +303,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Seed data
   if (reports.length === 0) {
     reports = [
-      { id: 'r1', area: 'Ensamble', type: 'Cuello de botella', desc: 'Retraso en estación 3 por falta de piezas', operator: 'Carlos M.', status: 'En revisión', date: new Date(Date.now() - 86400000).toISOString() },
-      { id: 'r2', area: 'Soldadura', type: 'Fallo técnico', desc: 'Robot soldador presenta desviación en eje Z', operator: 'Ana L.', status: 'Resuelto', date: new Date(Date.now() - 172800000).toISOString() },
-      { id: 'r3', area: 'Pintura', type: 'Mejora sugerida', desc: 'Instalar extractor adicional en cabina 2', operator: 'Pedro R.', status: 'En revisión', date: new Date(Date.now() - 259200000).toISOString() },
+      { id: 'r1', area: 'Ensamble', type: 'Cuello de botella', problem: 'Retraso en estación 3 por falta de piezas', solution: 'Reabastecer estación cada hora con lotes más pequeños', operator: 'Carlos M.', status: 'En revisión', date: new Date(Date.now() - 86400000).toISOString() },
+      { id: 'r2', area: 'Soldadura', type: 'Fallo técnico', problem: 'Robot soldador presenta desviación en eje Z', solution: 'Calibrar robot y reemplazar sensor de posición', operator: 'Ana L.', status: 'Resuelto', date: new Date(Date.now() - 172800000).toISOString() },
+      { id: 'r3', area: 'Pintura', type: 'Mejora sugerida', problem: 'Acumulación de humo en cabina 2', solution: 'Instalar extractor adicional de alta capacidad', operator: 'Pedro R.', status: 'En revisión', date: new Date(Date.now() - 259200000).toISOString() },
     ];
     saveReports();
   }
@@ -316,7 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ? reports.filter(r =>
           r.area.toLowerCase().includes(filter) ||
           r.type.toLowerCase().includes(filter) ||
-          r.desc.toLowerCase().includes(filter) ||
+          (r.problem || '').toLowerCase().includes(filter) ||
+          (r.solution || '').toLowerCase().includes(filter) ||
           r.operator.toLowerCase().includes(filter)
         )
       : reports;
@@ -327,7 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.innerHTML = `
         <td>${r.area}</td>
         <td><span class="badge badge--${badgeMap[r.type] || 'info'}">${r.type}</span></td>
-        <td>${r.desc}</td>
+        <td>${r.problem || r.desc || ''}</td>
+        <td>${r.solution || '—'}</td>
         <td>${r.operator}</td>
         <td><span class="badge badge--${r.status === 'Resuelto' ? 'success' : 'info'}">${r.status}</span></td>
         <td><button class="delete-btn" data-id="${r.id}" aria-label="Eliminar reporte de ${r.area}">&times;</button></td>
@@ -350,14 +360,16 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const area = document.getElementById('reportArea').value;
     const type = document.getElementById('reportType').value;
-    const desc = document.getElementById('reportDesc').value;
+    const problem = document.getElementById('reportProblem').value;
+    const solution = document.getElementById('reportSolution').value;
     const operator = document.getElementById('reportOperator').value || 'Anónimo';
 
     const report = {
       id: 'r' + Date.now(),
       area,
       type,
-      desc,
+      problem,
+      solution,
       operator,
       status: 'Pendiente',
       date: new Date().toISOString()
@@ -382,15 +394,56 @@ document.addEventListener('DOMContentLoaded', () => {
   // 9. EXPORT PDF
   // ====================================
   document.getElementById('exportPdfBtn').addEventListener('click', () => {
-    const element = document.getElementById('reportesTable');
+    const visibleReports = document.querySelectorAll('#reportsBody tr');
+    const container = document.getElementById('reportesTable');
+    const origContent = container.innerHTML;
+
+    let html = `
+      <div style="font-family:sans-serif;padding:20px">
+        <h1 style="font-size:22px;color:#0d9488;margin-bottom:4px">MHub — Reporte de Retroalimentaci&oacute;n</h1>
+        <p style="color:#666;font-size:13px;margin-bottom:20px">Generado el ${new Date().toLocaleDateString('es-MX')}</p>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead>
+            <tr style="background:#0d9488;color:#fff">
+              <th style="padding:8px;text-align:left">Supervisor</th>
+              <th style="padding:8px;text-align:left">Incidencia</th>
+              <th style="padding:8px;text-align:left">Soluci&oacute;n</th>
+              <th style="padding:8px;text-align:left">&Aacute;rea</th>
+              <th style="padding:8px;text-align:left">Tipo</th>
+            </tr>
+          </thead>
+          <tbody>
+    `;
+
+    visibleReports.forEach(row => {
+      const cells = row.querySelectorAll('td');
+      if (cells.length >= 5) {
+        html += '<tr style="border-bottom:1px solid #ddd">';
+        html += '<td style="padding:6px 8px">' + cells[4].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[2].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[3].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[0].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[1].textContent + '</td>';
+        html += '</tr>';
+      }
+    });
+
+    html += '</tbody></table></div>';
+
+    container.innerHTML = html;
+
     const opt = {
       margin: [10, 10, 10, 10],
-      filename: 'reportes-mhub-' + new Date().toISOString().slice(0, 10) + '.pdf',
+      filename: 'reporte-retroalimentacion-' + new Date().toISOString().slice(0, 10) + '.pdf',
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(element).save();
+    html2pdf().set(opt).from(container).save().then(function () {
+      container.innerHTML = origContent;
+    }, function () {
+      container.innerHTML = origContent;
+    });
   });
 
   // ====================================
@@ -429,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ====================================
   toolCards.forEach(card => {
     card.addEventListener('dblclick', () => {
+      if (currentUser && currentUser.role === 'supervisor') return;
       const statuses = ['disponible', 'uso', 'mantenimiento'];
       const current = card.dataset.status;
       const next = statuses[(statuses.indexOf(current) + 1) % statuses.length];
@@ -469,6 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let qrJsAvailable = false;
 
   function processQRCode(data) {
+    if (currentUser && currentUser.role === 'supervisor') return;
     qrScanning = false;
     const toolId = data.trim();
 
@@ -581,15 +636,89 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginBtn = document.getElementById('loginBtn');
   const loginModal = document.getElementById('loginModal');
   const loginModalClose = document.getElementById('loginModalClose');
+  const loginForm = document.getElementById('loginForm');
+  const loginUser = document.getElementById('loginUser');
+  const loginPass = document.getElementById('loginPass');
+  const loginError = document.getElementById('loginError');
+
+  const CREDENTIALS = {
+    supervisor: { password: 'sup123', label: 'Supervisor' },
+    operador: { password: 'ope123', label: 'Operador' }
+  };
+
+  function applyRoleRestrictions(role) {
+    const tabIds = document.querySelectorAll('.nav__tab');
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
+    const allowed = role === 'supervisor' ? allowedSupervisor : allowedOperador;
+
+    tabIds.forEach(tab => {
+      const tabId = tab.dataset.tab;
+      const isAllowed = allowed.includes(tabId);
+      tab.style.display = isAllowed ? '' : 'none';
+      if (tab.classList.contains('active') && !isAllowed) {
+        tab.classList.remove('active');
+      }
+    });
+
+    // Activate first allowed tab
+    const firstAllowed = [...tabIds].find(t => allowed.includes(t.dataset.tab));
+    if (firstAllowed) activateTab(firstAllowed.dataset.tab);
+
+    // Warehouse restrictions
+    const qrScanBtn = document.getElementById('qrScanBtn');
+    const faceAuthStartBtn = document.getElementById('faceAuthStartBtn');
+    const toolCards = document.querySelectorAll('.tool-card');
+    const addPersonBtn = document.getElementById('addPersonBtn');
+    const personnelSection = document.querySelector('.personnel-section');
+
+    if (role === 'supervisor') {
+      // Can only register persons, NOT check out tools
+      if (qrScanBtn) qrScanBtn.style.display = 'none';
+      if (faceAuthStartBtn) faceAuthStartBtn.style.display = 'none';
+      toolCards.forEach(c => c.style.pointerEvents = 'none');
+      if (addPersonBtn) addPersonBtn.style.display = '';
+      if (personnelSection) personnelSection.style.display = '';
+    } else {
+      // Can only check out tools, NOT register persons
+      if (qrScanBtn) qrScanBtn.style.display = '';
+      if (faceAuthStartBtn) faceAuthStartBtn.style.display = '';
+      toolCards.forEach(c => c.style.pointerEvents = '');
+      if (addPersonBtn) addPersonBtn.style.display = 'none';
+      if (personnelSection) personnelSection.style.display = 'none';
+    }
+  }
+
+  function clearRoleRestrictions() {
+    document.querySelectorAll('.nav__tab').forEach(t => {
+      t.style.display = '';
+      if (!t.classList.contains('active') && t.dataset.tab === 'inicio') {
+        t.classList.add('active');
+      }
+    });
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    const inicio = document.getElementById('tab-inicio');
+    if (inicio) inicio.classList.add('active');
+
+    const qrScanBtn = document.getElementById('qrScanBtn');
+    const faceAuthStartBtn = document.getElementById('faceAuthStartBtn');
+    if (qrScanBtn) qrScanBtn.style.display = '';
+    if (faceAuthStartBtn) faceAuthStartBtn.style.display = '';
+    document.querySelectorAll('.tool-card').forEach(c => c.style.pointerEvents = '');
+    const addPersonBtn = document.getElementById('addPersonBtn');
+    const personnelSection = document.querySelector('.personnel-section');
+    if (addPersonBtn) addPersonBtn.style.display = '';
+    if (personnelSection) personnelSection.style.display = '';
+  }
 
   loginBtn.addEventListener('click', () => {
     if (currentUser) {
-      if (auth) {
-        auth.signOut().catch(() => {});
-      }
       currentUser = null;
       document.getElementById('userBadge').style.display = 'none';
       loginBtn.textContent = 'Iniciar sesión';
+      clearRoleRestrictions();
+      loginForm.reset();
+      loginError.style.display = 'none';
     } else {
       loginModal.classList.add('open');
     }
@@ -600,15 +729,47 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === loginModal) loginModal.classList.remove('open');
   });
 
-  document.querySelectorAll('.role-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const role = btn.dataset.role;
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = loginUser.value.trim().toLowerCase();
+    const pass = loginPass.value;
+    const cred = CREDENTIALS[user];
+
+    if (cred && cred.password === pass) {
+      currentUser = { uid: 'demo-' + user, role: user };
       document.getElementById('userBadge').style.display = 'inline-flex';
-      document.getElementById('userName').textContent = role === 'supervisor' ? 'Supervisor' : 'Operador';
+      document.getElementById('userName').textContent = cred.label;
       loginBtn.textContent = 'Cerrar sesión';
-      currentUser = { uid: 'demo-' + role, role: role };
+      loginError.style.display = 'none';
       loginModal.classList.remove('open');
-    });
+      applyRoleRestrictions(user);
+    } else {
+      loginError.style.display = '';
+    }
+  });
+
+  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
+  loginModal.addEventListener('click', (e) => {
+    if (e.target === loginModal) loginModal.classList.remove('open');
+  });
+
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const user = loginUser.value.trim().toLowerCase();
+    const pass = loginPass.value;
+    const cred = CREDENTIALS[user];
+
+    if (cred && cred.password === pass) {
+      currentUser = { uid: 'demo-' + user, role: user };
+      document.getElementById('userBadge').style.display = 'inline-flex';
+      document.getElementById('userName').textContent = cred.label;
+      loginBtn.textContent = 'Cerrar sesión';
+      loginError.style.display = 'none';
+      loginModal.classList.remove('open');
+      applyRoleRestrictions(user);
+    } else {
+      loginError.style.display = '';
+    }
   });
 
   // Close modals on overlay click
@@ -2104,4 +2265,203 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+  // ====================================
+  // 11. TRAINING MODULES & EXAMS
+  // ====================================
+  const EXAM_STORAGE_KEY = 'mhub-exams';
+
+  const QUIZZES = {
+    seguridad: {
+      questions: [
+        { q: '¿Qué reduce el uso correcto de EPP hasta en un 60% según la OSHA?', options: ['Tiempo de producción', 'Accidentes graves', 'Costos de mantenimiento', 'Consumo de energía'], correct: 1 },
+        { q: '¿Cuál es el primer paso del procedimiento LOTO?', options: ['Aplicar candado', 'Liberar energía residual', 'Notificar a afectados', 'Verificar cero energía'], correct: 2 },
+        { q: '¿Qué significa el acrónimo PASS en el uso de extintores?', options: ['Push, Aim, Squeeze, Sweep', 'Pull, Aim, Squeeze, Sweep', 'Pull, Activate, Spray, Sweep', 'Push, Activate, Squeeze, Spray'], correct: 1 },
+        { q: '¿Cuál es la primera causa de incapacidad laboral según el módulo?', options: ['Caídas desde altura', 'Golpes por objetos', 'Trastornos musculoesqueléticos', 'Quemaduras químicas'], correct: 2 },
+        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', options: ['12', '14', '16', '18'], correct: 2 },
+        { q: '¿Qué tipo de extintor se usa para fuegos eléctricos?', options: ['Tipo A', 'Tipo B', 'Tipo C', 'Tipo D'], correct: 2 },
+        { q: '¿Cada cuánto deben realizarse los simulacros de evacuación?', options: ['Mensuales', 'Bimestrales', 'Trimestrales', 'Semestrales'], correct: 2 },
+        { q: '¿Qué significa la sigla LOTO?', options: ['Lock-Out / Tag-Out', 'Load-Over / Turn-Off', 'Lift-Off / Take-Out', 'Lever-Over / Tool-Out'], correct: 0 },
+        { q: '¿Cuál es la técnica correcta al levantar una carga > 15 kg?', options: ['Doblar la cintura', 'Doblar rodillas y mantener espalda recta', 'Levantar con un solo brazo', 'Girar el tronco mientras levanta'], correct: 1 },
+        { q: '¿Qué debe tener un trabajador antes de operar maquinaria?', options: ['Autorización verbal', 'Entrenamiento documentado vigente', 'Experiencia previa no certificada', 'Solo supervisión remota'], correct: 1 }
+      ]
+    },
+    optimizacion: {
+      questions: [
+        { q: '¿Cuál es el primer paso (Seiri) de la metodología 5S?', options: ['Ordenar', 'Clasificar', 'Limpiar', 'Estandarizar'], correct: 1 },
+        { q: '¿Qué significa la palabra japonesa "Kaizen"?', options: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
+        { q: '¿Cuál es el objetivo principal de SMED?', options: ['Aumentar velocidad de producción', 'Reducir cambios de herramienta a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
+        { q: '¿Qué representa un Kanban en el sistema Toyota?', options: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
+        { q: '¿Cuántos desperdicios (Muda) se identifican en Lean?', options: ['5', '6', '7', '8'], correct: 2 },
+        { q: '¿Qué significa "Takt" en alemán?', options: ['Tiempo', 'Ritmo', 'Velocidad', 'Ciclo'], correct: 1 },
+        { q: '¿Qué ciclo sigue la metodología Kaizen?', options: ['DMAIC', 'PDCA', 'FMEA', '8D'], correct: 1 },
+        { q: '¿Qué significa Jidoka?', options: ['Producción en masa', 'Automatización con toque humano', 'Control estadístico', 'Mantenimiento preventivo'], correct: 1 },
+        { q: '¿Qué herramienta mapea todos los pasos desde materia prima hasta el cliente?', options: ['Diagrama de Pareto', 'Value Stream Mapping (VSM)', 'Diagrama de Ishikawa', 'Histograma'], correct: 1 },
+        { q: '¿Qué reduce el SMV (Standard Minute Value)?', options: ['El tiempo de entrega', 'El tiempo estándar por tarea', 'El costo de materiales', 'El número de operadores'], correct: 1 }
+      ]
+    }
+  };
+
+  function getExamResult(courseId) {
+    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
+    return data[courseId] || null;
+  }
+
+  function saveExamResult(courseId, correct, total, passed) {
+    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
+    data[courseId] = { correct, total, passed, date: new Date().toISOString() };
+    localStorage.setItem(EXAM_STORAGE_KEY, JSON.stringify(data));
+  }
+
+  function updateCourseBadge(courseId) {
+    const exam = getExamResult(courseId);
+    const badge = document.getElementById('progress-' + courseId);
+    if (!badge) return;
+    if (exam && exam.passed) {
+      badge.textContent = 'Aprobado';
+      badge.style.background = '#16a34a';
+    } else if (exam && !exam.passed) {
+      badge.textContent = 'Reprobado';
+      badge.style.background = '#dc2626';
+    } else {
+      badge.textContent = 'Pendiente';
+      badge.style.background = '';
+    }
+  }
+
+  function switchTrainingView(courseId, showQuiz) {
+    const content = document.getElementById(courseId + '-content');
+    const quiz = document.getElementById(courseId + '-quiz');
+    if (content) content.style.display = showQuiz ? 'none' : '';
+    if (quiz) quiz.style.display = showQuiz ? '' : 'none';
+  }
+
+  function renderQuiz(courseId) {
+    const container = document.getElementById(courseId + '-questions');
+    const quizData = QUIZZES[courseId];
+    if (!container || !quizData) return;
+
+    container.innerHTML = quizData.questions.map((item, idx) => `
+      <div class="quiz-question" data-idx="${idx}">
+        <div class="quiz-question__text">${idx + 1}. ${item.q}</div>
+        <div class="quiz-question__options">
+          ${item.options.map((opt, oi) => `
+            <label class="quiz-option">
+              <input type="radio" name="q${idx}" value="${oi}">
+              <span class="quiz-option__label">${opt}</span>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function gradeQuiz(courseId) {
+    const quizData = QUIZZES[courseId];
+    const container = document.getElementById(courseId + '-questions');
+    const resultEl = document.getElementById(courseId + '-quiz-result');
+    if (!quizData || !container || !resultEl) return;
+
+    const questions = container.querySelectorAll('.quiz-question');
+    let correct = 0;
+
+    questions.forEach((qEl, idx) => {
+      const selected = qEl.querySelector('input[type="radio"]:checked');
+      const options = qEl.querySelectorAll('.quiz-option');
+      const correctIdx = quizData.questions[idx].correct;
+
+      options.forEach((opt, oi) => {
+        opt.classList.remove('correct', 'wrong');
+        if (oi === correctIdx) opt.classList.add('correct');
+        if (selected && parseInt(selected.value) === oi && oi !== correctIdx) opt.classList.add('wrong');
+      });
+
+      if (selected && parseInt(selected.value) === correctIdx) correct++;
+    });
+
+    const total = questions.length;
+    const passed = correct >= 7;
+
+    saveExamResult(courseId, correct, total, passed);
+
+    resultEl.innerHTML = `
+      <div class="quiz-result__score">${correct}/${total}</div>
+      <div style="font-size:1rem;margin-bottom:0.5rem">${correct} de ${total} respuestas correctas</div>
+      <div style="font-weight:700;font-size:1.3rem">${passed ? '&#9989; ¡APROBADO!' : '&#10060; REPROBADO'}</div>
+      ${passed ? '<p style="margin-top:0.5rem;color:#16a34a">Has completado la capacitaci\u00f3n exitosamente.</p>' : '<p style="margin-top:0.5rem;color:#dc2626">Debes estudiar el contenido nuevamente y recursar el examen.</p>'}
+    `;
+    resultEl.className = 'quiz-result ' + (passed ? 'passed' : 'failed');
+    resultEl.style.display = '';
+
+    document.getElementById(courseId + '-submit-quiz').style.display = 'none';
+    document.getElementById(courseId + '-back-content').innerHTML = passed ? '&#8592; Cerrar' : '&#8592; Volver a estudiar';
+    updateCourseBadge(courseId);
+  }
+
+  function resetQuiz(courseId) {
+    const resultEl = document.getElementById(courseId + '-quiz-result');
+    const submitBtn = document.getElementById(courseId + '-submit-quiz');
+    const backBtn = document.getElementById(courseId + '-back-content');
+    if (resultEl) { resultEl.style.display = 'none'; resultEl.className = 'quiz-result'; resultEl.innerHTML = ''; }
+    if (submitBtn) submitBtn.style.display = '';
+    if (backBtn) backBtn.innerHTML = '\u2190 Volver al contenido';
+  }
+
+  function openTrainingModal(courseId) {
+    const map = { seguridad: 'safety-training-modal', optimizacion: 'optimization-training-modal' };
+    const modal = document.getElementById(map[courseId]);
+    if (!modal) return;
+    modal.classList.add('open');
+    switchTrainingView(courseId, false);
+    resetQuiz(courseId);
+    renderQuiz(courseId);
+  }
+
+  function closeAllTrainingModals() {
+    document.querySelectorAll('.modal-overlay[id$="training-modal"]').forEach(m => m.classList.remove('open'));
+  }
+
+  document.querySelectorAll('[data-modal]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modalId = btn.dataset.modal;
+      const courseMap = { 'safety-training-modal': 'seguridad', 'optimization-training-modal': 'optimizacion' };
+      const courseId = courseMap[modalId];
+      if (courseId) openTrainingModal(courseId);
+    });
+  });
+
+  document.querySelectorAll('.safety-training-close, .optimization-training-close').forEach(btn => {
+    btn.addEventListener('click', closeAllTrainingModals);
+  });
+
+  ['safety-training-modal', 'optimization-training-modal'].forEach(id => {
+    const overlay = document.getElementById(id);
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeAllTrainingModals();
+      });
+    }
+  });
+
+  // Exam buttons
+  function bindExamButton(courseId) {
+    const startBtn = document.getElementById(courseId + '-start-exam');
+    const submitBtn = document.getElementById(courseId + '-submit-quiz');
+    const backBtn = document.getElementById(courseId + '-back-content');
+
+    if (startBtn) startBtn.addEventListener('click', () => switchTrainingView(courseId, true));
+    if (submitBtn) submitBtn.addEventListener('click', () => gradeQuiz(courseId));
+    if (backBtn) backBtn.addEventListener('click', () => {
+      const exam = getExamResult(courseId);
+      if (exam && exam.passed) { closeAllTrainingModals(); return; }
+      switchTrainingView(courseId, false);
+      resetQuiz(courseId);
+    });
+  }
+
+  bindExamButton('seguridad');
+  bindExamButton('optimizacion');
+
+  updateCourseBadge('seguridad');
+  updateCourseBadge('optimizacion');
 });
