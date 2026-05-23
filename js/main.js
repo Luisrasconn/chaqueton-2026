@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function activateTab(tabId) {
   // Role-based gate
   if (currentUser) {
-    const allowedSupervisor = ['inicio', 'entrenamiento', 'retroalimentacion', 'almacen'];
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen'];
     const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen'];
     const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
     if (!allowed.includes(tabId)) return;
@@ -607,7 +607,7 @@ function activateTab(tabId) {
 
   function applyRoleRestrictions(role) {
     const tabIds = document.querySelectorAll('.nav__tab');
-    const allowedSupervisor = ['inicio', 'entrenamiento', 'retroalimentacion', 'almacen'];
+    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen'];
     const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen'];
     const allowed = role === 'supervisor' ? allowedSupervisor : allowedOperador;
 
