@@ -731,32 +731,31 @@ document.addEventListener('DOMContentLoaded', () => {
           panel.appendChild(lineText);
         });
 
-        // Close button text
+        // Close button: clickable with ✕ icon
         const closeText = document.createElement('a-text');
-        closeText.setAttribute('value', 'Click para cerrar');
+        closeText.setAttribute('value', '✕  Cerrar');
         closeText.setAttribute('position', '0 -0.85 0.02');
         closeText.setAttribute('color', '#7f8c8d');
         closeText.setAttribute('align', 'center');
         closeText.setAttribute('width', '2.2');
         closeText.setAttribute('scale', '0.55 0.55 1');
 
-        // Close plane
+        // Close plane (clickable)
         const closeBg = document.createElement('a-plane');
         closeBg.setAttribute('position', '0 -0.85 0.01');
         closeBg.setAttribute('width', '2.3');
         closeBg.setAttribute('height', '0.2');
         closeBg.setAttribute('color', '#34495e');
         closeBg.setAttribute('radius', '0.05');
+        closeBg.setAttribute('class', 'clickable');
+        closeBg.setAttribute('click-feedback', '');
+        var self = this;
+        closeBg.addEventListener('click', function () { self.close(); });
+        closeText.setAttribute('class', 'clickable');
+        closeText.addEventListener('click', function () { self.close(); });
 
         panel.appendChild(closeBg);
         panel.appendChild(closeText);
-
-        // Make the panel clickable to close (using raycaster)
-        panel.setAttribute('class', 'clickable');
-        panel.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.close();
-        });
 
         // Entrance animation
         panel.setAttribute('animation', {
@@ -794,6 +793,118 @@ document.addEventListener('DOMContentLoaded', () => {
 
         this.panelEl = null;
         this.el.emit('panel-closed', {});
+      }
+    });
+
+    // Machine info: show floating panel when clicking a machine (works outside simulation)
+    AFRAME.registerComponent('machine-info', {
+      schema: {
+        title: { type: 'string', default: 'Maquina' },
+        lines: { type: 'string', default: 'Sin informacion disponible' }
+      },
+      init: function () {
+        var self = this;
+        this.panelEl = null;
+        this.el.addEventListener('click', function () {
+          if (self.panelEl) { self.close(); return; }
+          self.open();
+        });
+      },
+      open: function () {
+        var rig = document.getElementById('playerRig');
+        if (!rig) return;
+        var rigPos = rig.getAttribute('position');
+
+        var panel = document.createElement('a-entity');
+        panel.setAttribute('class', 'clickable');
+        panel.setAttribute('position', { x: rigPos.x, y: rigPos.y + 0.2, z: rigPos.z - 2.5 });
+        panel.setAttribute('look-at', '#playerCamera');
+        panel.setAttribute('scale', '0 0 0');
+
+        var bg = document.createElement('a-plane');
+        bg.setAttribute('width', '2.5');
+        bg.setAttribute('height', '2');
+        bg.setAttribute('color', '#1a1a2e');
+        bg.setAttribute('opacity', '0.95');
+        bg.setAttribute('shadow', '');
+        bg.setAttribute('radius', '0.08');
+
+        var color = this.el.getAttribute('data-color') || '#0d9488';
+
+        var header = document.createElement('a-plane');
+        header.setAttribute('position', '0 0.85 0.01');
+        header.setAttribute('width', '2.3');
+        header.setAttribute('height', '0.3');
+        header.setAttribute('color', color);
+        header.setAttribute('radius', '0.05');
+
+        var titleText = document.createElement('a-text');
+        titleText.setAttribute('value', this.data.title);
+        titleText.setAttribute('position', '0 0.85 0.02');
+        titleText.setAttribute('color', 'white');
+        titleText.setAttribute('align', 'center');
+        titleText.setAttribute('width', '2.2');
+
+        panel.appendChild(bg);
+        panel.appendChild(header);
+        panel.appendChild(titleText);
+
+        var lines = this.data.lines.split('|').map(function (l) { return l.trim(); }).filter(function (l) { return l; });
+        lines.forEach(function (line, i) {
+          var yPos = 0.55 - (i * 0.25);
+          var lt = document.createElement('a-text');
+          lt.setAttribute('value', line);
+          lt.setAttribute('position', '-0.8 ' + yPos + ' 0.02');
+          lt.setAttribute('color', '#bdc3c7');
+          lt.setAttribute('align', 'left');
+          lt.setAttribute('width', '2.2');
+          lt.setAttribute('scale', '0.85 0.85 1');
+          panel.appendChild(lt);
+        });
+
+        var closeBg = document.createElement('a-plane');
+        closeBg.setAttribute('position', '0 -0.85 0.01');
+        closeBg.setAttribute('width', '2.3');
+        closeBg.setAttribute('height', '0.2');
+        closeBg.setAttribute('color', '#34495e');
+        closeBg.setAttribute('radius', '0.05');
+        closeBg.setAttribute('class', 'clickable');
+        var self2 = this;
+        closeBg.addEventListener('click', function () { self2.close(); });
+
+        var closeText = document.createElement('a-text');
+        closeText.setAttribute('value', '✕  Cerrar');
+        closeText.setAttribute('position', '0 -0.85 0.02');
+        closeText.setAttribute('color', '#7f8c8d');
+        closeText.setAttribute('align', 'center');
+        closeText.setAttribute('width', '2.2');
+        closeText.setAttribute('scale', '0.55 0.55 1');
+        closeText.setAttribute('class', 'clickable');
+        closeText.addEventListener('click', function () { self2.close(); });
+
+        panel.appendChild(closeBg);
+        panel.appendChild(closeText);
+
+        panel.setAttribute('animation', {
+          property: 'scale', from: '0 0 0', to: '1 1 1',
+          dur: 300, easing: 'easeOutBack'
+        });
+
+        document.querySelector('a-scene').appendChild(panel);
+        this.panelEl = panel;
+      },
+      close: function () {
+        if (!this.panelEl) return;
+        var panel = this.panelEl;
+        panel.setAttribute('animation', {
+          property: 'scale', from: '1 1 1', to: '0 0 0',
+          dur: 200, easing: 'easeInQuad'
+        });
+        var self = this;
+        setTimeout(function () {
+          if (panel.parentNode) panel.parentNode.removeChild(panel);
+          self.panelEl = null;
+        }, 250);
       }
     });
 
