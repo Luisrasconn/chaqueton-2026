@@ -1103,6 +1103,58 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
   min-height: 40px;
 }
 
+/* ===== EXAMEN MÓDULO 4 ===== */
+.modal--exam {
+  max-width: 580px;
+  width: 90%;
+}
+
+.exam-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.exam-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.exam-option {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.exam-option:hover {
+  border-color: var(--accent);
+  background: rgba(13,148,136,0.08);
+}
+
+.exam-option.selected {
+  border-color: var(--accent);
+  background: rgba(13,148,136,0.15);
+  font-weight: 600;
+}
+
+.exam-history {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+}
+
 /* ===== FOOTER ===== */
 .footer {
   background: var(--header-bg);

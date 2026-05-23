@@ -208,6 +208,13 @@
           <div class="card__meta"><span>&#9201; 25 min</span></div>
           <button class="btn btn--primary" data-tab="realidadvirtual">Abrir RA</button>
         </div>
+        <div class="card card--program">
+          <div class="card__badge">Certificaci&#243;n</div>
+          <h3 class="card__title">M&#243;dulo 4: Evaluaci&#243;n y Certificado</h3>
+          <p class="card__text">Examen de certificaci&#243;n que eval&#250;a los conocimientos adquiridos en los M&#243;dulos 1-3. Aprobaci&#243;n: 7/10 aciertos.</p>
+          <div class="card__meta"><span>&#9201; 30 min</span></div>
+          <button class="btn btn--primary" id="openExamBtn">Comenzar examen</button>
+        </div>
       </div>
 
       <div class="checklist">
@@ -238,7 +245,53 @@
           <span class="checklist__label">Evaluaci&#243;n de habilidades b&#225;sicas</span>
         </label>
       </div>
+
+      <!-- ===== HISTORIAL DE CERTIFICACIONES ===== -->
+      <div class="exam-history" id="examHistory" style="margin-top:2rem">
+        <h2 class="section-title">Historial de certificaciones</h2>
+        <div id="historyList" style="display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto"></div>
+        <p id="historyEmpty" style="color:var(--text-light);font-size:0.9rem">No hay intentos registrados a&#250;n.</p>
+      </div>
     </section>
+
+    <!-- ===== MODAL EXAMEN ===== -->
+    <div class="modal-overlay" id="examModal">
+      <div class="modal modal--exam">
+        <button class="modal__close" id="examModalClose">&times;</button>
+        <div id="examStart">
+          <h2 class="section-title" style="margin-bottom:0.5rem">Evaluaci&#243;n y Certificado</h2>
+          <p style="color:var(--text-light);margin-bottom:1rem">10 preguntas de opci&#243;n m&#250;ltiple &bull; 30 minutos l&#237;mite &bull; Aprobaci&#243;n: 7/10</p>
+          <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Responde correctamente al menos 7 preguntas para obtener tu certificado de capacitaci&#243;n.</p>
+          <button class="btn btn--primary" id="examStartBtn">Iniciar examen</button>
+        </div>
+        <div id="examActive" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+            <span id="examProgress" style="font-weight:600;font-size:0.95rem">Pregunta 1/10</span>
+            <span id="examTimer" style="font-weight:600;color:var(--accent);font-size:1.1rem">30:00</span>
+          </div>
+          <div class="exam-bar"><div class="exam-fill" id="examFill" style="width:0%"></div></div>
+          <div id="examQuestion" style="margin:1.5rem 0;font-size:1.05rem;line-height:1.5;color:var(--text)"></div>
+          <div id="examOptions" style="display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem"></div>
+          <div style="display:flex;justify-content:space-between">
+            <button class="btn btn--outline" id="examPrevBtn" disabled>&#8592; Anterior</button>
+            <button class="btn btn--primary" id="examNextBtn">Siguiente &#8594;</button>
+          </div>
+        </div>
+        <div id="examResult" style="display:none;text-align:center;padding:1rem 0">
+          <div id="examResultIcon" style="font-size:3rem;margin-bottom:0.5rem"></div>
+          <h2 class="section-title" id="examResultTitle"></h2>
+          <p id="examResultScore" style="font-size:1.2rem;margin:0.5rem 0;color:var(--text-light)"></p>
+          <p id="examResultMsg" style="font-size:0.9rem;color:var(--text-light);margin-bottom:1.5rem"></p>
+          <div id="examPassActions" style="display:none">
+            <button class="btn btn--primary" id="examCertBtn">&#128196; Descargar certificado PDF</button>
+          </div>
+          <div id="examFailActions" style="display:none">
+            <button class="btn btn--outline" id="examRetryBtn">Reintentar examen</button>
+          </div>
+          <button class="btn btn--outline" id="examCloseBtn" style="margin-top:0.5rem">Cerrar</button>
+        </div>
+      </div>
+    </div>
 
     <!-- ======== RETROALIMENTACIÓN ======== -->
     <section class="tab-content" id="tab-retroalimentacion" role="tabpanel" aria-label="Retroalimentación">
