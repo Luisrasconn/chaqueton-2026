@@ -749,13 +749,21 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
 }
 
 .tool-card__qr {
-  font-size: 0.65rem;
-  color: var(--text-light);
-  background: var(--surface-alt);
-  padding: 0.15rem 0.5rem;
+  width: 60px;
+  height: 60px;
+  display: block;
+  margin: 0.35rem auto 0;
   border-radius: 4px;
-  display: inline-block;
-  font-family: monospace;
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition);
+  border: 1px solid var(--border);
+}
+
+.tool-card__qr:hover {
+  transform: scale(2.5);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  z-index: 10;
+  position: relative;
 }
 
 .status--disponible { color: var(--success); }

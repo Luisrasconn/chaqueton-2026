@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MHub — Códigos QR de Herramientas</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 2rem;
+    }
+    h1 { text-align: center; margin-bottom: 0.5rem; color: #0d9488; }
+    .sub { text-align: center; margin-bottom: 2rem; color: #64748b; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+      border: 1px solid #cbd5e1;
+      page-break-inside: avoid;
+    }
+    .card img {
+      width: 180px;
+      height: 180px;
+      display: block;
+      margin: 0 auto 0.75rem;
+    }
+    .card__id {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0d9488;
+    }
+    .card__name {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    @media print {
+      body { padding: 1rem; background: #fff; }
+      .card { box-shadow: none; border: 1px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+  <h1>MHub — Almacén Virtual</h1>
+  <p class="sub">Escanea estos QR con la cámara para actualizar el estado de las herramientas</p>
+  <div class="grid" id="qrGrid"></div>
+  <script>
+    const tools = [
+      { id: 'T-102', name: 'Taladro Industrial' },
+      { id: 'P-045', name: 'Pulidora Angular' },
+      { id: 'L-203', name: 'Llave de Impacto' },
+      { id: 'M-089', name: 'Multímetro Digital' },
+      { id: 'S-117', name: 'Sierra Circular' },
+      { id: 'C-056', name: 'Compresor de Aire' },
+      { id: 'E-034', name: 'Esmeril de Banco' },
+      { id: 'T-208', name: 'Taladro Percutor' },
+    ];
+    const grid = document.getElementById('qrGrid');
+    grid.innerHTML = tools.map(t => `
+      <div class="card">
+        <img src="assets/qr/${t.id}.png" alt="QR ${t.id}">
+        <div class="card__id">${t.id}</div>
+        <div class="card__name">${t.name}</div>
+      </div>
+    `).join('');
+  </script>
+</body>
+</html>

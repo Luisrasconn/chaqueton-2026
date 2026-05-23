@@ -4,5 +4,8 @@
   "description": "MHub — Plataforma de manufactura inteligente con VR, retroalimentación en tiempo real e inventario IoT",
   "private": true,
   "author": "Hackaton 2026",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "qrcode": "^1.5.4"
+  }
 }
