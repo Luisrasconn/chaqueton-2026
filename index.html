@@ -157,6 +157,16 @@
           </div>
           <button class="btn btn--primary" data-modal="optimization-training-modal">Iniciar</button>
         </div>
+        <div class="card card--program">
+          <div class="card__badge">Certificaci&oacute;n</div>
+          <h3 class="card__title">Examen de Certificaci&oacute;n — Capacitaci&oacute;n</h3>
+          <p class="card__text">Examen final que eval&uacute;a los conocimientos adquiridos en los cursos de capacitaci&oacute;n. Aprobaci&oacute;n: 7/10 aciertos.</p>
+          <div class="card__meta">
+            <span>&#9201; 30 min</span>
+            <span>&#11088; 4.7</span>
+          </div>
+          <button class="btn btn--primary" id="capacitacionExamBtn">Comenzar examen</button>
+        </div>
       </div>
 
       <div class="progress-section">
@@ -179,6 +189,7 @@
           </div>
         </div>
       </div>
+
     </section>
 
     <!-- ======== ENTRENAMIENTO ======== -->
@@ -199,14 +210,7 @@
           <h3 class="card__title">M&#243;dulo 2: Simulador de Operaciones</h3>
           <p class="card__text">Practica en un entorno virtual seguro antes de operar maquinaria real.</p>
           <div class="card__meta"><span>&#9201; 40 min</span></div>
-          <button class="btn btn--primary" data-tab="realidadvirtual">Comenzar VR</button>
-        </div>
-        <div class="card card--program">
-          <div class="card__badge">RA</div>
-          <h3 class="card__title">M&#243;dulo 3: Realidad Aumentada en Planta</h3>
-          <p class="card__text">Superposici&#243;n de informaci&#243;n t&#233;cnica en maquinaria real mediante c&#225;mara.</p>
-          <div class="card__meta"><span>&#9201; 25 min</span></div>
-          <button class="btn btn--primary" data-tab="realidadvirtual">Abrir RA</button>
+          <button class="btn btn--primary" id="modulo2Btn">Comenzar VR</button>
         </div>
         <div class="card card--program">
           <div class="card__badge">Certificaci&#243;n</div>
@@ -260,7 +264,7 @@
       <div class="modal modal--exam">
         <button class="modal__close" id="examModalClose">&times;</button>
         <div id="examStart">
-          <h2 class="section-title" style="margin-bottom:0.5rem">Evaluaci&#243;n y Certificado</h2>
+          <h2 class="section-title" style="margin-bottom:0.5rem" id="examModalTitle">Evaluaci&#243;n y Certificado</h2>
           <p style="color:var(--text-light);margin-bottom:1rem">10 preguntas de opci&#243;n m&#250;ltiple &bull; 30 minutos l&#237;mite &bull; Aprobaci&#243;n: 7/10</p>
           <p style="color:var(--text-light);font-size:0.9rem;margin-bottom:1.5rem">Responde correctamente al menos 7 preguntas para obtener tu certificado de capacitaci&#243;n.</p>
           <button class="btn btn--primary" id="examStartBtn">Iniciar examen</button>
@@ -1129,18 +1133,6 @@
           <button class="btn btn--primary" id="seguridad-start-exam">&#128221; Tomar examen</button>
         </div>
       </div>
-
-      <!-- QUIZ VIEW -->
-      <div class="training-quiz" id="seguridad-quiz" style="display:none">
-        <p style="color:var(--text-light);margin-bottom:1rem">Responde correctamente al menos <strong>7 de 10</strong> preguntas para aprobar.</p>
-        <div class="quiz-questions" id="seguridad-questions"></div>
-        <div class="quiz-result" id="seguridad-quiz-result" style="display:none"></div>
-        <div class="training-footer">
-          <button class="btn btn--outline" id="seguridad-back-content">&#8592; Volver al contenido</button>
-          <span style="flex:1"></span>
-          <button class="btn btn--primary" id="seguridad-submit-quiz">&#9989; Entregar examen</button>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -1160,18 +1152,6 @@
         <div class="training-footer">
           <span style="flex:1"></span>
           <button class="btn btn--primary" id="optimizacion-start-exam">&#128221; Tomar examen</button>
-        </div>
-      </div>
-
-      <!-- QUIZ VIEW -->
-      <div class="training-quiz" id="optimizacion-quiz" style="display:none">
-        <p style="color:var(--text-light);margin-bottom:1rem">Responde correctamente al menos <strong>7 de 10</strong> preguntas para aprobar.</p>
-        <div class="quiz-questions" id="optimizacion-questions"></div>
-        <div class="quiz-result" id="optimizacion-quiz-result" style="display:none"></div>
-        <div class="training-footer">
-          <button class="btn btn--outline" id="optimizacion-back-content">&#8592; Volver al contenido</button>
-          <span style="flex:1"></span>
-          <button class="btn btn--primary" id="optimizacion-submit-quiz">&#9989; Entregar examen</button>
         </div>
       </div>
     </div>
