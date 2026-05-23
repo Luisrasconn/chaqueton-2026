@@ -789,10 +789,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const registerFaceCancelBtn = document.getElementById('registerFaceCancelBtn');
   const registerPersonClose = document.getElementById('registerPersonClose');
   const personNameInput = document.getElementById('personNameInput');
+  const registerStep1 = document.getElementById('registerStep1');
+  const registerStep2 = document.getElementById('registerStep2');
+  const registerPersonNameDisplay = document.getElementById('registerPersonNameDisplay');
+  const registerToolsGrid = document.getElementById('registerToolsGrid');
+  const registerSaveBtn = document.getElementById('registerSaveBtn');
+  const registerSkipBtn = document.getElementById('registerSkipBtn');
   let registerStream = null;
   let registerDrawInterval = null;
+  let pendingPersonData = null;
 
   function startRegisterCamera() {
+    registerStep1.style.display = '';
+    registerStep2.style.display = 'none';
+    pendingPersonData = null;
     registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Iniciando c&#225;mara...</span>';
     registerFaceCaptureBtn.disabled = true;
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } } })
@@ -819,14 +829,35 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  function stopRegisterCamera() {
+  function stopRegisterCamera(closeModal = true) {
     if (registerDrawInterval) { clearInterval(registerDrawInterval); registerDrawInterval = null; }
     if (registerStream) {
       registerStream.getTracks().forEach(t => t.stop());
       registerStream = null;
     }
     registerFaceVideo.srcObject = null;
-    registerPersonModal.classList.remove('open');
+    if (closeModal) registerPersonModal.classList.remove('open');
+  }
+
+  function renderToolSelection() {
+    const allTools = document.querySelectorAll('.tool-card');
+    let html = '';
+    allTools.forEach(tool => {
+      const toolId = tool.dataset.id;
+      const toolName = tool.querySelector('.tool-card__name').textContent;
+      html += `
+        <label class="auth-tool-item">
+          <input type="checkbox" class="auth-tool-checkbox" data-tool-id="${toolId}">
+          <span>${toolName}</span>
+        </label>
+      `;
+    });
+    registerToolsGrid.innerHTML = html;
+  }
+
+  function getSelectedTools() {
+    const checks = registerToolsGrid.querySelectorAll('.auth-tool-checkbox:checked');
+    return Array.from(checks).map(cb => cb.dataset.toolId);
   }
 
   async function handleRegisterFace() {
@@ -845,23 +876,54 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const persons = getPersons();
-    const newPerson = {
+    pendingPersonData = {
       id: 'p_' + Date.now(),
       name: name,
       descriptor: Array.from(descriptor),
       authorizedTools: [],
       createdAt: new Date().toISOString()
     };
-    persons.push(newPerson);
-    savePersons(persons);
 
-    registerFaceStatus.innerHTML = '<span class="face-status-msg__icon" style="font-size:2rem">&#9989;</span><span style="font-size:1.1rem;font-weight:700;color:var(--success)">' + name + ' registrado exitosamente!</span>';
+    stopRegisterCamera(false);
+    registerPersonNameDisplay.textContent = name;
+    renderToolSelection();
+    registerStep1.style.display = 'none';
+    registerStep2.style.display = '';
+  }
+
+  function handleRegisterSave() {
+    if (!pendingPersonData) return;
+    const selected = getSelectedTools();
+    pendingPersonData.authorizedTools = selected;
+    const persons = getPersons();
+    persons.push(pendingPersonData);
+    savePersons(persons);
+    const name = pendingPersonData.name;
     renderPersonGrid();
-    setTimeout(stopRegisterCamera, 2000);
+    pendingPersonData = null;
+    registerPersonModal.classList.remove('open');
+    if (recognizedPerson) {
+      updateWarehouseAuthUI(recognizedPerson);
+    }
+    alert(name + ' registrado exitosamente con ' + selected.length + ' herramienta(s) autorizada(s).');
+  }
+
+  function handleRegisterSkip() {
+    if (!pendingPersonData) return;
+    pendingPersonData.authorizedTools = [];
+    const persons = getPersons();
+    persons.push(pendingPersonData);
+    savePersons(persons);
+    const name = pendingPersonData.name;
+    renderPersonGrid();
+    pendingPersonData = null;
+    registerPersonModal.classList.remove('open');
+    alert(name + ' registrado sin herramientas. Puedes asignarlas despu\u00e9s con el bot\u00f3n Editar.');
   }
 
   registerFaceCaptureBtn.addEventListener('click', handleRegisterFace);
+  registerSaveBtn.addEventListener('click', handleRegisterSave);
+  registerSkipBtn.addEventListener('click', handleRegisterSkip);
   registerFaceCancelBtn.addEventListener('click', stopRegisterCamera);
   registerPersonClose.addEventListener('click', stopRegisterCamera);
 
@@ -1038,6 +1100,9 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   document.getElementById('addPersonBtn').addEventListener('click', () => {
+    pendingPersonData = null;
+    registerStep2.style.display = 'none';
+    registerStep1.style.display = '';
     personNameInput.value = '';
     registerFaceStatus.innerHTML = '<span class="face-status-msg__icon">&#128161;</span><span>Preparando c\u00e1mara...</span>';
     registerPersonModal.classList.add('open');

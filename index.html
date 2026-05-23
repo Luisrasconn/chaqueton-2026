@@ -851,25 +851,42 @@
     <div class="modal modal--wide">
       <button class="modal__close" id="registerPersonClose">&times;</button>
       <h2 class="section-title">Registrar Persona</h2>
-      <p style="color:var(--text-light);margin-bottom:1rem">Ingresa el nombre y captura el rostro para registrar a una persona autorizada.</p>
-      <div class="form__group">
-        <label for="personNameInput">Nombre completo</label>
-        <input type="text" id="personNameInput" placeholder="Ej: Juan P&#233;rez">
-      </div>
-      <div class="form__group">
-        <label>Captura de rostro</label>
-        <div class="face-camera-container">
-          <video id="registerFaceVideo" autoplay playsinline muted></video>
-          <canvas id="registerFaceOverlay" class="face-overlay"></canvas>
+
+      <!-- Step 1: Name + Face -->
+      <div id="registerStep1">
+        <p style="color:var(--text-light);margin-bottom:1rem">Ingresa el nombre y captura el rostro para registrar a una persona autorizada.</p>
+        <div class="form__group">
+          <label for="personNameInput">Nombre completo</label>
+          <input type="text" id="personNameInput" placeholder="Ej: Juan P&#233;rez">
+        </div>
+        <div class="form__group">
+          <label>Captura de rostro</label>
+          <div class="face-camera-container">
+            <video id="registerFaceVideo" autoplay playsinline muted></video>
+            <canvas id="registerFaceOverlay" class="face-overlay"></canvas>
+          </div>
+        </div>
+        <div class="face-status-msg" id="registerFaceStatus">
+          <span class="face-status-msg__icon">&#128161;</span>
+          <span>Preparando c&#225;mara...</span>
+        </div>
+        <div class="face-rec-actions">
+          <button class="btn btn--primary" id="registerFaceCaptureBtn">&#128247; Capturar Rostro</button>
+          <button class="btn btn--outline" id="registerFaceCancelBtn">Cancelar</button>
         </div>
       </div>
-      <div class="face-status-msg" id="registerFaceStatus">
-        <span class="face-status-msg__icon">&#128161;</span>
-        <span>Preparando c&#225;mara...</span>
-      </div>
-      <div class="face-rec-actions">
-        <button class="btn btn--primary" id="registerFaceCaptureBtn">&#128247; Capturar Rostro</button>
-        <button class="btn btn--outline" id="registerFaceCancelBtn">Cancelar</button>
+
+      <!-- Step 2: Select authorized tools -->
+      <div id="registerStep2" style="display:none">
+        <p style="color:var(--text-light);margin-bottom:1rem">Rostro capturado exitosamente. Ahora selecciona las herramientas que <strong id="registerPersonNameDisplay"></strong> puede usar.</p>
+        <div class="form__group">
+          <label>Herramientas autorizadas</label>
+          <div class="auth-tools-grid" id="registerToolsGrid"></div>
+        </div>
+        <div class="face-rec-actions">
+          <button class="btn btn--primary" id="registerSaveBtn">&#128190; Guardar persona</button>
+          <button class="btn btn--outline" id="registerSkipBtn">Omitir, despu&#233;s las asigno</button>
+        </div>
       </div>
     </div>
   </div>
