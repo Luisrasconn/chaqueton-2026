@@ -2681,4 +2681,11 @@ function activateTab(tabId) {
 
   // Render history on load
   renderHistory();
+
+  document.getElementById('clearHistoryBtn').addEventListener('click', function () {
+    if (confirm('¿Eliminar todo el historial de certificaciones?')) {
+      localStorage.removeItem('mhub-exam-history');
+      renderHistory();
+    }
+  });
 });
