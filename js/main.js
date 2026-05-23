@@ -798,78 +798,407 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ======================================================================
-    // ASSEMBLY MANAGER: controls 7-step guided simulation
+    // OPERATION MANAGER: detailed 22-substep assembly simulation
     // ======================================================================
-    AFRAME.registerComponent('assembly-manager', {
+    AFRAME.registerComponent('operation-manager', {
       schema: { active: { type: 'boolean', default: false } },
 
       init: function () {
-        this.currentStep = 0;
+        this.currentStepIdx = 0;
+        this.currentSubIdx = 0;
         this.workpiece = null;
         this.startTime = 0;
         this.isActive = false;
+        this.correctCount = 0;
+        this.wrongCount = 0;
+        this.pieceType = 'A';
+        this.conveyorRunning = false;
+        this.conveyorAnimId = null;
+        this.armPhase = 0;
+        this.armOrigPos = {};
 
         this.hudEl = document.getElementById('assemblyHud');
         this.hudStep = document.getElementById('hudStep');
         this.hudText = document.getElementById('hudText');
         this.hudFill = document.getElementById('hudFill');
+        this.hudScore = document.getElementById('hudScore');
         this.completeEl = document.getElementById('assemblyComplete');
+        this.choicePanel = document.getElementById('choicePanel');
+        this.feedbackPanel = document.getElementById('feedbackPanel');
 
-        const resetBtn = document.getElementById('resetBtn');
-        const completeReset = document.getElementById('completeReset');
-        if (resetBtn) resetBtn.addEventListener('click', () => this.reset());
-        if (completeReset) completeReset.addEventListener('click', () => this.reset());
+        var self = this;
+        document.getElementById('resetBtn').addEventListener('click', function () { self.reset(); });
+        document.getElementById('completeReset').addEventListener('click', function () { self.reset(); });
 
-        const startBtn = document.querySelector('#startAssembly');
+        var startBtn = document.querySelector('#startAssembly');
         if (startBtn) {
-          startBtn.addEventListener('click', (e) => {
-            if (!this.isActive) { e.stopPropagation(); this.start(); }
+          startBtn.addEventListener('click', function (e) {
+            if (!self.isActive) { e.stopPropagation(); self.start(); }
           });
         }
 
+        // ===== STEP DEFINITIONS =====
         this.steps = [
+          // STEP 0: START
           {
-            instruction: 'Haz clic en INICIAR SIMULACION para comenzar el proceso de ensamble',
-            target: '#startAssembly',
-            action: () => this.nextStep()
+            title: 'Inicio',
+            subSteps: [
+              {
+                type: 'click',
+                instruction: 'Haz clic en INICIAR SIMULACION para comenzar el proceso de ensamble',
+                target: '#startAssembly',
+                action: function () { self.goToStep(0, 0); }
+              }
+            ]
           },
+
+          // STEP 1: PARTS BIN (2 sub-steps)
           {
-            instruction: 'Paso 1: Haz clic en el CONTENEDOR DE PIEZAS (bote amarillo) para obtener material',
-            target: '#partsBin',
-            action: () => this.stepGetPart()
+            title: 'Seleccionar pieza',
+            subSteps: [
+              {
+                type: 'choice',
+                instruction: 'Selecciona el tipo de pieza a ensamblar',
+                options: [
+                  { label: 'Tipo A — Plastico', correct: true, feedback: 'Correcto! Pieza de plastico seleccionada' },
+                  { label: 'Tipo B — Metal', correct: true, feedback: 'Correcto! Pieza de metal seleccionada' }
+                ],
+                onChoose: function (value) { self.pieceType = value; }
+              },
+              {
+                type: 'click',
+                instruction: 'Haz clic en el CONTENEDOR DE PIEZAS (bote amarillo) para obtener material',
+                target: '#partsBin',
+                action: function () {
+                  var color = self.pieceType === 'A' ? '#f1c40f' : '#e74c3c';
+                  var worldPos = self.getWorldPos('#partsBin');
+                  worldPos.y += 0.4;
+
+                  var scene = document.querySelector('a-scene');
+                  var part = document.createElement('a-box');
+                  part.setAttribute('id', 'workpiece');
+                  part.setAttribute('width', '0.25');
+                  part.setAttribute('height', '0.25');
+                  part.setAttribute('depth', '0.25');
+                  part.setAttribute('color', color);
+                  part.setAttribute('shadow', '');
+                  part.setAttribute('position', worldPos.x + ' ' + worldPos.y + ' ' + worldPos.z);
+                  scene.appendChild(part);
+                  self.workpiece = part;
+                  self.flashElement('#partsBin', '#f1c40f');
+                  setTimeout(function () { self.advance(); }, 500);
+                }
+              }
+            ]
           },
+
+          // STEP 2: CONVEYOR (3 sub-steps)
           {
-            instruction: 'Paso 2: Haz clic en la BANDA TRANSPORTADORA para mover la pieza',
-            target: '#conveyorBelt',
-            action: () => this.stepConveyor()
+            title: 'Banda transportadora',
+            subSteps: [
+              {
+                type: 'click',
+                instruction: 'Paso 2a: Presiona ENCENDER BANDA para iniciar el transporte de la pieza',
+                target: '#conveyorBelt',
+                action: function () {
+                  self.conveyorRunning = true;
+                  self.flashElement('#conveyorBelt', '#2980b9');
+                  self.advance();
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 2b: Presiona DETENER BANDA cuando la pieza llegue al final',
+                target: '#conveyorBelt',
+                action: function () {
+                  if (!self.conveyorRunning) return;
+                  self.conveyorRunning = false;
+                  // Move workpiece to conveyor end
+                  var st1 = self.getWorldPos('#station1');
+                  var endX = st1.x + 1.3, endZ = st1.z + 0.5;
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('animation', {
+                      property: 'position',
+                      to: endX + ' 0.55 ' + endZ,
+                      dur: 1500,
+                      easing: 'linear'
+                    });
+                  }
+                  setTimeout(function () { self.advance(); }, 1800);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 2c: Confirma la posicion de la pieza en la banda',
+                target: '#conveyorBelt',
+                action: function () {
+                  self.flashElement('#conveyorBelt', '#27ae60');
+                  setTimeout(function () { self.advance(); }, 300);
+                }
+              }
+            ]
           },
+
+          // STEP 3: ROBOTIC ARM (5 sub-steps)
           {
-            instruction: 'Paso 3: Haz clic en el BRAZO ROBOTICO para ensamblar la pieza',
-            target: '#roboticArm',
-            action: () => this.stepAssemble()
+            title: 'Brazo robotico',
+            subSteps: [
+              {
+                type: 'click',
+                instruction: 'Paso 3a: Bajar brazo — Haz clic en el BRAZO ROBOTICO',
+                target: '#roboticArm',
+                action: function () {
+                  self.animateArmSegment('bajar');
+                  setTimeout(function () { self.advance(); }, 600);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 3b: Cerrar pinzas — Haz clic en el BRAZO ROBOTICO',
+                target: '#roboticArm',
+                action: function () {
+                  self.animateGripper('cerrar');
+                  setTimeout(function () { self.advance(); }, 400);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 3c: Subir brazo con pieza — Haz clic en el BRAZO ROBOTICO',
+                target: '#roboticArm',
+                action: function () {
+                  self.animateArmSegment('subir');
+                  setTimeout(function () { self.advance(); }, 600);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 3d: Rotar brazo 180° — Haz clic en el BRAZO ROBOTICO',
+                target: '#roboticArm',
+                action: function () {
+                  var arm = document.querySelector('#roboticArm');
+                  if (arm) {
+                    arm.setAttribute('animation__armrot', {
+                      property: 'rotation', to: '0 180 0', dur: 800, easing: 'easeInOutQuad'
+                    });
+                  }
+                  setTimeout(function () { self.advance(); }, 1000);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 3e: Soltar pieza en mesa de soldadura — Haz clic en el BRAZO ROBOTICO',
+                target: '#roboticArm',
+                action: function () {
+                  self.animateGripper('abrir');
+                  // Move workpiece to welding table
+                  var weldWorld = self.getWorldPos('#weldingTable');
+                  weldWorld.y += 0.4;
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('animation', {
+                      property: 'position',
+                      to: weldWorld.x + ' ' + weldWorld.y + ' ' + weldWorld.z,
+                      dur: 800, easing: 'easeInOutQuad'
+                    });
+                  }
+                  // Return arm
+                  var arm = document.querySelector('#roboticArm');
+                  if (arm) {
+                    arm.setAttribute('animation__armrot', {
+                      property: 'rotation', to: '0 0 0', dur: 600, easing: 'easeInOutQuad'
+                    });
+                  }
+                  self.flashElement('#roboticArm', '#2980b9');
+                  setTimeout(function () { self.advance(); }, 1200);
+                }
+              }
+            ]
           },
+
+          // STEP 4: WELDING (4 sub-steps)
           {
-            instruction: 'Paso 4: Haz clic en el ROBOT DE SOLDADURA para soldar',
-            target: '#weldingRobot',
-            action: () => this.stepWeld()
+            title: 'Soldadura',
+            subSteps: [
+              {
+                type: 'choice',
+                instruction: 'Paso 4a: Selecciona la TEMPERATURA correcta de soldadura',
+                options: [
+                  { label: '650°C', correct: false, feedback: 'Incorrecto. 650°C es muy baja — el material no se fundira correctamente. La temperatura optima es 850°C.' },
+                  { label: '850°C', correct: true, feedback: 'Correcto! 850°C es la temperatura optima para soldar este material.' },
+                  { label: '1050°C', correct: false, feedback: 'Incorrecto. 1050°C es muy alta — deformara la pieza y puede causar defectos. La temperatura correcta es 850°C.' }
+                ]
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 4b: Posicionar la antorcha de soldadura — Haz clic en el ROBOT SOLDADOR',
+                target: '#weldingRobot',
+                action: function () {
+                  self.flashElement('#weldingRobot', '#f39c12');
+                  // Animate welding arm
+                  var armBox = document.querySelector('#station2 a-box[position="0.6 1 -0.3"]');
+                  if (armBox) {
+                    armBox.setAttribute('animation__weldarm', {
+                      property: 'rotation', to: '0 0 -60', dur: 600, easing: 'easeInOutQuad'
+                    });
+                  }
+                  setTimeout(function () { self.advance(); }, 800);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 4c: Activar SOLDADURA — Haz clic en el ROBOT SOLDADOR',
+                target: '#weldingRobot',
+                action: function () {
+                  var spark = document.querySelector('#weldingSpark');
+                  if (spark) {
+                    spark.setAttribute('animation__weld', {
+                      property: 'scale', to: '4 4 4', dur: 80,
+                      dir: 'alternate', loop: 6, easing: 'easeInOutQuad'
+                    });
+                  }
+                  self.flashElement('#weldingRobot', '#e74c3c');
+                  setTimeout(function () { self.advance(); }, 1000);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 4d: Enfriar la pieza — Haz clic en el ROBOT SOLDADOR',
+                target: '#weldingRobot',
+                action: function () {
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('color', '#d97706');
+                  }
+                  self.flashElement('#weldingRobot', '#27ae60');
+                  setTimeout(function () { self.advance(); }, 500);
+                }
+              }
+            ]
           },
+
+          // STEP 5: SCANNER (3 sub-steps)
           {
-            instruction: 'Paso 5: Haz clic en el ESCANER para inspeccionar calidad',
-            target: '#scanner',
-            action: () => this.stepScan()
+            title: 'Control de calidad',
+            subSteps: [
+              {
+                type: 'click',
+                instruction: 'Paso 5a: Iniciar ESCANEO de calidad — Haz clic en el ESCANER',
+                target: '#scanner',
+                action: function () {
+                  // Move workpiece to scanner
+                  var scanWorld = self.getWorldPos('#scanner');
+                  scanWorld.y += 0.5;
+                  scanWorld.z += 0.4;
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('animation', {
+                      property: 'position',
+                      to: scanWorld.x + ' ' + scanWorld.y + ' ' + scanWorld.z,
+                      dur: 1200, easing: 'easeInOutQuad'
+                    });
+                  }
+                  self.flashElement('#scanner', '#27ae60');
+                  setTimeout(function () { self.advance(); }, 1500);
+                }
+              },
+              {
+                type: 'auto',
+                instruction: 'Escaneando... Resultado: PIEZA APROBADA (98.7% de calidad)',
+                delay: 2000,
+                action: function () {
+                  var sp = self.getWorldPos('#scanner');
+                  var scene = document.querySelector('a-scene');
+                  var rt = document.createElement('a-text');
+                  rt.setAttribute('id', 'scanResult');
+                  rt.setAttribute('position', sp.x + ' ' + (sp.y + 1.2) + ' ' + sp.z);
+                  rt.setAttribute('value', 'PIEZA APROBADA');
+                  rt.setAttribute('color', '#27ae60');
+                  rt.setAttribute('align', 'center');
+                  rt.setAttribute('width', '3');
+                  rt.setAttribute('scale', '0 0 0');
+                  scene.appendChild(rt);
+                  rt.setAttribute('animation__appear', {
+                    property: 'scale', from: '0 0 0', to: '1.5 1.5 1',
+                    dur: 400, easing: 'easeOutBack'
+                  });
+                  setTimeout(function () {
+                    if (rt.parentNode) rt.parentNode.removeChild(rt);
+                  }, 3000);
+                }
+              },
+              {
+                type: 'choice',
+                instruction: 'Paso 5c: La pieza paso la inspeccion. Que accion tomas?',
+                options: [
+                  { label: 'Aprobar pieza', correct: true, feedback: 'Correcto! La pieza cumple con todos los estandares de calidad.' },
+                  { label: 'Rechazar pieza', correct: false, feedback: 'Incorrecto. La pieza tiene 98.7% de calidad — esta dentro del rango aceptable. Debe aprobarse.' }
+                ]
+              }
+            ]
           },
+
+          // STEP 6: PACKAGING (3 sub-steps)
           {
-            instruction: 'Paso 6: Haz clic en la MAQUINA DE EMPAQUE para finalizar',
-            target: '#shrinkWrap',
-            action: () => this.stepPackage()
+            title: 'Empaque final',
+            subSteps: [
+              {
+                type: 'choice',
+                instruction: 'Paso 6a: Selecciona el MATERIAL DE EMPAQUE',
+                options: [
+                  { label: 'Plastico termoencogible', correct: true, feedback: 'Excelente! El plastico termoencogible protege la pieza de humedad y golpes.' },
+                  { label: 'Caja de carton', correct: true, feedback: 'Perfecto! El carton es ideal para transporte seguro.' },
+                  { label: 'Burbuja sin caja', correct: false, feedback: 'Incorrecto. La burbuja sola no protege lo suficiente para envio industrial.' }
+                ]
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 6b: Envolver la pieza — Haz clic en la MAQUINA DE EMPAQUE',
+                target: '#shrinkWrap',
+                action: function () {
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('color', '#d4a574');
+                    var wp = self.workpiece.getAttribute('position');
+                    var scene = document.querySelector('a-scene');
+                    var wrap = document.createElement('a-box');
+                    wrap.setAttribute('width', '0.35');
+                    wrap.setAttribute('height', '0.35');
+                    wrap.setAttribute('depth', '0.35');
+                    wrap.setAttribute('color', '#d4a574');
+                    wrap.setAttribute('material', 'transparent: true; opacity: 0.3');
+                    wrap.setAttribute('position', wp.x + ' ' + wp.y + ' ' + wp.z);
+                    scene.appendChild(wrap);
+                    setTimeout(function () { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }, 2000);
+                  }
+                  self.flashElement('#shrinkWrap', '#8e44ad');
+                  setTimeout(function () { self.advance(); }, 800);
+                }
+              },
+              {
+                type: 'click',
+                instruction: 'Paso 6c: Apilar pieza en el pallet — Haz clic en la MAQUINA DE EMPAQUE',
+                target: '#shrinkWrap',
+                action: function () {
+                  var palletWorld = self.getWorldPos('#station4');
+                  palletWorld.x -= 0.8;
+                  palletWorld.y = 0.6;
+                  palletWorld.z -= 0.5;
+                  if (self.workpiece) {
+                    self.workpiece.setAttribute('animation', {
+                      property: 'position',
+                      to: palletWorld.x + ' ' + palletWorld.y + ' ' + palletWorld.z,
+                      dur: 1500, easing: 'easeInOutQuad'
+                    });
+                  }
+                  self.flashElement('#shrinkWrap', '#f1c40f');
+                  setTimeout(function () { self.advance(); }, 1800);
+                }
+              }
+            ]
           }
         ];
       },
 
       getWorldPos: function (selector) {
-        const el = document.querySelector(selector);
+        var el = document.querySelector(selector);
         if (!el || !el.object3D) return { x: 0, y: 0, z: 0 };
-        const pos = new AFRAME.THREE.Vector3();
+        var pos = new AFRAME.THREE.Vector3();
         el.object3D.getWorldPosition(pos);
         return { x: pos.x, y: pos.y, z: pos.z };
       },
@@ -877,277 +1206,187 @@ document.addEventListener('DOMContentLoaded', () => {
       start: function () {
         if (this.isActive) return;
         this.isActive = true;
-        this.currentStep = 0;
+        this.currentStepIdx = 0;
+        this.currentSubIdx = 0;
+        this.correctCount = 0;
+        this.wrongCount = 0;
         this.startTime = Date.now();
+        this.conveyorRunning = false;
+        this.armPhase = 0;
         this.hudEl.style.display = 'block';
         this.completeEl.style.display = 'none';
-        this.goToStep(0);
+        this.choicePanel.style.display = 'none';
+        this.feedbackPanel.style.display = 'none';
+        this.enterSubStep(0, 0);
       },
 
-      goToStep: function (index) {
-        var step = this.steps[index];
+      enterSubStep: function (stepIdx, subIdx) {
+        var step = this.steps[stepIdx];
         if (!step) { this.complete(); return; }
-        this.currentStep = index;
 
-        this.hudStep.textContent = 'Paso ' + (index + 1) + '/' + this.steps.length;
-        this.hudText.textContent = step.instruction;
-        this.hudFill.style.width = ((index) / this.steps.length * 100) + '%';
-
-        this.highlightTarget(step.target);
-
-        // Remove previous step listener
-        if (this._stepTarget && this._stepHandler) {
-          this._stepTarget.removeEventListener('click', this._stepHandler);
+        var sub = step.subSteps[subIdx];
+        if (!sub) {
+          // Next step
+          this.enterSubStep(stepIdx + 1, 0);
+          return;
         }
 
-        // Wire step action to target
-        var target = document.querySelector(step.target);
-        if (target) {
-          target.classList.add('step-active');
-          this._stepTarget = target;
-          this._stepHandler = function (e) {
-            if (!this.isActive) return;
-            step.action.call(this);
-          }.bind(this);
-          target.addEventListener('click', this._stepHandler, { once: true });
+        this.currentStepIdx = stepIdx;
+        this.currentSubIdx = subIdx;
+
+        // Update HUD
+        this.hudStep.textContent = 'Paso ' + (stepIdx + 1) + '/' + this.steps.length;
+        this.hudText.textContent = sub.instruction;
+        this.hudFill.style.width = (this.calcProgress() * 100) + '%';
+        this.hudScore.textContent = '✓ ' + this.correctCount + '  ✗ ' + this.wrongCount;
+
+        // Hide panels
+        this.choicePanel.style.display = 'none';
+        this.choicePanel.innerHTML = '';
+        this.feedbackPanel.style.display = 'none';
+
+        // Clear highlight
+        this.clearHighlight();
+
+        if (sub.type === 'click') {
+          this.highlightTarget(sub.target);
+          this.wireClick(sub);
+        } else if (sub.type === 'choice') {
+          this.showChoices(sub);
+        } else if (sub.type === 'auto') {
+          this.hudText.textContent = sub.instruction;
+          var self = this;
+          setTimeout(function () {
+            if (sub.action) sub.action();
+            self.advance();
+          }, sub.delay || 1500);
         }
+      },
+
+      calcProgress: function () {
+        var totalSteps = 0;
+        var doneSteps = 0;
+        for (var i = 0; i < this.steps.length; i++) {
+          var subs = this.steps[i].subSteps.length;
+          totalSteps += subs;
+          if (i < this.currentStepIdx) doneSteps += subs;
+          else if (i === this.currentStepIdx) doneSteps += this.currentSubIdx;
+        }
+        return totalSteps > 0 ? doneSteps / totalSteps : 0;
+      },
+
+      advance: function () {
+        this.enterSubStep(this.currentStepIdx, this.currentSubIdx + 1);
+      },
+
+      wireClick: function (sub) {
+        var self = this;
+        // Remove previous click handler
+        if (this._clickTarget && this._clickHandler) {
+          this._clickTarget.removeEventListener('click', this._clickHandler);
+        }
+        var target = document.querySelector(sub.target);
+        if (!target) return;
+        this._clickTarget = target;
+        this._clickHandler = function () {
+          if (!self.isActive) return;
+          if (self._clickTarget) {
+            self._clickTarget.removeEventListener('click', self._clickHandler);
+          }
+          sub.action();
+        };
+        target.addEventListener('click', this._clickHandler, { once: true });
+      },
+
+      showChoices: function (sub) {
+        var self = this;
+        this.choicePanel.style.display = 'flex';
+        this.choicePanel.innerHTML = '';
+
+        sub.options.forEach(function (opt, idx) {
+          var btn = document.createElement('button');
+          btn.className = 'choice-btn';
+          btn.textContent = opt.label;
+          btn.style.cssText = 'padding:8px 16px;border:2px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.06);color:white;cursor:pointer;font-size:0.85rem;font-family:inherit;transition:0.2s';
+          btn.addEventListener('mouseenter', function () { this.style.borderColor = '#0d9488'; this.style.background = 'rgba(13,148,136,0.15)'; });
+          btn.addEventListener('mouseleave', function () { this.style.borderColor = 'rgba(255,255,255,0.2)'; this.style.background = 'rgba(255,255,255,0.06)'; });
+          btn.addEventListener('click', function () {
+            self.choicePanel.style.display = 'none';
+            if (opt.correct) {
+              self.correctCount++;
+              self.feedbackPanel.style.cssText = 'display:block;margin-top:8px;padding:8px 12px;border-radius:8px;text-align:center;font-size:0.9rem;background:rgba(39,174,96,0.2);border:1px solid #27ae60;color:#27ae60';
+              self.feedbackPanel.textContent = opt.feedback;
+              setTimeout(function () {
+                self.feedbackPanel.style.display = 'none';
+                self.advance();
+              }, 1800);
+            } else {
+              self.wrongCount++;
+              self.feedbackPanel.style.cssText = 'display:block;margin-top:8px;padding:8px 12px;border-radius:8px;text-align:center;font-size:0.9rem;background:rgba(231,76,60,0.2);border:1px solid #e74c3c;color:#e74c3c';
+              self.feedbackPanel.textContent = opt.feedback;
+              var retry = document.createElement('button');
+              retry.className = 'hud-btn';
+              retry.textContent = 'Reintentar';
+              retry.style.marginTop = '8px';
+              retry.style.marginLeft = '12px';
+              retry.addEventListener('click', function () {
+                self.feedbackPanel.style.display = 'none';
+                self.choicePanel.style.display = 'flex';
+              });
+              self.feedbackPanel.appendChild(retry);
+            }
+          });
+          self.choicePanel.appendChild(btn);
+        });
       },
 
       highlightTarget: function (selector) {
+        this.clearHighlight();
+        var target = document.querySelector(selector);
+        if (!target) return;
+        target.classList.add('assembly-highlight');
+        target.setAttribute('animation__stepglow', {
+          property: 'scale', to: '1.12 1.12 1.12',
+          dur: 600, dir: 'alternate', loop: true, easing: 'easeInOutQuad'
+        });
+      },
+
+      clearHighlight: function () {
         document.querySelectorAll('.assembly-highlight').forEach(function (el) {
           el.classList.remove('assembly-highlight');
           el.removeAttribute('animation__stepglow');
         });
-        const target = document.querySelector(selector);
-        if (!target) return;
-        target.classList.add('assembly-highlight');
-        target.setAttribute('animation__stepglow', {
-          property: 'scale',
-          to: '1.12 1.12 1.12',
-          dur: 600,
-          dir: 'alternate',
-          loop: true,
-          easing: 'easeInOutQuad'
-        });
       },
 
       flashElement: function (selector, color) {
-        const el = document.querySelector(selector);
+        var el = document.querySelector(selector);
         if (!el) return;
         el.setAttribute('animation__flash', {
-          property: 'scale',
-          to: '1.2 1.2 1.2',
-          dur: 200,
-          dir: 'alternate',
-          loop: 2,
-          easing: 'easeInOutQuad'
+          property: 'scale', to: '1.2 1.2 1.2',
+          dur: 200, dir: 'alternate', loop: 2, easing: 'easeInOutQuad'
         });
       },
 
-      // ===== STEP ACTIONS =====
-
-      stepGetPart: function () {
-        const worldPos = this.getWorldPos('#partsBin');
-        worldPos.y += 0.4;
-
-        const scene = document.querySelector('a-scene');
-        const part = document.createElement('a-box');
-        part.setAttribute('id', 'workpiece');
-        part.setAttribute('width', '0.25');
-        part.setAttribute('height', '0.25');
-        part.setAttribute('depth', '0.25');
-        part.setAttribute('color', '#f1c40f');
-        part.setAttribute('shadow', '');
-        part.setAttribute('position', worldPos.x + ' ' + worldPos.y + ' ' + worldPos.z);
-        scene.appendChild(part);
-
-        this.workpiece = part;
-        this.flashElement('#partsBin', '#2980b9');
-
-        var self = this;
-        setTimeout(function () { self.nextStep(); }, 600);
-      },
-
-      stepConveyor: function () {
-        if (!this.workpiece) return;
-        var conveyorEnd = this.getWorldPos('#station1');
-        conveyorEnd.x += 1.3;
-        conveyorEnd.y = 0.55;
-        conveyorEnd.z += 0.5;
-
-        var pos = this.workpiece.getAttribute('position');
-
-        this.workpiece.setAttribute('animation', {
-          property: 'position',
-          from: pos.x + ' ' + pos.y + ' ' + pos.z,
-          to: conveyorEnd.x + ' ' + conveyorEnd.y + ' ' + conveyorEnd.z,
-          dur: 2000,
-          easing: 'linear'
+      // Robotic arm animations
+      animateArmSegment: function (dir) {
+        var armBox = document.querySelector('#roboticArm a-box[position="0 1.3 0.35"]');
+        if (!armBox) return;
+        var toRot = dir === 'bajar' ? '30 0 0' : '-30 0 0';
+        armBox.setAttribute('animation__armseg', {
+          property: 'rotation', to: toRot, dur: 500, easing: 'easeInOutQuad'
         });
-
-        var self = this;
-        setTimeout(function () { self.nextStep(); }, 2200);
       },
 
-      stepAssemble: function () {
-        if (!this.workpiece) return;
-        var armWorld = this.getWorldPos('#roboticArm');
-        var pos = this.workpiece.getAttribute('position');
-
-        // Move to arm (pick up)
-        this.workpiece.setAttribute('animation', {
-          property: 'position',
-          from: pos.x + ' ' + pos.y + ' ' + pos.z,
-          to: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
-          dur: 1200,
-          easing: 'easeInOutQuad'
-        });
-
-        var self = this;
-        // Then move to welding table
-        setTimeout(function () {
-          var weldWorld = self.getWorldPos('#weldingTable');
-          weldWorld.y += 0.4;
-
-          self.workpiece.setAttribute('animation', {
-            property: 'position',
-            from: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
-            to: weldWorld.x + ' ' + weldWorld.y + ' ' + weldWorld.z,
-            dur: 1500,
-            easing: 'easeInOutQuad'
-          });
-
-          // Rotate arm
-          var arm = document.querySelector('#roboticArm');
-          if (arm) {
-            arm.setAttribute('animation__armrot', {
-              property: 'rotation',
-              to: '0 180 0',
-              dur: 800,
-              easing: 'easeInOutQuad'
-            });
-            setTimeout(function () {
-              arm.setAttribute('animation__armrot', {
-                property: 'rotation',
-                to: '0 0 0',
-                dur: 800,
-                easing: 'easeInOutQuad'
-              });
-            }, 1000);
-          }
-        }, 1300);
-
-        setTimeout(function () { self.nextStep(); }, 3200);
-      },
-
-      stepWeld: function () {
-        if (!this.workpiece) return;
-        this.workpiece.setAttribute('color', '#d97706');
-
-        var spark = document.querySelector('#weldingSpark');
-        if (spark) {
-          spark.setAttribute('animation__weld', {
-            property: 'scale',
-            to: '3 3 3',
-            dur: 100,
-            dir: 'alternate',
-            loop: 4,
-            easing: 'easeInOutQuad'
-          });
+      animateGripper: function (action) {
+        var g1 = document.querySelector('#roboticArm a-box[position="0.05 1.9 0.55"]');
+        var g2 = document.querySelector('#roboticArm a-box[position="0.25 1.9 0.55"]');
+        if (action === 'cerrar') {
+          if (g1) g1.setAttribute('position', '0.12 1.9 0.55');
+          if (g2) g2.setAttribute('position', '0.18 1.9 0.55');
+        } else {
+          if (g1) g1.setAttribute('position', '0.05 1.9 0.55');
+          if (g2) g2.setAttribute('position', '0.25 1.9 0.55');
         }
-        this.flashElement('#weldingRobot', '#f39c12');
-
-        var self = this;
-        setTimeout(function () { self.nextStep(); }, 1200);
-      },
-
-      stepScan: function () {
-        if (!this.workpiece) return;
-        var scanWorld = this.getWorldPos('#scanner');
-        scanWorld.y += 0.5;
-        scanWorld.z += 0.4;
-
-        var pos = this.workpiece.getAttribute('position');
-
-        this.workpiece.setAttribute('animation', {
-          property: 'position',
-          from: pos.x + ' ' + pos.y + ' ' + pos.z,
-          to: scanWorld.x + ' ' + scanWorld.y + ' ' + scanWorld.z,
-          dur: 1500,
-          easing: 'easeInOutQuad'
-        });
-
-        var self = this;
-        setTimeout(function () {
-          self.flashElement('#scanner', '#27ae60');
-
-          var scene = document.querySelector('a-scene');
-          var resultText = document.createElement('a-text');
-          resultText.setAttribute('id', 'scanResult');
-          var sp = self.getWorldPos('#scanner');
-          resultText.setAttribute('position', sp.x + ' ' + (sp.y + 1.2) + ' ' + sp.z);
-          resultText.setAttribute('value', 'PIEZA APROBADA');
-          resultText.setAttribute('color', '#27ae60');
-          resultText.setAttribute('align', 'center');
-          resultText.setAttribute('width', '3');
-          resultText.setAttribute('scale', '0 0 0');
-          scene.appendChild(resultText);
-
-          resultText.setAttribute('animation__appear', {
-            property: 'scale',
-            from: '0 0 0',
-            to: '1.5 1.5 1',
-            dur: 400,
-            easing: 'easeOutBack'
-          });
-
-          setTimeout(function () {
-            if (resultText.parentNode) resultText.parentNode.removeChild(resultText);
-          }, 2000);
-        }, 1600);
-
-        setTimeout(function () { self.nextStep(); }, 3200);
-      },
-
-      stepPackage: function () {
-        if (!this.workpiece) return;
-        var palletWorld = this.getWorldPos('#station4');
-        palletWorld.x -= 0.8;
-        palletWorld.y = 0.6;
-        palletWorld.z -= 0.5;
-
-        var pos = this.workpiece.getAttribute('position');
-
-        this.workpiece.setAttribute('animation', {
-          property: 'position',
-          from: pos.x + ' ' + pos.y + ' ' + pos.z,
-          to: palletWorld.x + ' ' + palletWorld.y + ' ' + palletWorld.z,
-          dur: 1500,
-          easing: 'easeInOutQuad'
-        });
-
-        var self = this;
-        setTimeout(function () {
-          self.workpiece.setAttribute('color', '#d4a574');
-
-          var scene = document.querySelector('a-scene');
-          var wrap = document.createElement('a-box');
-          wrap.setAttribute('width', '0.35');
-          wrap.setAttribute('height', '0.35');
-          wrap.setAttribute('depth', '0.35');
-          wrap.setAttribute('material', 'transparent: true; opacity: 0.3; color: #d4a574');
-          var wp = self.workpiece.getAttribute('position');
-          wrap.setAttribute('position', wp.x + ' ' + wp.y + ' ' + wp.z);
-          scene.appendChild(wrap);
-
-          self.flashElement('#shrinkWrap', '#8e44ad');
-
-          setTimeout(function () {
-            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-          }, 1500);
-        }, 1600);
-
-        setTimeout(function () { self.nextStep(); }, 2500);
       },
 
       complete: function () {
@@ -1155,49 +1394,48 @@ document.addEventListener('DOMContentLoaded', () => {
         var mins = Math.floor(elapsed / 60);
         var secs = elapsed % 60;
 
+        this.clearHighlight();
+        if (this._clickTarget && this._clickHandler) {
+          this._clickTarget.removeEventListener('click', this._clickHandler);
+        }
+        this.choicePanel.style.display = 'none';
+        this.feedbackPanel.style.display = 'none';
         this.hudEl.style.display = 'none';
         this.completeEl.style.display = 'flex';
-        document.getElementById('completeStats').textContent =
-          'Tiempo total: ' + mins + 'm ' + secs + 's | 4 estaciones completadas';
+        document.getElementById('completeStats').innerHTML =
+          'Tiempo total: ' + mins + 'm ' + secs + 's<br>' +
+          'Aciertos: ' + this.correctCount + ' | Errores: ' + this.wrongCount +
+          ' | Calificacion: ' + (this.wrongCount === 0 ? 'Excelente' : this.wrongCount <= 2 ? 'Buena' : 'Necesita mejorar');
         this.isActive = false;
-
-        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
-          el.classList.remove('assembly-highlight');
-          el.removeAttribute('animation__stepglow');
-        });
       },
 
       reset: function () {
+        if (this._clickTarget && this._clickHandler) {
+          this._clickTarget.removeEventListener('click', this._clickHandler);
+        }
+        this._clickTarget = null;
+        this._clickHandler = null;
+
         if (this.workpiece && this.workpiece.parentNode) {
           this.workpiece.parentNode.removeChild(this.workpiece);
         }
         this.workpiece = null;
 
-        // Remove active step listener
-        if (this._stepTarget && this._stepHandler) {
-          this._stepTarget.removeEventListener('click', this._stepHandler);
-        }
-        this._stepTarget = null;
-        this._stepHandler = null;
+        var sr = document.querySelector('#scanResult');
+        if (sr && sr.parentNode) sr.parentNode.removeChild(sr);
 
-        var result = document.querySelector('#scanResult');
-        if (result && result.parentNode) result.parentNode.removeChild(result);
-
+        this.clearHighlight();
+        this.choicePanel.style.display = 'none';
+        this.feedbackPanel.style.display = 'none';
         this.hudEl.style.display = 'none';
         this.completeEl.style.display = 'none';
         this.isActive = false;
-        this.currentStep = 0;
-
-        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
-          el.classList.remove('assembly-highlight');
-          el.removeAttribute('animation__stepglow');
-        });
-
-        // Reset workpiece color
-        var wp = document.querySelector('#workpiece');
-        if (wp) wp.setAttribute('color', '#f1c40f');
+        this.conveyorRunning = false;
+        this.currentStepIdx = 0;
+        this.currentSubIdx = 0;
       }
     });
+    // ===== END OPERATION MANAGER =====
 
     // Conveyor animation (station 1)
     AFRAME.registerComponent('conveyor-animation', {
