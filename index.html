@@ -386,7 +386,7 @@
       <p class="section-desc">Explora la recepción de la planta en 3D. Usa <strong>WASD</strong> para moverte y haz <strong>click</strong> en los paneles para ver información.</p>
 
       <div class="vr-container" id="vrContainer">
-        <a-scene id="vrScene" embedded loading-screen="enabled: false" shadow="type: pcfsoft">
+        <a-scene id="vrScene" embedded loading-screen="enabled: false" shadow="type: pcfsoft" assembly-manager>
           <a-sky color="#1a1a2e"></a-sky>
 
           <!-- ===== FLOOR ===== -->
@@ -419,6 +419,15 @@
 
             <!-- Instructions text -->
             <a-entity position="0 0.8 -1" text="value: Usa WASD para caminar y Click en los paneles para ver informacion; color: #95a5a6; align: center; width: 5;" scale="0.7 0.7 1"></a-entity>
+
+            <!-- START ASSEMBLY BUTTON -->
+            <a-entity id="startAssembly" class="clickable" click-feedback hover-glow="color: #0d9488" data-color="#0d9488" position="0 1.3 -1"
+              animation__hoverenter="property: scale; to: 1.12 1.12 1.12; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad"
+              animation__pulse="property: scale; to: 1.05 1.05 1.05; dur: 1000; dir: alternate; loop: true; easing: easeInOutQuad">
+              <a-plane width="2.2" height="0.5" color="#0d9488" radius="0.06" shadow></a-plane>
+              <a-text value="INICIAR SIMULACION DE ENSAMBLE" position="0 0 0.02" color="white" align="center" width="2"></a-text>
+            </a-entity>
 
             <!-- INFO PANEL 1: Mapa general (left side) -->
             <a-entity class="clickable" toggle-panel="title: MAPA DE PLANTA" data-lines="E1: Ensamble|E2: Soldadura|E3: Control de Calidad|E4: Empaque" click-feedback hover-glow="color: #0d9488" data-color="#0d9488" position="-4 2 1.5" look-at="[camera]"
@@ -467,7 +476,9 @@
             <a-entity position="0 3 0" text="value: E1 - ENSAMBLE; color: #85c1e9; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
             <!-- Conveyor belt -->
-            <a-box position="0 0.2 0.5" width="3" height="0.15" depth="1" color="#566573" shadow></a-box>
+            <a-box id="conveyorBelt" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 0.2 0.5" width="3" height="0.15" depth="1" color="#566573" shadow
+              animation__hoverenter="property: material.color; to: #2980b9; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: material.color; to: #566573; dur: 200; startEvents: mouseleave; easing: easeOutQuad"></a-box>
             <a-box class="conveyor-item" position="-1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#f1c40f"></a-box>
             <a-box class="conveyor-item" position="0 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#e74c3c"></a-box>
             <a-box class="conveyor-item" position="1 0.5 0.5" width="0.4" height="0.4" depth="0.4" color="#3498db"></a-box>
@@ -479,7 +490,7 @@
             <a-box position="1.3 -0.1 1" width="0.08" height="0.2" depth="0.08" color="#7f8c8d"></a-box>
 
             <!-- Robotic arm (built with primitives) -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="-0.5 0 -0.3"
+            <a-entity id="roboticArm" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="-0.5 0 -0.3"
               animation__hoverenter="property: scale; to: 1.1 1.1 1.1; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <!-- Base -->
@@ -504,9 +515,13 @@
             <a-cylinder position="-0.5 0.5 -0.3" radius="0.4" height="0.2" color="#5d6d7e" shadow></a-cylinder>
 
             <!-- Parts bin -->
-            <a-box position="1.2 0.3 -0.5" width="0.6" height="0.5" depth="0.6" color="#2c3e50">
-              <a-box position="0 0.3 0" width="0.4" height="0.1" depth="0.4" color="#f1c40f"></a-box>
-            </a-box>
+            <a-entity id="partsBin" class="clickable" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="1.2 0.3 -0.5"
+              animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
+              animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
+              <a-box width="0.6" height="0.5" depth="0.6" color="#2c3e50">
+                <a-box position="0 0.3 0" width="0.4" height="0.1" depth="0.4" color="#f1c40f"></a-box>
+              </a-box>
+            </a-entity>
 
             <!-- Info panel station 1 -->
             <a-entity class="clickable" toggle-panel="title: ESTACION 1 - ENSAMBLE" data-lines="Piezas ensambladas: 1,247|Ciclo promedio: 12.4s|Eficiencia: 94%|Operador: Roberto" click-feedback hover-glow="color: #2980b9" data-color="#2980b9" position="0 2 -1.2"
@@ -531,7 +546,7 @@
             <a-entity position="0 3 0" text="value: E2 - SOLDADURA; color: #e74c3c; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
             <!-- Welding robot body -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 2 - SOLDADURA" data-lines="Temp. arco: 850°C|Electrodos restantes: 12/24|Soldaduras/hora: 48|Operador: Maria" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 0.7 -0.3"
+            <a-entity id="weldingRobot" class="clickable" click-feedback hover-glow="color: #e74c3c" data-color="#e74c3c" position="0 0.7 -0.3"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-box width="1.2" height="1.2" depth="0.8" color="#5d6d7e" shadow>
@@ -553,7 +568,7 @@
               animation__move="property: position; to: 0.9 0.7 -0.3; dur: 500; dir: alternate; loop: true"></a-sphere>
 
             <!-- Workpiece table -->
-            <a-box position="0.9 0.2 -0.3" width="0.5" height="0.1" depth="0.5" color="#7f8c8d"></a-box>
+            <a-box id="weldingTable" position="0.9 0.2 -0.3" width="0.5" height="0.1" depth="0.5" color="#7f8c8d"></a-box>
             <a-box position="0.9 0.1 -0.3" width="0.5" height="0.1" depth="0.5" color="#566573"></a-box>
 
             <!-- Info panel station 2 -->
@@ -579,7 +594,7 @@
             <a-entity position="0 3 0" text="value: E3 - CONTROL CALIDAD; color: #27ae60; align: center; width: 3; letter-spacing: 2;"></a-entity>
 
             <!-- Scanner base -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 3 - CALIDAD" data-lines="Tasa aprobacion: 98.7%|Piezas inspeccionadas: 3,450|Defectos detectados: 45|Inspector: Lucia" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 0 0"
+            <a-entity id="scanner" class="clickable" click-feedback hover-glow="color: #27ae60" data-color="#27ae60" position="0 0 0"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-cylinder position="0 0.4 0" radius="0.4" height="0.6" color="#5d6d7e" shadow></a-cylinder>
@@ -642,7 +657,7 @@
             <a-box position="-0.8 1.2 -0.5" width="0.4" height="0.3" depth="0.4" color="#d4a574"></a-box>
 
             <!-- Shrink wrap machine -->
-            <a-entity class="clickable" toggle-panel="title: ESTACION 4 - EMPAQUE" data-lines="Unidades empacadas: 3,210 cajas|Pallets preparados: 12/24|Peso total: 4,815 kg|Operador: Jose" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0.8 0.4 -0.5"
+            <a-entity id="shrinkWrap" class="clickable" click-feedback hover-glow="color: #8e44ad" data-color="#8e44ad" position="0.8 0.4 -0.5"
               animation__hoverenter="property: scale; to: 1.08 1.08 1.08; dur: 200; startEvents: mouseenter; easing: easeOutQuad"
               animation__hoverleave="property: scale; to: 1 1 1; dur: 200; startEvents: mouseleave; easing: easeOutQuad">
               <a-box width="0.5" height="0.6" depth="0.5" color="#5d6d7e"></a-box>
@@ -780,5 +795,23 @@
   </footer>
 
   <script src="js/main.js"></script>
+
+  <!-- ===== ASSEMBLY HUD ===== -->
+  <div id="assemblyHud" class="assembly-hud">
+    <div class="hud-row">
+      <span class="hud-step" id="hudStep">Paso 1/7</span>
+      <div class="hud-bar"><div class="hud-fill" id="hudFill" style="width:0%"></div></div>
+      <button class="hud-btn" id="resetBtn" title="Reiniciar simulacion">↺</button>
+    </div>
+    <div class="hud-text" id="hudText">Preparando linea de ensamble...</div>
+  </div>
+
+  <div id="assemblyComplete" class="assembly-complete">
+    <div class="complete-box">
+      <h2>PROCESO COMPLETADO</h2>
+      <p id="completeStats">Tiempo: --</p>
+      <button class="hud-btn" id="completeReset" style="padding:10px 30px;font-size:1rem">Reiniciar</button>
+    </div>
+  </div>
 </body>
 </html>

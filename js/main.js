@@ -797,6 +797,408 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
+    // ======================================================================
+    // ASSEMBLY MANAGER: controls 7-step guided simulation
+    // ======================================================================
+    AFRAME.registerComponent('assembly-manager', {
+      schema: { active: { type: 'boolean', default: false } },
+
+      init: function () {
+        this.currentStep = 0;
+        this.workpiece = null;
+        this.startTime = 0;
+        this.isActive = false;
+
+        this.hudEl = document.getElementById('assemblyHud');
+        this.hudStep = document.getElementById('hudStep');
+        this.hudText = document.getElementById('hudText');
+        this.hudFill = document.getElementById('hudFill');
+        this.completeEl = document.getElementById('assemblyComplete');
+
+        const resetBtn = document.getElementById('resetBtn');
+        const completeReset = document.getElementById('completeReset');
+        if (resetBtn) resetBtn.addEventListener('click', () => this.reset());
+        if (completeReset) completeReset.addEventListener('click', () => this.reset());
+
+        const startBtn = document.querySelector('#startAssembly');
+        if (startBtn) {
+          startBtn.addEventListener('click', (e) => {
+            if (!this.isActive) { e.stopPropagation(); this.start(); }
+          });
+        }
+
+        this.steps = [
+          {
+            instruction: 'Haz clic en INICIAR SIMULACION para comenzar el proceso de ensamble',
+            target: '#startAssembly',
+            action: () => this.nextStep()
+          },
+          {
+            instruction: 'Paso 1: Haz clic en el CONTENEDOR DE PIEZAS (bote amarillo) para obtener material',
+            target: '#partsBin',
+            action: () => this.stepGetPart()
+          },
+          {
+            instruction: 'Paso 2: Haz clic en la BANDA TRANSPORTADORA para mover la pieza',
+            target: '#conveyorBelt',
+            action: () => this.stepConveyor()
+          },
+          {
+            instruction: 'Paso 3: Haz clic en el BRAZO ROBOTICO para ensamblar la pieza',
+            target: '#roboticArm',
+            action: () => this.stepAssemble()
+          },
+          {
+            instruction: 'Paso 4: Haz clic en el ROBOT DE SOLDADURA para soldar',
+            target: '#weldingRobot',
+            action: () => this.stepWeld()
+          },
+          {
+            instruction: 'Paso 5: Haz clic en el ESCANER para inspeccionar calidad',
+            target: '#scanner',
+            action: () => this.stepScan()
+          },
+          {
+            instruction: 'Paso 6: Haz clic en la MAQUINA DE EMPAQUE para finalizar',
+            target: '#shrinkWrap',
+            action: () => this.stepPackage()
+          }
+        ];
+      },
+
+      getWorldPos: function (selector) {
+        const el = document.querySelector(selector);
+        if (!el || !el.object3D) return { x: 0, y: 0, z: 0 };
+        const pos = new AFRAME.THREE.Vector3();
+        el.object3D.getWorldPosition(pos);
+        return { x: pos.x, y: pos.y, z: pos.z };
+      },
+
+      start: function () {
+        if (this.isActive) return;
+        this.isActive = true;
+        this.currentStep = 0;
+        this.startTime = Date.now();
+        this.hudEl.style.display = 'block';
+        this.completeEl.style.display = 'none';
+        this.goToStep(0);
+      },
+
+      goToStep: function (index) {
+        var step = this.steps[index];
+        if (!step) { this.complete(); return; }
+        this.currentStep = index;
+
+        this.hudStep.textContent = 'Paso ' + (index + 1) + '/' + this.steps.length;
+        this.hudText.textContent = step.instruction;
+        this.hudFill.style.width = ((index) / this.steps.length * 100) + '%';
+
+        this.highlightTarget(step.target);
+
+        // Remove previous step listener
+        if (this._stepTarget && this._stepHandler) {
+          this._stepTarget.removeEventListener('click', this._stepHandler);
+        }
+
+        // Wire step action to target
+        var target = document.querySelector(step.target);
+        if (target) {
+          target.classList.add('step-active');
+          this._stepTarget = target;
+          this._stepHandler = function (e) {
+            if (!this.isActive) return;
+            step.action.call(this);
+          }.bind(this);
+          target.addEventListener('click', this._stepHandler, { once: true });
+        }
+      },
+
+      highlightTarget: function (selector) {
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+        const target = document.querySelector(selector);
+        if (!target) return;
+        target.classList.add('assembly-highlight');
+        target.setAttribute('animation__stepglow', {
+          property: 'scale',
+          to: '1.12 1.12 1.12',
+          dur: 600,
+          dir: 'alternate',
+          loop: true,
+          easing: 'easeInOutQuad'
+        });
+      },
+
+      flashElement: function (selector, color) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        el.setAttribute('animation__flash', {
+          property: 'scale',
+          to: '1.2 1.2 1.2',
+          dur: 200,
+          dir: 'alternate',
+          loop: 2,
+          easing: 'easeInOutQuad'
+        });
+      },
+
+      // ===== STEP ACTIONS =====
+
+      stepGetPart: function () {
+        const worldPos = this.getWorldPos('#partsBin');
+        worldPos.y += 0.4;
+
+        const scene = document.querySelector('a-scene');
+        const part = document.createElement('a-box');
+        part.setAttribute('id', 'workpiece');
+        part.setAttribute('width', '0.25');
+        part.setAttribute('height', '0.25');
+        part.setAttribute('depth', '0.25');
+        part.setAttribute('color', '#f1c40f');
+        part.setAttribute('shadow', '');
+        part.setAttribute('position', worldPos.x + ' ' + worldPos.y + ' ' + worldPos.z);
+        scene.appendChild(part);
+
+        this.workpiece = part;
+        this.flashElement('#partsBin', '#2980b9');
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 600);
+      },
+
+      stepConveyor: function () {
+        if (!this.workpiece) return;
+        var conveyorEnd = this.getWorldPos('#station1');
+        conveyorEnd.x += 1.3;
+        conveyorEnd.y = 0.55;
+        conveyorEnd.z += 0.5;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: conveyorEnd.x + ' ' + conveyorEnd.y + ' ' + conveyorEnd.z,
+          dur: 2000,
+          easing: 'linear'
+        });
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 2200);
+      },
+
+      stepAssemble: function () {
+        if (!this.workpiece) return;
+        var armWorld = this.getWorldPos('#roboticArm');
+        var pos = this.workpiece.getAttribute('position');
+
+        // Move to arm (pick up)
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
+          dur: 1200,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        // Then move to welding table
+        setTimeout(function () {
+          var weldWorld = self.getWorldPos('#weldingTable');
+          weldWorld.y += 0.4;
+
+          self.workpiece.setAttribute('animation', {
+            property: 'position',
+            from: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
+            to: weldWorld.x + ' ' + weldWorld.y + ' ' + weldWorld.z,
+            dur: 1500,
+            easing: 'easeInOutQuad'
+          });
+
+          // Rotate arm
+          var arm = document.querySelector('#roboticArm');
+          if (arm) {
+            arm.setAttribute('animation__armrot', {
+              property: 'rotation',
+              to: '0 180 0',
+              dur: 800,
+              easing: 'easeInOutQuad'
+            });
+            setTimeout(function () {
+              arm.setAttribute('animation__armrot', {
+                property: 'rotation',
+                to: '0 0 0',
+                dur: 800,
+                easing: 'easeInOutQuad'
+              });
+            }, 1000);
+          }
+        }, 1300);
+
+        setTimeout(function () { self.nextStep(); }, 3200);
+      },
+
+      stepWeld: function () {
+        if (!this.workpiece) return;
+        this.workpiece.setAttribute('color', '#d97706');
+
+        var spark = document.querySelector('#weldingSpark');
+        if (spark) {
+          spark.setAttribute('animation__weld', {
+            property: 'scale',
+            to: '3 3 3',
+            dur: 100,
+            dir: 'alternate',
+            loop: 4,
+            easing: 'easeInOutQuad'
+          });
+        }
+        this.flashElement('#weldingRobot', '#f39c12');
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 1200);
+      },
+
+      stepScan: function () {
+        if (!this.workpiece) return;
+        var scanWorld = this.getWorldPos('#scanner');
+        scanWorld.y += 0.5;
+        scanWorld.z += 0.4;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: scanWorld.x + ' ' + scanWorld.y + ' ' + scanWorld.z,
+          dur: 1500,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        setTimeout(function () {
+          self.flashElement('#scanner', '#27ae60');
+
+          var scene = document.querySelector('a-scene');
+          var resultText = document.createElement('a-text');
+          resultText.setAttribute('id', 'scanResult');
+          var sp = self.getWorldPos('#scanner');
+          resultText.setAttribute('position', sp.x + ' ' + (sp.y + 1.2) + ' ' + sp.z);
+          resultText.setAttribute('value', 'PIEZA APROBADA');
+          resultText.setAttribute('color', '#27ae60');
+          resultText.setAttribute('align', 'center');
+          resultText.setAttribute('width', '3');
+          resultText.setAttribute('scale', '0 0 0');
+          scene.appendChild(resultText);
+
+          resultText.setAttribute('animation__appear', {
+            property: 'scale',
+            from: '0 0 0',
+            to: '1.5 1.5 1',
+            dur: 400,
+            easing: 'easeOutBack'
+          });
+
+          setTimeout(function () {
+            if (resultText.parentNode) resultText.parentNode.removeChild(resultText);
+          }, 2000);
+        }, 1600);
+
+        setTimeout(function () { self.nextStep(); }, 3200);
+      },
+
+      stepPackage: function () {
+        if (!this.workpiece) return;
+        var palletWorld = this.getWorldPos('#station4');
+        palletWorld.x -= 0.8;
+        palletWorld.y = 0.6;
+        palletWorld.z -= 0.5;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: palletWorld.x + ' ' + palletWorld.y + ' ' + palletWorld.z,
+          dur: 1500,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        setTimeout(function () {
+          self.workpiece.setAttribute('color', '#d4a574');
+
+          var scene = document.querySelector('a-scene');
+          var wrap = document.createElement('a-box');
+          wrap.setAttribute('width', '0.35');
+          wrap.setAttribute('height', '0.35');
+          wrap.setAttribute('depth', '0.35');
+          wrap.setAttribute('material', 'transparent: true; opacity: 0.3; color: #d4a574');
+          var wp = self.workpiece.getAttribute('position');
+          wrap.setAttribute('position', wp.x + ' ' + wp.y + ' ' + wp.z);
+          scene.appendChild(wrap);
+
+          self.flashElement('#shrinkWrap', '#8e44ad');
+
+          setTimeout(function () {
+            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+          }, 1500);
+        }, 1600);
+
+        setTimeout(function () { self.nextStep(); }, 2500);
+      },
+
+      complete: function () {
+        var elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        var mins = Math.floor(elapsed / 60);
+        var secs = elapsed % 60;
+
+        this.hudEl.style.display = 'none';
+        this.completeEl.style.display = 'flex';
+        document.getElementById('completeStats').textContent =
+          'Tiempo total: ' + mins + 'm ' + secs + 's | 4 estaciones completadas';
+        this.isActive = false;
+
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+      },
+
+      reset: function () {
+        if (this.workpiece && this.workpiece.parentNode) {
+          this.workpiece.parentNode.removeChild(this.workpiece);
+        }
+        this.workpiece = null;
+
+        // Remove active step listener
+        if (this._stepTarget && this._stepHandler) {
+          this._stepTarget.removeEventListener('click', this._stepHandler);
+        }
+        this._stepTarget = null;
+        this._stepHandler = null;
+
+        var result = document.querySelector('#scanResult');
+        if (result && result.parentNode) result.parentNode.removeChild(result);
+
+        this.hudEl.style.display = 'none';
+        this.completeEl.style.display = 'none';
+        this.isActive = false;
+        this.currentStep = 0;
+
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+
+        // Reset workpiece color
+        var wp = document.querySelector('#workpiece');
+        if (wp) wp.setAttribute('color', '#f1c40f');
+      }
+    });
+
     // Conveyor animation (station 1)
     AFRAME.registerComponent('conveyor-animation', {
       tick: function (time, delta) {
