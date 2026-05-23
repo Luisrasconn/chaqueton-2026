@@ -2812,55 +2812,81 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ====================================
-  // 11. TRAINING MODULES & EXAMS
   // ====================================
-  const EXAM_STORAGE_KEY = 'mhub-exams';
+  // 11. UNIFIED EXAM SYSTEM
+  // ====================================
 
-  const QUIZZES = {
-    seguridad: {
+  const EXAMS = {
+    modulo4: {
+      title: 'Examen de Certificación',
+      certName: 'Módulo 4: Evaluación y Certificado',
       questions: [
-        { q: '¿Qué reduce el uso correcto de EPP hasta en un 60% según la OSHA?', options: ['Tiempo de producción', 'Accidentes graves', 'Costos de mantenimiento', 'Consumo de energía'], correct: 1 },
-        { q: '¿Cuál es el primer paso del procedimiento LOTO?', options: ['Aplicar candado', 'Liberar energía residual', 'Notificar a afectados', 'Verificar cero energía'], correct: 2 },
-        { q: '¿Qué significa el acrónimo PASS en el uso de extintores?', options: ['Push, Aim, Squeeze, Sweep', 'Pull, Aim, Squeeze, Sweep', 'Pull, Activate, Spray, Sweep', 'Push, Activate, Squeeze, Spray'], correct: 1 },
-        { q: '¿Cuál es la primera causa de incapacidad laboral según el módulo?', options: ['Caídas desde altura', 'Golpes por objetos', 'Trastornos musculoesqueléticos', 'Quemaduras químicas'], correct: 2 },
-        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', options: ['12', '14', '16', '18'], correct: 2 },
-        { q: '¿Qué tipo de extintor se usa para fuegos eléctricos?', options: ['Tipo A', 'Tipo B', 'Tipo C', 'Tipo D'], correct: 2 },
-        { q: '¿Cada cuánto deben realizarse los simulacros de evacuación?', options: ['Mensuales', 'Bimestrales', 'Trimestrales', 'Semestrales'], correct: 2 },
-        { q: '¿Qué significa la sigla LOTO?', options: ['Lock-Out / Tag-Out', 'Load-Over / Turn-Off', 'Lift-Off / Take-Out', 'Lever-Over / Tool-Out'], correct: 0 },
-        { q: '¿Cuál es la técnica correcta al levantar una carga > 15 kg?', options: ['Doblar la cintura', 'Doblar rodillas y mantener espalda recta', 'Levantar con un solo brazo', 'Girar el tronco mientras levanta'], correct: 1 },
-        { q: '¿Qué debe tener un trabajador antes de operar maquinaria?', options: ['Autorización verbal', 'Entrenamiento documentado vigente', 'Experiencia previa no certificada', 'Solo supervisión remota'], correct: 1 }
+        { q: '¿Cuál es el propósito principal del Módulo 1?', opts: ['Conocer las áreas y procesos de la planta', 'Operar maquinaria pesada', 'Diseñar nuevos productos', 'Gestionar el personal'], correct: 0 },
+        { q: '¿Cuál de las siguientes es un área clave en la planta?', opts: ['Ensamble', 'Marketing', 'Ventas', 'Recursos Humanos'], correct: 0 },
+        { q: '¿Qué significa EPP?', opts: ['Equipo de Protección Personal', 'Estación de Procesos Primarios', 'Equipo de Producción Primaria', 'Estación de Protección Principal'], correct: 0 },
+        { q: 'En el Módulo 2, ¿qué tipo de entorno se usa para practicar?', opts: ['Entorno virtual seguro', 'Planta real en funcionamiento', 'Simulador de escritorio sin VR', 'Manual impreso'], correct: 0 },
+        { q: '¿Cuál es la velocidad máxima de la banda transportadora en E1?', opts: ['0.5 m/s', '1.0 m/s', '0.2 m/s', '2.0 m/s'], correct: 0 },
+        { q: '¿Cuántos grados de libertad tiene el brazo robótico en E1?', opts: ['6', '4', '8', '3'], correct: 0 },
+        { q: 'En el Módulo 3, ¿qué tecnología se utiliza para superponer información técnica?', opts: ['Realidad Aumentada', 'Realidad Virtual', 'Impresión 3D', 'Internet de las Cosas'], correct: 0 },
+        { q: '¿Qué temperatura de soldadura es la óptima en E2?', opts: ['850°C', '650°C', '1050°C', '500°C'], correct: 0 },
+        { q: '¿Cuál es la tasa de aprobación del escáner 3D en E3?', opts: ['98.7%', '85.0%', '99.9%', '90.5%'], correct: 0 },
+        { q: '¿Qué acción es correcta al finalizar el ensamble en E4?', opts: ['Apilar la pieza en el pallet', 'Desechar la pieza', 'Devolver la pieza a E1', 'Ignorar la pieza'], correct: 0 }
+      ]
+    },
+    seguridad: {
+      title: 'Normas de Seguridad 2026',
+      certName: 'Capacitación: Normas de Seguridad 2026',
+      questions: [
+        { q: '¿Qué reduce el uso correcto de EPP hasta en un 60% según la OSHA?', opts: ['Tiempo de producción', 'Accidentes graves', 'Costos de mantenimiento', 'Consumo de energía'], correct: 1 },
+        { q: '¿Cuál es el primer paso del procedimiento LOTO?', opts: ['Aplicar candado', 'Liberar energía residual', 'Notificar a afectados', 'Verificar cero energía'], correct: 2 },
+        { q: '¿Qué significa el acrónimo PASS en el uso de extintores?', opts: ['Push, Aim, Squeeze, Sweep', 'Pull, Aim, Squeeze, Sweep', 'Pull, Activate, Spray, Sweep', 'Push, Activate, Squeeze, Spray'], correct: 1 },
+        { q: '¿Cuál es la primera causa de incapacidad laboral según el módulo?', opts: ['Caídas desde altura', 'Golpes por objetos', 'Trastornos musculoesqueléticos', 'Quemaduras químicas'], correct: 2 },
+        { q: '¿Cuántas secciones tiene la Hoja de Datos de Seguridad (HDS)?', opts: ['12', '14', '16', '18'], correct: 2 },
+        { q: '¿Qué tipo de extintor se usa para fuegos eléctricos?', opts: ['Tipo A', 'Tipo B', 'Tipo C', 'Tipo D'], correct: 2 },
+        { q: '¿Cada cuánto deben realizarse los simulacros de evacuación?', opts: ['Mensuales', 'Bimestrales', 'Trimestrales', 'Semestrales'], correct: 2 },
+        { q: '¿Qué significa la sigla LOTO?', opts: ['Lock-Out / Tag-Out', 'Load-Over / Turn-Off', 'Lift-Off / Take-Out', 'Lever-Over / Tool-Out'], correct: 0 },
+        { q: '¿Cuál es la técnica correcta al levantar una carga > 15 kg?', opts: ['Doblar la cintura', 'Doblar rodillas y mantener espalda recta', 'Levantar con un solo brazo', 'Girar el tronco mientras levanta'], correct: 1 },
+        { q: '¿Qué debe tener un trabajador antes de operar maquinaria?', opts: ['Autorización verbal', 'Entrenamiento documentado vigente', 'Experiencia previa no certificada', 'Solo supervisión remota'], correct: 1 }
       ]
     },
     optimizacion: {
+      title: 'Optimización de Procesos',
+      certName: 'Capacitación: Optimización de Procesos',
       questions: [
-        { q: '¿Cuál es el primer paso (Seiri) de la metodología 5S?', options: ['Ordenar', 'Clasificar', 'Limpiar', 'Estandarizar'], correct: 1 },
-        { q: '¿Qué significa la palabra japonesa "Kaizen"?', options: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
-        { q: '¿Cuál es el objetivo principal de SMED?', options: ['Aumentar velocidad de producción', 'Reducir cambios de herramienta a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
-        { q: '¿Qué representa un Kanban en el sistema Toyota?', options: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
-        { q: '¿Cuántos desperdicios (Muda) se identifican en Lean?', options: ['5', '6', '7', '8'], correct: 2 },
-        { q: '¿Qué significa "Takt" en alemán?', options: ['Tiempo', 'Ritmo', 'Velocidad', 'Ciclo'], correct: 1 },
-        { q: '¿Qué ciclo sigue la metodología Kaizen?', options: ['DMAIC', 'PDCA', 'FMEA', '8D'], correct: 1 },
-        { q: '¿Qué significa Jidoka?', options: ['Producción en masa', 'Automatización con toque humano', 'Control estadístico', 'Mantenimiento preventivo'], correct: 1 },
-        { q: '¿Qué herramienta mapea todos los pasos desde materia prima hasta el cliente?', options: ['Diagrama de Pareto', 'Value Stream Mapping (VSM)', 'Diagrama de Ishikawa', 'Histograma'], correct: 1 },
-        { q: '¿Qué reduce el SMV (Standard Minute Value)?', options: ['El tiempo de entrega', 'El tiempo estándar por tarea', 'El costo de materiales', 'El número de operadores'], correct: 1 }
+        { q: '¿Cuál es el primer paso (Seiri) de la metodología 5S?', opts: ['Ordenar', 'Clasificar', 'Limpiar', 'Estandarizar'], correct: 1 },
+        { q: '¿Qué significa la palabra japonesa "Kaizen"?', opts: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
+        { q: '¿Cuál es el objetivo principal de SMED?', opts: ['Aumentar velocidad de producción', 'Reducir cambios de herramienta a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
+        { q: '¿Qué representa un Kanban en el sistema Toyota?', opts: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
+        { q: '¿Cuántos desperdicios (Muda) se identifican en Lean?', opts: ['5', '6', '7', '8'], correct: 2 },
+        { q: '¿Qué significa "Takt" en alemán?', opts: ['Tiempo', 'Ritmo', 'Velocidad', 'Ciclo'], correct: 1 },
+        { q: '¿Qué ciclo sigue la metodología Kaizen?', opts: ['DMAIC', 'PDCA', 'FMEA', '8D'], correct: 1 },
+        { q: '¿Qué significa Jidoka?', opts: ['Producción en masa', 'Automatización con toque humano', 'Control estadístico', 'Mantenimiento preventivo'], correct: 1 },
+        { q: '¿Qué herramienta mapea todos los pasos desde materia prima hasta el cliente?', opts: ['Diagrama de Pareto', 'Value Stream Mapping (VSM)', 'Diagrama de Ishikawa', 'Histograma'], correct: 1 },
+        { q: '¿Qué reduce el SMV (Standard Minute Value)?', opts: ['El tiempo de entrega', 'El tiempo estándar por tarea', 'El costo de materiales', 'El número de operadores'], correct: 1 }
+      ]
+    },
+    capacitacion: {
+      title: 'Examen de Certificación — Capacitación',
+      certName: 'Capacitación: Examen de Certificación',
+      questions: [
+        { q: '¿Cuál es el objetivo principal del programa de capacitación MHub?', opts: ['Actualizar y retroalimentar a operadores con experiencia', 'Contratar nuevo personal', 'Diseñar nuevos productos', 'Reducir el salario de los operadores'], correct: 0 },
+        { q: '¿Qué norma de seguridad es obligatorio actualizar en 2026 según el programa?', opts: ['Normas de Seguridad 2026', 'Normas ISO 9001', 'Reglamento de construcción', 'Código de ética'], correct: 0 },
+        { q: '¿Qué significa EPP en el contexto de seguridad industrial?', opts: ['Equipo de Protección Personal', 'Estación de Procesos Primarios', 'Equipo de Producción Principal', 'Estación de Protección'], correct: 0 },
+        { q: '¿Cuál es el primer paso (Seiri) de la metodología 5S?', opts: ['Ordenar', 'Clasificar', 'Limpiar', 'Estandarizar'], correct: 1 },
+        { q: '¿Qué significa la palabra japonesa "Kaizen"?', opts: ['Producción rápida', 'Cambio para mejorar', 'Cero defectos', 'Trabajo en equipo'], correct: 1 },
+        { q: '¿Qué equipo de protección es obligatorio en el área de soldadura?', opts: ['Casco, guantes y careta de soldar', 'Solo lentes de seguridad', 'Casco y botas', 'Tapones auditivos'], correct: 0 },
+        { q: '¿Cuál es el objetivo principal de la metodología SMED?', opts: ['Aumentar velocidad de producción', 'Reducir tiempos de cambio a <10 min', 'Eliminar inventario completo', 'Mejorar calidad del producto'], correct: 1 },
+        { q: '¿Qué representa un Kanban en el sistema de producción Toyota?', opts: ['Una máquina', 'Un operario', 'Una tarjeta o señal', 'Un producto defectuoso'], correct: 2 },
+        { q: '¿Cuántos desperdicios (Muda) se identifican en la metodología Lean?', opts: ['5', '6', '7', '8'], correct: 2 },
+        { q: '¿Qué herramienta se utiliza para mapear el flujo de valor desde materia prima hasta el cliente?', opts: ['Diagrama de Pareto', 'Value Stream Mapping (VSM)', 'Diagrama de Ishikawa', 'Histograma'], correct: 1 }
       ]
     }
   };
 
-  function getExamResult(courseId) {
-    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
-    return data[courseId] || null;
-  }
-
-  function saveExamResult(courseId, correct, total, passed) {
-    const data = JSON.parse(localStorage.getItem(EXAM_STORAGE_KEY) || '{}');
-    data[courseId] = { correct, total, passed, date: new Date().toISOString() };
-    localStorage.setItem(EXAM_STORAGE_KEY, JSON.stringify(data));
-  }
-
   function updateCourseBadge(courseId) {
-    const exam = getExamResult(courseId);
-    const badge = document.getElementById('progress-' + courseId);
+    var records = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+    var exam = records.slice().reverse().find(function (r) { return r.courseId === courseId; });
+    var badge = document.getElementById('progress-' + courseId);
     if (!badge) return;
     if (exam && exam.passed) {
       badge.textContent = 'Aprobado';
@@ -2874,153 +2900,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function switchTrainingView(courseId, showQuiz) {
-    const content = document.getElementById(courseId + '-content');
-    const quiz = document.getElementById(courseId + '-quiz');
-    if (content) content.style.display = showQuiz ? 'none' : '';
-    if (quiz) quiz.style.display = showQuiz ? '' : 'none';
-  }
-
-  function renderQuiz(courseId) {
-    const container = document.getElementById(courseId + '-questions');
-    const quizData = QUIZZES[courseId];
-    if (!container || !quizData) return;
-
-    container.innerHTML = quizData.questions.map((item, idx) => `
-      <div class="quiz-question" data-idx="${idx}">
-        <div class="quiz-question__text">${idx + 1}. ${item.q}</div>
-        <div class="quiz-question__options">
-          ${item.options.map((opt, oi) => `
-            <label class="quiz-option">
-              <input type="radio" name="q${idx}" value="${oi}">
-              <span class="quiz-option__label">${opt}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function gradeQuiz(courseId) {
-    const quizData = QUIZZES[courseId];
-    const container = document.getElementById(courseId + '-questions');
-    const resultEl = document.getElementById(courseId + '-quiz-result');
-    if (!quizData || !container || !resultEl) return;
-
-    const questions = container.querySelectorAll('.quiz-question');
-    let correct = 0;
-
-    questions.forEach((qEl, idx) => {
-      const selected = qEl.querySelector('input[type="radio"]:checked');
-      const options = qEl.querySelectorAll('.quiz-option');
-      const correctIdx = quizData.questions[idx].correct;
-
-      options.forEach((opt, oi) => {
-        opt.classList.remove('correct', 'wrong');
-        if (oi === correctIdx) opt.classList.add('correct');
-        if (selected && parseInt(selected.value) === oi && oi !== correctIdx) opt.classList.add('wrong');
-      });
-
-      if (selected && parseInt(selected.value) === correctIdx) correct++;
-    });
-
-    const total = questions.length;
-    const passed = correct >= 7;
-
-    saveExamResult(courseId, correct, total, passed);
-
-    resultEl.innerHTML = `
-      <div class="quiz-result__score">${correct}/${total}</div>
-      <div style="font-size:1rem;margin-bottom:0.5rem">${correct} de ${total} respuestas correctas</div>
-      <div style="font-weight:700;font-size:1.3rem">${passed ? '&#9989; ¡APROBADO!' : '&#10060; REPROBADO'}</div>
-      ${passed ? '<p style="margin-top:0.5rem;color:#16a34a">Has completado la capacitaci\u00f3n exitosamente.</p>' : '<p style="margin-top:0.5rem;color:#dc2626">Debes estudiar el contenido nuevamente y recursar el examen.</p>'}
-    `;
-    resultEl.className = 'quiz-result ' + (passed ? 'passed' : 'failed');
-    resultEl.style.display = '';
-
-    document.getElementById(courseId + '-submit-quiz').style.display = 'none';
-    document.getElementById(courseId + '-back-content').innerHTML = passed ? '&#8592; Cerrar' : '&#8592; Volver a estudiar';
-    updateCourseBadge(courseId);
-  }
-
-  function resetQuiz(courseId) {
-    const resultEl = document.getElementById(courseId + '-quiz-result');
-    const submitBtn = document.getElementById(courseId + '-submit-quiz');
-    const backBtn = document.getElementById(courseId + '-back-content');
-    if (resultEl) { resultEl.style.display = 'none'; resultEl.className = 'quiz-result'; resultEl.innerHTML = ''; }
-    if (submitBtn) submitBtn.style.display = '';
-    if (backBtn) backBtn.innerHTML = '\u2190 Volver al contenido';
-  }
-
   function openTrainingModal(courseId) {
-    const map = { seguridad: 'safety-training-modal', optimizacion: 'optimization-training-modal' };
-    const modal = document.getElementById(map[courseId]);
-    if (!modal) return;
-    modal.classList.add('open');
-    switchTrainingView(courseId, false);
-    resetQuiz(courseId);
-    renderQuiz(courseId);
+    var map = { seguridad: 'safety-training-modal', optimizacion: 'optimization-training-modal' };
+    var modal = document.getElementById(map[courseId]);
+    if (modal) modal.classList.add('open');
   }
 
   function closeAllTrainingModals() {
-    document.querySelectorAll('.modal-overlay[id$="training-modal"]').forEach(m => m.classList.remove('open'));
+    document.querySelectorAll('.modal-overlay').forEach(function (m) {
+      if (m.id.indexOf('training-modal') !== -1) m.classList.remove('open');
+    });
   }
 
-  document.querySelectorAll('[data-modal]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const modalId = btn.dataset.modal;
-      const courseMap = { 'safety-training-modal': 'seguridad', 'optimization-training-modal': 'optimizacion' };
-      const courseId = courseMap[modalId];
+  document.querySelectorAll('[data-modal]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var courseMap = { 'safety-training-modal': 'seguridad', 'optimization-training-modal': 'optimizacion' };
+      var courseId = courseMap[btn.dataset.modal];
       if (courseId) openTrainingModal(courseId);
     });
   });
 
-  document.querySelectorAll('.safety-training-close, .optimization-training-close').forEach(btn => {
+  document.querySelectorAll('.safety-training-close, .optimization-training-close').forEach(function (btn) {
     btn.addEventListener('click', closeAllTrainingModals);
   });
 
-  ['safety-training-modal', 'optimization-training-modal'].forEach(id => {
-    const overlay = document.getElementById(id);
+  ['safety-training-modal', 'optimization-training-modal'].forEach(function (id) {
+    var overlay = document.getElementById(id);
     if (overlay) {
-      overlay.addEventListener('click', (e) => {
+      overlay.addEventListener('click', function (e) {
         if (e.target === overlay) closeAllTrainingModals();
       });
     }
   });
 
-  // Exam buttons
-  function bindExamButton(courseId) {
-    const startBtn = document.getElementById(courseId + '-start-exam');
-    const submitBtn = document.getElementById(courseId + '-submit-quiz');
-    const backBtn = document.getElementById(courseId + '-back-content');
-
-    if (startBtn) startBtn.addEventListener('click', () => switchTrainingView(courseId, true));
-    if (submitBtn) submitBtn.addEventListener('click', () => gradeQuiz(courseId));
-    if (backBtn) backBtn.addEventListener('click', () => {
-      const exam = getExamResult(courseId);
-      if (exam && exam.passed) { closeAllTrainingModals(); return; }
-      switchTrainingView(courseId, false);
-      resetQuiz(courseId);
-    });
-  }
-
   // ====================================
-  // MÓDULO 4 — EXAMEN DE CERTIFICACIÓN
+  // EXAM STATE & FUNCTIONS
   // ====================================
-  const examQuestions = [
-    { q: '¿Cuál es el propósito principal del Módulo 1?', opts: ['Conocer las áreas y procesos de la planta', 'Operar maquinaria pesada', 'Diseñar nuevos productos', 'Gestionar el personal'], correct: 0 },
-    { q: '¿Cuál de las siguientes es un área clave en la planta?', opts: ['Ensamble', 'Marketing', 'Ventas', 'Recursos Humanos'], correct: 0 },
-    { q: '¿Qué significa EPP?', opts: ['Equipo de Protección Personal', 'Estación de Procesos Primarios', 'Equipo de Producción Primaria', 'Estación de Protección Principal'], correct: 0 },
-    { q: 'En el Módulo 2, ¿qué tipo de entorno se usa para practicar?', opts: ['Entorno virtual seguro', 'Planta real en funcionamiento', 'Simulador de escritorio sin VR', 'Manual impreso'], correct: 0 },
-    { q: '¿Cuál es la velocidad máxima de la banda transportadora en E1?', opts: ['0.5 m/s', '1.0 m/s', '0.2 m/s', '2.0 m/s'], correct: 0 },
-    { q: '¿Cuántos grados de libertad tiene el brazo robótico en E1?', opts: ['6', '4', '8', '3'], correct: 0 },
-    { q: 'En el Módulo 3, ¿qué tecnología se utiliza para superponer información técnica?', opts: ['Realidad Aumentada', 'Realidad Virtual', 'Impresión 3D', 'Internet de las Cosas'], correct: 0 },
-    { q: '¿Qué temperatura de soldadura es la óptima en E2?', opts: ['850°C', '650°C', '1050°C', '500°C'], correct: 0 },
-    { q: '¿Cuál es la tasa de aprobación del escáner 3D en E3?', opts: ['98.7%', '85.0%', '99.9%', '90.5%'], correct: 0 },
-    { q: '¿Qué acción es correcta al finalizar el ensamble en E4?', opts: ['Apilar la pieza en el pallet', 'Desechar la pieza', 'Devolver la pieza a E1', 'Ignorar la pieza'], correct: 0 }
-  ];
-
   var examState = {
+    courseId: null,
     current: 0,
     answers: [],
     timer: null,
@@ -3034,8 +2951,19 @@ document.addEventListener('DOMContentLoaded', () => {
   var examActive = document.getElementById('examActive');
   var examResult = document.getElementById('examResult');
 
-  function openExam() {
-    examState = { current: 0, answers: new Array(examQuestions.length).fill(-1), timer: null, timeLeft: 1800, started: false, finished: false };
+  function openExam(courseId) {
+    if (!EXAMS[courseId]) return;
+    var qs = EXAMS[courseId].questions;
+    examState = {
+      courseId: courseId,
+      current: 0,
+      answers: new Array(qs.length).fill(-1),
+      timer: null,
+      timeLeft: 1800,
+      started: false,
+      finished: false
+    };
+    document.getElementById('examModalTitle').textContent = EXAMS[courseId].title;
     examStart.style.display = 'block';
     examActive.style.display = 'none';
     examResult.style.display = 'none';
@@ -3073,9 +3001,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderQuestion() {
     var i = examState.current;
-    var q = examQuestions[i];
-    document.getElementById('examProgress').textContent = 'Pregunta ' + (i + 1) + '/' + examQuestions.length;
-    document.getElementById('examFill').style.width = ((i / examQuestions.length) * 100) + '%';
+    var qs = EXAMS[examState.courseId].questions;
+    var q = qs[i];
+    document.getElementById('examProgress').textContent = 'Pregunta ' + (i + 1) + '/' + qs.length;
+    document.getElementById('examFill').style.width = ((i / qs.length) * 100) + '%';
     document.getElementById('examQuestion').textContent = q.q;
 
     var optsDiv = document.getElementById('examOptions');
@@ -3099,7 +3028,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function nextQuestion() {
     if (examState.answers[examState.current] === -1) return;
-    if (examState.current === examQuestions.length - 1) {
+    var qs = EXAMS[examState.courseId].questions;
+    if (examState.current === qs.length - 1) {
       finishExam();
     } else {
       examState.current++;
@@ -3122,10 +3052,11 @@ document.addEventListener('DOMContentLoaded', () => {
     examResult.style.display = 'block';
 
     var correct = 0;
+    var qs = EXAMS[examState.courseId].questions;
     examState.answers.forEach(function (ans, i) {
-      if (ans === examQuestions[i].correct) correct++;
+      if (ans === qs[i].correct) correct++;
     });
-    var total = examQuestions.length;
+    var total = qs.length;
     var passed = correct >= 7;
 
     document.getElementById('examResultIcon').innerHTML = passed ? '&#127891;' : '&#128170;';
@@ -3140,12 +3071,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     saveExamHistory(correct, total, passed);
     renderHistory();
+    updateCourseBadge(examState.courseId);
   }
 
   function saveExamHistory(correct, total, passed) {
     var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
     history.push({
       date: new Date().toISOString(),
+      courseId: examState.courseId,
       correct: correct,
       total: total,
       passed: passed,
@@ -3176,6 +3109,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var lastPassed = history.slice().reverse().find(function (h) { return h.passed; });
     if (!lastPassed) return;
 
+    var courseName = (lastPassed.courseId && EXAMS[lastPassed.courseId]) ? EXAMS[lastPassed.courseId].certName : 'Módulo 4: Evaluación y Certificado';
     var name = currentUser && currentUser.uid ? (currentUser.role || 'Operador') : 'Operador';
     var d = new Date(lastPassed.date);
     var dateStr = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
@@ -3190,7 +3124,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<p style="font-size:1rem;color:#333">Otorgado a</p>' +
       '<h2 style="font-size:1.5rem;color:#1a1a2e;margin:5px 0">' + name + '</h2>' +
       '<p style="font-size:0.95rem;color:#555;margin:15px 0">Por haber completado exitosamente la evaluaci\u00f3n del</p>' +
-      '<p style="font-size:1.1rem;font-weight:600;color:#0d9488;margin:5px 0">M\u00f3dulo 4: Evaluaci\u00f3n y Certificado</p>' +
+      '<p style="font-size:1.1rem;font-weight:600;color:#0d9488;margin:5px 0">' + courseName + '</p>' +
       '<p style="font-size:0.9rem;color:#888;margin:5px 0">Calificaci\u00f3n: ' + lastPassed.correct + '/' + lastPassed.total + '</p>' +
       '<hr style="border:1px solid #ddd;margin:20px 50px">' +
       '<p style="font-size:0.85rem;color:#aaa;margin:5px 0">Fecha: ' + dateStr + '</p>' +
@@ -3209,7 +3143,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Bind exam buttons
-  document.getElementById('openExamBtn').addEventListener('click', openExam);
+  document.getElementById('openExamBtn').addEventListener('click', function () { openExam('modulo4'); });
+  document.getElementById('capacitacionExamBtn').addEventListener('click', function () { openExam('capacitacion'); });
+  document.getElementById('modulo2Btn').addEventListener('click', function () {
+    activateTab('realidadvirtual');
+    setTimeout(function () {
+      var ar = document.querySelector('.ar-section');
+      if (ar) ar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  });
+  document.getElementById('seguridad-start-exam').addEventListener('click', function () { closeAllTrainingModals(); openExam('seguridad'); });
+  document.getElementById('optimizacion-start-exam').addEventListener('click', function () { closeAllTrainingModals(); openExam('optimizacion'); });
   document.getElementById('examStartBtn').addEventListener('click', startExam);
   document.getElementById('examNextBtn').addEventListener('click', nextQuestion);
   document.getElementById('examPrevBtn').addEventListener('click', prevQuestion);
