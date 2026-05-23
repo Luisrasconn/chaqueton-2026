@@ -53,12 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const contents = document.querySelectorAll('.tab-content');
 
   function activateTab(tabId) {
-    if (currentUser) {
-      const allowedSupervisor = ['inicio', 'capacitacion', 'entrenamiento', 'retroalimentacion', 'almacen', 'realidadvirtual'];
-      const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
-      const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
-      if (!allowed.includes(tabId)) return;
+    if (!currentUser) {
+      loginModal.classList.add('open');
+      return;
     }
+    const allowedSupervisor = ['inicio', 'capacitacion', 'entrenamiento', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
+    const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
+    if (!allowed.includes(tabId)) return;
     tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tabId));
     contents.forEach(c => c.classList.toggle('active', c.id === 'tab-' + tabId));
     try { history.replaceState(null, '', '#' + tabId); } catch (e) { /* file:// no permite modificar URL */ }
@@ -76,9 +78,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  const hash = location.hash.replace('#', '');
-  if (hash && document.querySelector('[data-tab="' + hash + '"]')) {
-    activateTab(hash);
+  // Block initial hash nav if not logged in
+  if (currentUser) {
+    const hash = location.hash.replace('#', '');
+    if (hash && document.querySelector('[data-tab="' + hash + '"]')) {
+      activateTab(hash);
+    }
   }
 
   // ====================================
@@ -719,6 +724,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (personnelSection) personnelSection.style.display = '';
   }
 
+  function requireLogin() {
+    if (!currentUser) {
+      loginModal.classList.add('open');
+      return false;
+    }
+    return true;
+  }
+
   loginBtn.addEventListener('click', () => {
     if (currentUser) {
       currentUser = null;
@@ -727,14 +740,24 @@ document.addEventListener('DOMContentLoaded', () => {
       clearRoleRestrictions();
       loginForm.reset();
       loginError.style.display = 'none';
+      loginModal.classList.add('open');
     } else {
       loginModal.classList.add('open');
     }
   });
 
-  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
+  loginModalClose.addEventListener('click', (e) => {
+    if (!currentUser) {
+      e.stopPropagation();
+      return;
+    }
+    loginModal.classList.remove('open');
+  });
+
   loginModal.addEventListener('click', (e) => {
-    if (e.target === loginModal) loginModal.classList.remove('open');
+    if (e.target !== loginModal) return;
+    if (!currentUser) return;
+    loginModal.classList.remove('open');
   });
 
   loginForm.addEventListener('submit', (e) => {
@@ -756,29 +779,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
-  loginModal.addEventListener('click', (e) => {
-    if (e.target === loginModal) loginModal.classList.remove('open');
-  });
+  // Auto-show login on page load
+  loginModal.classList.add('open');
 
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const user = loginUser.value.trim().toLowerCase();
-    const pass = loginPass.value;
-    const cred = CREDENTIALS[user];
-
-    if (cred && cred.password === pass) {
-      currentUser = { uid: 'demo-' + user, role: user };
-      document.getElementById('userBadge').style.display = 'inline-flex';
-      document.getElementById('userName').textContent = cred.label;
-      loginBtn.textContent = 'Cerrar sesión';
-      loginError.style.display = 'none';
-      loginModal.classList.remove('open');
-      applyRoleRestrictions(user);
-    } else {
-      loginError.style.display = '';
+  // Block Escape key from closing login modal when not logged in
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && loginModal.classList.contains('open') && !currentUser) {
+      e.stopImmediatePropagation();
     }
-  });
+  }, true);
 
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(m => {
