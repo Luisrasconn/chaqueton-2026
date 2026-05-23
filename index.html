@@ -276,8 +276,12 @@
             </div>
           </div>
           <div class="form__group">
-            <label for="reportDesc">Descripci&#243;n</label>
-            <textarea id="reportDesc" rows="3" placeholder="Describe el problema o mejora…" required></textarea>
+            <label for="reportProblem">Problema</label>
+            <textarea id="reportProblem" rows="2" placeholder="Describe el problema…" required></textarea>
+          </div>
+          <div class="form__group">
+            <label for="reportSolution">Soluci&#243;n propuesta</label>
+            <textarea id="reportSolution" rows="2" placeholder="Describe la soluci&#243;n que propones…"></textarea>
           </div>
           <div class="form__group">
             <label for="reportOperator">Reportado por</label>
@@ -294,17 +298,18 @@
           <input type="text" id="searchReport" class="table-search" placeholder="Buscar reportes…">
           <span id="reportCount" class="table-count"></span>
         </div>
-        <table class="table">
-          <thead>
-            <tr>
-              <th>&#193;rea</th>
-              <th>Tipo</th>
-              <th>Descripci&#243;n</th>
-              <th>Operador</th>
-              <th>Estado</th>
-              <th>Acci&#243;n</th>
-            </tr>
-          </thead>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>&#193;rea</th>
+                <th>Tipo</th>
+                <th>Problema</th>
+                <th>Soluci&#243;n</th>
+                <th>Operador</th>
+                <th>Estado</th>
+                <th>Acci&#243;n</th>
+              </tr>
+            </thead>
           <tbody id="reportsBody"></tbody>
         </table>
       </div>

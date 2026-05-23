@@ -295,9 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
   // Seed data
   if (reports.length === 0) {
     reports = [
-      { id: 'r1', area: 'Ensamble', type: 'Cuello de botella', desc: 'Retraso en estación 3 por falta de piezas', operator: 'Carlos M.', status: 'En revisión', date: new Date(Date.now() - 86400000).toISOString() },
-      { id: 'r2', area: 'Soldadura', type: 'Fallo técnico', desc: 'Robot soldador presenta desviación en eje Z', operator: 'Ana L.', status: 'Resuelto', date: new Date(Date.now() - 172800000).toISOString() },
-      { id: 'r3', area: 'Pintura', type: 'Mejora sugerida', desc: 'Instalar extractor adicional en cabina 2', operator: 'Pedro R.', status: 'En revisión', date: new Date(Date.now() - 259200000).toISOString() },
+      { id: 'r1', area: 'Ensamble', type: 'Cuello de botella', problem: 'Retraso en estación 3 por falta de piezas', solution: 'Reabastecer estación cada hora con lotes más pequeños', operator: 'Carlos M.', status: 'En revisión', date: new Date(Date.now() - 86400000).toISOString() },
+      { id: 'r2', area: 'Soldadura', type: 'Fallo técnico', problem: 'Robot soldador presenta desviación en eje Z', solution: 'Calibrar robot y reemplazar sensor de posición', operator: 'Ana L.', status: 'Resuelto', date: new Date(Date.now() - 172800000).toISOString() },
+      { id: 'r3', area: 'Pintura', type: 'Mejora sugerida', problem: 'Acumulación de humo en cabina 2', solution: 'Instalar extractor adicional de alta capacidad', operator: 'Pedro R.', status: 'En revisión', date: new Date(Date.now() - 259200000).toISOString() },
     ];
     saveReports();
   }
@@ -316,7 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
       ? reports.filter(r =>
           r.area.toLowerCase().includes(filter) ||
           r.type.toLowerCase().includes(filter) ||
-          r.desc.toLowerCase().includes(filter) ||
+          (r.problem || '').toLowerCase().includes(filter) ||
+          (r.solution || '').toLowerCase().includes(filter) ||
           r.operator.toLowerCase().includes(filter)
         )
       : reports;
@@ -327,7 +328,8 @@ document.addEventListener('DOMContentLoaded', () => {
       tr.innerHTML = `
         <td>${r.area}</td>
         <td><span class="badge badge--${badgeMap[r.type] || 'info'}">${r.type}</span></td>
-        <td>${r.desc}</td>
+        <td>${r.problem || r.desc || ''}</td>
+        <td>${r.solution || '—'}</td>
         <td>${r.operator}</td>
         <td><span class="badge badge--${r.status === 'Resuelto' ? 'success' : 'info'}">${r.status}</span></td>
         <td><button class="delete-btn" data-id="${r.id}" aria-label="Eliminar reporte de ${r.area}">&times;</button></td>
@@ -350,14 +352,16 @@ document.addEventListener('DOMContentLoaded', () => {
     e.preventDefault();
     const area = document.getElementById('reportArea').value;
     const type = document.getElementById('reportType').value;
-    const desc = document.getElementById('reportDesc').value;
+    const problem = document.getElementById('reportProblem').value;
+    const solution = document.getElementById('reportSolution').value;
     const operator = document.getElementById('reportOperator').value || 'Anónimo';
 
     const report = {
       id: 'r' + Date.now(),
       area,
       type,
-      desc,
+      problem,
+      solution,
       operator,
       status: 'Pendiente',
       date: new Date().toISOString()
