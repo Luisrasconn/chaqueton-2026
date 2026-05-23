@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <td>${r.desc}</td>
         <td>${r.operator}</td>
         <td><span class="badge badge--${r.status === 'Resuelto' ? 'success' : 'info'}">${r.status}</span></td>
-        <td><button class="delete-btn" data-id="${r.id}">&times;</button></td>
+        <td><button class="delete-btn" data-id="${r.id}" aria-label="Eliminar reporte de ${r.area}">&times;</button></td>
       `;
       reportsBody.appendChild(tr);
     });
@@ -411,10 +411,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   filterBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+<<<<<<< HEAD
       const filter = btn.dataset.filter;
       if (filter === 'authorized') return;
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
+=======
+      filterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+>>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
       toolCards.forEach(card => {
         card.classList.toggle('tool-card--hidden', filter !== 'all' && card.dataset.status !== filter);
       });
@@ -588,16 +594,21 @@ document.addEventListener('DOMContentLoaded', () => {
   // Close modals on overlay click
   document.querySelectorAll('.modal-overlay').forEach(m => {
     m.addEventListener('click', (e) => {
+<<<<<<< HEAD
       if (e.target === m) {
         if (m.id === 'faceRecModal') stopFaceRecCamera();
         else if (m.id === 'registerPersonModal') stopRegisterCamera();
         else if (m.id === 'personDetailModal') personDetailModal.classList.remove('open');
         else m.classList.remove('open');
       }
+=======
+      if (e.target === m) m.classList.remove('open');
+>>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
     });
   });
 
   // ====================================
+<<<<<<< HEAD
   // 14. VR SCENE INIT (trigger A-Frame)
   // ====================================
   function initVRScene() {
@@ -1113,6 +1124,636 @@ document.addEventListener('DOMContentLoaded', () => {
           const pos = item.getAttribute('position');
           let x = pos.x + (delta * 0.001);
           if (x > 5) x = -5;
+=======
+  // 14. VR COMPONENTS (A-Frame)
+  // ====================================
+  if (typeof AFRAME !== 'undefined') {
+
+    // Click feedback: pulse + flash
+    AFRAME.registerComponent('click-feedback', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          const el = this.el;
+          // Get current scale at click time
+          const scale = el.getComputedAttribute('scale') || { x: 1, y: 1, z: 1 };
+          el.setAttribute('scale', {
+            x: scale.x * 0.75,
+            y: scale.y * 0.75,
+            z: scale.z * 0.75
+          });
+          // Flash emissive
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            const origEmissive = m.getAttribute('material').emissive || '#000000';
+            m.setAttribute('material', 'emissive', '#f1c40f');
+            m.setAttribute('material', 'emissiveIntensity', '0.6');
+            setTimeout(() => {
+              m.setAttribute('material', 'emissive', origEmissive);
+              m.setAttribute('material', 'emissiveIntensity', '0');
+            }, 200);
+          });
+          setTimeout(() => {
+            el.setAttribute('scale', scale);
+          }, 300);
+        });
+      }
+    });
+
+    // Hover emissive: adds glow on mouseenter/mouseleave for an entity and its children
+    AFRAME.registerComponent('hover-glow', {
+      schema: {
+        color: { type: 'color', default: '#0d9488' },
+        intensity: { type: 'number', default: 0.4 }
+      },
+      init: function () {
+        const el = this.el;
+        const color = this.data.color;
+        const intensity = this.data.intensity;
+
+        el.addEventListener('mouseenter', () => {
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            m.setAttribute('material', 'emissive', color);
+            m.setAttribute('material', 'emissiveIntensity', intensity);
+          });
+        });
+        el.addEventListener('mouseleave', () => {
+          const meshes = el.querySelectorAll('[material]');
+          meshes.forEach(m => {
+            m.setAttribute('material', 'emissive', '#000000');
+            m.setAttribute('material', 'emissiveIntensity', 0);
+          });
+        });
+      }
+    });
+
+    // Toggle panel: spawn a floating panel near the player
+    AFRAME.registerComponent('toggle-panel', {
+      schema: {
+        title: { type: 'string', default: 'Panel' }
+      },
+      init: function () {
+        this.panelEl = null;
+        this.el.addEventListener('click', () => {
+          this.toggle();
+        });
+      },
+      toggle: function () {
+        if (this.panelEl) {
+          this.close();
+        } else {
+          this.open();
+        }
+      },
+      open: function () {
+        const rig = document.getElementById('playerRig');
+        if (!rig) return;
+
+        const rigPos = rig.getAttribute('position');
+        const rigRot = rig.getAttribute('rotation');
+
+        // Create panel 2m in front of player
+        const panel = document.createElement('a-entity');
+        panel.setAttribute('class', 'clickable');
+        panel.setAttribute('position', { x: rigPos.x, y: rigPos.y + 0.2, z: rigPos.z - 2.5 });
+        panel.setAttribute('look-at', '#playerCamera');
+        panel.setAttribute('scale', '0 0 0');
+
+        const bg = document.createElement('a-plane');
+        bg.setAttribute('width', '2.5');
+        bg.setAttribute('height', '2');
+        bg.setAttribute('color', '#1a1a2e');
+        bg.setAttribute('opacity', '0.95');
+        bg.setAttribute('shadow', '');
+        bg.setAttribute('radius', '0.08');
+
+        const panelColor = this.el.getAttribute('data-color') || '#0d9488';
+
+        const header = document.createElement('a-plane');
+        header.setAttribute('position', '0 0.85 0.01');
+        header.setAttribute('width', '2.3');
+        header.setAttribute('height', '0.3');
+        header.setAttribute('color', panelColor);
+        header.setAttribute('radius', '0.05');
+
+        const titleText = document.createElement('a-text');
+        const titleAttr = this.data.title || 'INFORMACION';
+        titleText.setAttribute('value', titleAttr);
+        titleText.setAttribute('position', '0 0.85 0.02');
+        titleText.setAttribute('color', 'white');
+        titleText.setAttribute('align', 'center');
+        titleText.setAttribute('width', '2.2');
+
+        panel.appendChild(bg);
+        panel.appendChild(header);
+        panel.appendChild(titleText);
+
+        // Parse data-lines attribute manually (| separated, since A-Frame array schema splits on commas)
+        const raw = this.el.getAttribute('data-lines') || '';
+        const lines = raw.split('|').map(l => l.trim()).filter(l => l);
+
+        lines.forEach((line, i) => {
+          const yPos = 0.55 - (i * 0.25);
+          const lineText = document.createElement('a-text');
+          lineText.setAttribute('value', line);
+          lineText.setAttribute('position', `-0.8 ${yPos} 0.02`);
+          lineText.setAttribute('color', '#bdc3c7');
+          lineText.setAttribute('align', 'left');
+          lineText.setAttribute('width', '2.2');
+          lineText.setAttribute('scale', '0.85 0.85 1');
+          panel.appendChild(lineText);
+        });
+
+        // Close button text
+        const closeText = document.createElement('a-text');
+        closeText.setAttribute('value', 'Click para cerrar');
+        closeText.setAttribute('position', '0 -0.85 0.02');
+        closeText.setAttribute('color', '#7f8c8d');
+        closeText.setAttribute('align', 'center');
+        closeText.setAttribute('width', '2.2');
+        closeText.setAttribute('scale', '0.55 0.55 1');
+
+        // Close plane
+        const closeBg = document.createElement('a-plane');
+        closeBg.setAttribute('position', '0 -0.85 0.01');
+        closeBg.setAttribute('width', '2.3');
+        closeBg.setAttribute('height', '0.2');
+        closeBg.setAttribute('color', '#34495e');
+        closeBg.setAttribute('radius', '0.05');
+
+        panel.appendChild(closeBg);
+        panel.appendChild(closeText);
+
+        // Make the panel clickable to close (using raycaster)
+        panel.setAttribute('class', 'clickable');
+        panel.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.close();
+        });
+
+        // Entrance animation
+        panel.setAttribute('animation', {
+          property: 'scale',
+          from: '0 0 0',
+          to: '1 1 1',
+          dur: 300,
+          easing: 'easeOutBack'
+        });
+
+        document.querySelector('a-scene').appendChild(panel);
+
+        this.panelEl = panel;
+
+        // Keep reference for cleanup
+        this.el.emit('panel-opened', { panel: panel });
+      },
+      close: function () {
+        if (!this.panelEl) return;
+
+        const panel = this.panelEl;
+
+        // Exit animation then remove
+        panel.setAttribute('animation', {
+          property: 'scale',
+          from: '1 1 1',
+          to: '0 0 0',
+          dur: 200,
+          easing: 'easeInQuad'
+        });
+
+        setTimeout(() => {
+          if (panel.parentNode) panel.parentNode.removeChild(panel);
+        }, 250);
+
+        this.panelEl = null;
+        this.el.emit('panel-closed', {});
+      }
+    });
+
+    // ======================================================================
+    // ASSEMBLY MANAGER: controls 7-step guided simulation
+    // ======================================================================
+    AFRAME.registerComponent('assembly-manager', {
+      schema: { active: { type: 'boolean', default: false } },
+
+      init: function () {
+        this.currentStep = 0;
+        this.workpiece = null;
+        this.startTime = 0;
+        this.isActive = false;
+
+        this.hudEl = document.getElementById('assemblyHud');
+        this.hudStep = document.getElementById('hudStep');
+        this.hudText = document.getElementById('hudText');
+        this.hudFill = document.getElementById('hudFill');
+        this.completeEl = document.getElementById('assemblyComplete');
+
+        const resetBtn = document.getElementById('resetBtn');
+        const completeReset = document.getElementById('completeReset');
+        if (resetBtn) resetBtn.addEventListener('click', () => this.reset());
+        if (completeReset) completeReset.addEventListener('click', () => this.reset());
+
+        const startBtn = document.querySelector('#startAssembly');
+        if (startBtn) {
+          startBtn.addEventListener('click', (e) => {
+            if (!this.isActive) { e.stopPropagation(); this.start(); }
+          });
+        }
+
+        this.steps = [
+          {
+            instruction: 'Haz clic en INICIAR SIMULACION para comenzar el proceso de ensamble',
+            target: '#startAssembly',
+            action: () => this.nextStep()
+          },
+          {
+            instruction: 'Paso 1: Haz clic en el CONTENEDOR DE PIEZAS (bote amarillo) para obtener material',
+            target: '#partsBin',
+            action: () => this.stepGetPart()
+          },
+          {
+            instruction: 'Paso 2: Haz clic en la BANDA TRANSPORTADORA para mover la pieza',
+            target: '#conveyorBelt',
+            action: () => this.stepConveyor()
+          },
+          {
+            instruction: 'Paso 3: Haz clic en el BRAZO ROBOTICO para ensamblar la pieza',
+            target: '#roboticArm',
+            action: () => this.stepAssemble()
+          },
+          {
+            instruction: 'Paso 4: Haz clic en el ROBOT DE SOLDADURA para soldar',
+            target: '#weldingRobot',
+            action: () => this.stepWeld()
+          },
+          {
+            instruction: 'Paso 5: Haz clic en el ESCANER para inspeccionar calidad',
+            target: '#scanner',
+            action: () => this.stepScan()
+          },
+          {
+            instruction: 'Paso 6: Haz clic en la MAQUINA DE EMPAQUE para finalizar',
+            target: '#shrinkWrap',
+            action: () => this.stepPackage()
+          }
+        ];
+      },
+
+      getWorldPos: function (selector) {
+        const el = document.querySelector(selector);
+        if (!el || !el.object3D) return { x: 0, y: 0, z: 0 };
+        const pos = new AFRAME.THREE.Vector3();
+        el.object3D.getWorldPosition(pos);
+        return { x: pos.x, y: pos.y, z: pos.z };
+      },
+
+      start: function () {
+        if (this.isActive) return;
+        this.isActive = true;
+        this.currentStep = 0;
+        this.startTime = Date.now();
+        this.hudEl.style.display = 'block';
+        this.completeEl.style.display = 'none';
+        this.goToStep(0);
+      },
+
+      goToStep: function (index) {
+        var step = this.steps[index];
+        if (!step) { this.complete(); return; }
+        this.currentStep = index;
+
+        this.hudStep.textContent = 'Paso ' + (index + 1) + '/' + this.steps.length;
+        this.hudText.textContent = step.instruction;
+        this.hudFill.style.width = ((index) / this.steps.length * 100) + '%';
+
+        this.highlightTarget(step.target);
+
+        // Remove previous step listener
+        if (this._stepTarget && this._stepHandler) {
+          this._stepTarget.removeEventListener('click', this._stepHandler);
+        }
+
+        // Wire step action to target
+        var target = document.querySelector(step.target);
+        if (target) {
+          target.classList.add('step-active');
+          this._stepTarget = target;
+          this._stepHandler = function (e) {
+            if (!this.isActive) return;
+            step.action.call(this);
+          }.bind(this);
+          target.addEventListener('click', this._stepHandler, { once: true });
+        }
+      },
+
+      highlightTarget: function (selector) {
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+        const target = document.querySelector(selector);
+        if (!target) return;
+        target.classList.add('assembly-highlight');
+        target.setAttribute('animation__stepglow', {
+          property: 'scale',
+          to: '1.12 1.12 1.12',
+          dur: 600,
+          dir: 'alternate',
+          loop: true,
+          easing: 'easeInOutQuad'
+        });
+      },
+
+      flashElement: function (selector, color) {
+        const el = document.querySelector(selector);
+        if (!el) return;
+        el.setAttribute('animation__flash', {
+          property: 'scale',
+          to: '1.2 1.2 1.2',
+          dur: 200,
+          dir: 'alternate',
+          loop: 2,
+          easing: 'easeInOutQuad'
+        });
+      },
+
+      // ===== STEP ACTIONS =====
+
+      stepGetPart: function () {
+        const worldPos = this.getWorldPos('#partsBin');
+        worldPos.y += 0.4;
+
+        const scene = document.querySelector('a-scene');
+        const part = document.createElement('a-box');
+        part.setAttribute('id', 'workpiece');
+        part.setAttribute('width', '0.25');
+        part.setAttribute('height', '0.25');
+        part.setAttribute('depth', '0.25');
+        part.setAttribute('color', '#f1c40f');
+        part.setAttribute('shadow', '');
+        part.setAttribute('position', worldPos.x + ' ' + worldPos.y + ' ' + worldPos.z);
+        scene.appendChild(part);
+
+        this.workpiece = part;
+        this.flashElement('#partsBin', '#2980b9');
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 600);
+      },
+
+      stepConveyor: function () {
+        if (!this.workpiece) return;
+        var conveyorEnd = this.getWorldPos('#station1');
+        conveyorEnd.x += 1.3;
+        conveyorEnd.y = 0.55;
+        conveyorEnd.z += 0.5;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: conveyorEnd.x + ' ' + conveyorEnd.y + ' ' + conveyorEnd.z,
+          dur: 2000,
+          easing: 'linear'
+        });
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 2200);
+      },
+
+      stepAssemble: function () {
+        if (!this.workpiece) return;
+        var armWorld = this.getWorldPos('#roboticArm');
+        var pos = this.workpiece.getAttribute('position');
+
+        // Move to arm (pick up)
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
+          dur: 1200,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        // Then move to welding table
+        setTimeout(function () {
+          var weldWorld = self.getWorldPos('#weldingTable');
+          weldWorld.y += 0.4;
+
+          self.workpiece.setAttribute('animation', {
+            property: 'position',
+            from: (armWorld.x) + ' ' + (armWorld.y + 1.2) + ' ' + armWorld.z,
+            to: weldWorld.x + ' ' + weldWorld.y + ' ' + weldWorld.z,
+            dur: 1500,
+            easing: 'easeInOutQuad'
+          });
+
+          // Rotate arm
+          var arm = document.querySelector('#roboticArm');
+          if (arm) {
+            arm.setAttribute('animation__armrot', {
+              property: 'rotation',
+              to: '0 180 0',
+              dur: 800,
+              easing: 'easeInOutQuad'
+            });
+            setTimeout(function () {
+              arm.setAttribute('animation__armrot', {
+                property: 'rotation',
+                to: '0 0 0',
+                dur: 800,
+                easing: 'easeInOutQuad'
+              });
+            }, 1000);
+          }
+        }, 1300);
+
+        setTimeout(function () { self.nextStep(); }, 3200);
+      },
+
+      stepWeld: function () {
+        if (!this.workpiece) return;
+        this.workpiece.setAttribute('color', '#d97706');
+
+        var spark = document.querySelector('#weldingSpark');
+        if (spark) {
+          spark.setAttribute('animation__weld', {
+            property: 'scale',
+            to: '3 3 3',
+            dur: 100,
+            dir: 'alternate',
+            loop: 4,
+            easing: 'easeInOutQuad'
+          });
+        }
+        this.flashElement('#weldingRobot', '#f39c12');
+
+        var self = this;
+        setTimeout(function () { self.nextStep(); }, 1200);
+      },
+
+      stepScan: function () {
+        if (!this.workpiece) return;
+        var scanWorld = this.getWorldPos('#scanner');
+        scanWorld.y += 0.5;
+        scanWorld.z += 0.4;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: scanWorld.x + ' ' + scanWorld.y + ' ' + scanWorld.z,
+          dur: 1500,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        setTimeout(function () {
+          self.flashElement('#scanner', '#27ae60');
+
+          var scene = document.querySelector('a-scene');
+          var resultText = document.createElement('a-text');
+          resultText.setAttribute('id', 'scanResult');
+          var sp = self.getWorldPos('#scanner');
+          resultText.setAttribute('position', sp.x + ' ' + (sp.y + 1.2) + ' ' + sp.z);
+          resultText.setAttribute('value', 'PIEZA APROBADA');
+          resultText.setAttribute('color', '#27ae60');
+          resultText.setAttribute('align', 'center');
+          resultText.setAttribute('width', '3');
+          resultText.setAttribute('scale', '0 0 0');
+          scene.appendChild(resultText);
+
+          resultText.setAttribute('animation__appear', {
+            property: 'scale',
+            from: '0 0 0',
+            to: '1.5 1.5 1',
+            dur: 400,
+            easing: 'easeOutBack'
+          });
+
+          setTimeout(function () {
+            if (resultText.parentNode) resultText.parentNode.removeChild(resultText);
+          }, 2000);
+        }, 1600);
+
+        setTimeout(function () { self.nextStep(); }, 3200);
+      },
+
+      stepPackage: function () {
+        if (!this.workpiece) return;
+        var palletWorld = this.getWorldPos('#station4');
+        palletWorld.x -= 0.8;
+        palletWorld.y = 0.6;
+        palletWorld.z -= 0.5;
+
+        var pos = this.workpiece.getAttribute('position');
+
+        this.workpiece.setAttribute('animation', {
+          property: 'position',
+          from: pos.x + ' ' + pos.y + ' ' + pos.z,
+          to: palletWorld.x + ' ' + palletWorld.y + ' ' + palletWorld.z,
+          dur: 1500,
+          easing: 'easeInOutQuad'
+        });
+
+        var self = this;
+        setTimeout(function () {
+          self.workpiece.setAttribute('color', '#d4a574');
+
+          var scene = document.querySelector('a-scene');
+          var wrap = document.createElement('a-box');
+          wrap.setAttribute('width', '0.35');
+          wrap.setAttribute('height', '0.35');
+          wrap.setAttribute('depth', '0.35');
+          wrap.setAttribute('material', 'transparent: true; opacity: 0.3; color: #d4a574');
+          var wp = self.workpiece.getAttribute('position');
+          wrap.setAttribute('position', wp.x + ' ' + wp.y + ' ' + wp.z);
+          scene.appendChild(wrap);
+
+          self.flashElement('#shrinkWrap', '#8e44ad');
+
+          setTimeout(function () {
+            if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+          }, 1500);
+        }, 1600);
+
+        setTimeout(function () { self.nextStep(); }, 2500);
+      },
+
+      complete: function () {
+        var elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        var mins = Math.floor(elapsed / 60);
+        var secs = elapsed % 60;
+
+        this.hudEl.style.display = 'none';
+        this.completeEl.style.display = 'flex';
+        document.getElementById('completeStats').textContent =
+          'Tiempo total: ' + mins + 'm ' + secs + 's | 4 estaciones completadas';
+        this.isActive = false;
+
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+      },
+
+      reset: function () {
+        if (this.workpiece && this.workpiece.parentNode) {
+          this.workpiece.parentNode.removeChild(this.workpiece);
+        }
+        this.workpiece = null;
+
+        // Remove active step listener
+        if (this._stepTarget && this._stepHandler) {
+          this._stepTarget.removeEventListener('click', this._stepHandler);
+        }
+        this._stepTarget = null;
+        this._stepHandler = null;
+
+        var result = document.querySelector('#scanResult');
+        if (result && result.parentNode) result.parentNode.removeChild(result);
+
+        this.hudEl.style.display = 'none';
+        this.completeEl.style.display = 'none';
+        this.isActive = false;
+        this.currentStep = 0;
+
+        document.querySelectorAll('.assembly-highlight').forEach(function (el) {
+          el.classList.remove('assembly-highlight');
+          el.removeAttribute('animation__stepglow');
+        });
+
+        // Reset workpiece color
+        var wp = document.querySelector('#workpiece');
+        if (wp) wp.setAttribute('color', '#f1c40f');
+      }
+    });
+
+    // Conveyor animation (station 1)
+    AFRAME.registerComponent('conveyor-animation', {
+      tick: function (time, delta) {
+        const items = document.querySelectorAll('.conveyor-item');
+        items.forEach((item) => {
+          const pos = item.getAttribute('position');
+          let x = pos.x + (delta * 0.0008);
+          if (x > 1.3) x = -1.3;
+          item.setAttribute('position', { x, y: pos.y, z: pos.z });
+        });
+      }
+    });
+
+    // Package animation (station 4)
+    AFRAME.registerComponent('package-animation', {
+      tick: function (time, delta) {
+        const items = document.querySelectorAll('.package-item');
+        items.forEach((item) => {
+          const pos = item.getAttribute('position');
+          let x = pos.x + (delta * 0.0006);
+          if (x > 1) x = -1;
+>>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
           item.setAttribute('position', { x, y: pos.y, z: pos.z });
         });
       }
@@ -1122,7 +1763,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const scene = document.querySelector('a-scene');
       if (scene) {
         scene.setAttribute('conveyor-animation', '');
+<<<<<<< HEAD
       }
     });
   }
+=======
+        scene.setAttribute('package-animation', '');
+      }
+    });
+  }
+
+  function initVRScene() {
+    // Scene auto-initializes with A-Frame
+  }
+>>>>>>> 7dd8d4f258cae370b4644ee8f4100bf36b53c62f
 });

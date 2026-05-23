@@ -1,0 +1,8 @@
+{
+  "name": "mhub-hackaton-2026",
+  "version": "1.0.0",
+  "description": "MHub — Plataforma de manufactura inteligente con VR, retroalimentación en tiempo real e inventario IoT",
+  "private": true,
+  "author": "Hackaton 2026",
+  "license": "MIT"
+}

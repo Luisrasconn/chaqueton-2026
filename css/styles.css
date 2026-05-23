@@ -250,12 +250,21 @@ body {
   margin-bottom: 2rem;
 }
 
-.card {
+.card,
+.chart-card,
+.checklist,
+.form-card,
+.table-wrapper,
+.tool-card {
   background: var(--surface);
   border-radius: var(--radius);
-  padding: 1.5rem;
-  box-shadow: var(--shadow);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transition: background var(--transition), border-color var(--transition);
+}
+
+.card {
+  padding: 1.5rem;
   transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
   position: relative;
 }
@@ -334,12 +343,7 @@ body {
 }
 
 .chart-card {
-  background: var(--surface);
-  border-radius: var(--radius);
   padding: 1.25rem;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  transition: background var(--transition), border-color var(--transition);
 }
 
 .chart-card__title {
@@ -480,12 +484,7 @@ body {
 
 /* ===== CHECKLIST ===== */
 .checklist {
-  background: var(--surface);
-  border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
-  transition: background var(--transition), border-color var(--transition);
 }
 
 .checklist__item {
@@ -546,13 +545,8 @@ body {
 }
 
 .form-card {
-  background: var(--surface);
-  border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
   margin-bottom: 2rem;
-  transition: background var(--transition), border-color var(--transition);
 }
 
 .form-row {
@@ -643,12 +637,7 @@ body.dark .form__success {
 }
 
 .table-wrapper {
-  background: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
   overflow-x: auto;
-  transition: background var(--transition), border-color var(--transition);
 }
 
 .table {
@@ -726,13 +715,9 @@ body.dark .badge--info    { background: #0c4a6e; color: #7dd3fc; }
 }
 
 .tool-card {
-  background: var(--surface);
-  border-radius: var(--radius);
   padding: 1.25rem;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
   text-align: center;
-  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), border-color var(--transition);
+  transition: transform var(--transition), box-shadow var(--transition);
   position: relative;
 }
 
@@ -1265,4 +1250,106 @@ body.dark .auth-tools-msg {
     flex-direction: column;
     text-align: center;
   }
+}
+
+/* ===== ASSEMBLY HUD ===== */
+.assembly-hud {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(13, 148, 136, 0.4);
+  border-radius: 14px;
+  padding: 14px 22px;
+  z-index: 1000;
+  min-width: 420px;
+  max-width: 640px;
+  backdrop-filter: blur(10px);
+  color: white;
+  font-family: system-ui, sans-serif;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  pointer-events: auto;
+  display: none;
+}
+.hud-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.hud-step {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #0d9488;
+  background: rgba(13,148,136,0.15);
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.hud-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.hud-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0d9488, #5ee4d0);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.hud-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  padding: 5px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: 0.2s;
+  font-family: inherit;
+}
+.hud-btn:hover {
+  background: rgba(13,148,136,0.3);
+  border-color: #0d9488;
+}
+.hud-text {
+  font-size: 1rem;
+  color: #e2e8f0;
+  line-height: 1.4;
+  padding-left: 2px;
+}
+
+.assembly-complete {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  backdrop-filter: blur(6px);
+}
+.complete-box {
+  background: rgba(15, 23, 42, 0.95);
+  border: 2px solid #0d9488;
+  border-radius: 20px;
+  padding: 40px 50px;
+  text-align: center;
+  color: white;
+  max-width: 440px;
+}
+.complete-box h2 {
+  font-size: 1.6rem;
+  color: #27ae60;
+  margin-bottom: 12px;
+}
+.complete-box p {
+  color: #94a3b8;
+  margin-bottom: 20px;
+  font-size: 1rem;
+}
 }
