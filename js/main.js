@@ -707,15 +707,9 @@ function activateTab(tabId) {
     }
   });
 
-  loginModalClose.addEventListener('click', () => {
-    loginModal.classList.remove('open');
-    document.getElementById('loginOverlay').classList.remove('modal-open');
-  });
+  loginModalClose.addEventListener('click', () => loginModal.classList.remove('open'));
   loginModal.addEventListener('click', (e) => {
-    if (e.target === loginModal) {
-      loginModal.classList.remove('open');
-      document.getElementById('loginOverlay').classList.remove('modal-open');
-    }
+    if (e.target === loginModal) loginModal.classList.remove('open');
   });
 
   loginForm.addEventListener('submit', (e) => {
@@ -731,18 +725,10 @@ function activateTab(tabId) {
       loginBtn.textContent = 'Cerrar sesión';
       loginError.style.display = 'none';
       loginModal.classList.remove('open');
-      document.getElementById('loginOverlay').classList.remove('modal-open');
-      document.getElementById('loginOverlay').classList.add('hidden');
       applyRoleRestrictions(user);
     } else {
       loginError.style.display = '';
     }
-  });
-
-  // Show login modal from overlay
-  document.getElementById('showLoginBtn').addEventListener('click', () => {
-    loginModal.classList.add('open');
-    document.getElementById('loginOverlay').classList.add('modal-open');
   });
 
   // Close modals on overlay click
@@ -2451,7 +2437,7 @@ function activateTab(tabId) {
     resultEl.style.display = '';
 
     document.getElementById(courseId + '-submit-quiz').style.display = 'none';
-    document.getElementById(courseId + '-back-content').textContent = passed ? '&#8592; Cerrar' : '&#8592; Volver a estudiar';
+    document.getElementById(courseId + '-back-content').innerHTML = passed ? '&#8592; Cerrar' : '&#8592; Volver a estudiar';
     updateCourseBadge(courseId);
   }
 
