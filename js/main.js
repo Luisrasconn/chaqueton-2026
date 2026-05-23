@@ -395,6 +395,7 @@ function activateTab(tabId) {
   // ====================================
   document.getElementById('exportPdfBtn').addEventListener('click', () => {
     const visibleReports = document.querySelectorAll('#reportsBody tr');
+
     let html = `
       <div style="font-family:sans-serif;padding:20px">
         <h1 style="font-size:22px;color:#0d9488;margin-bottom:4px">MHub — Reporte de Retroalimentaci&oacute;n</h1>
@@ -416,22 +417,21 @@ function activateTab(tabId) {
       const cells = row.querySelectorAll('td');
       if (cells.length >= 5) {
         html += '<tr style="border-bottom:1px solid #ddd">';
-        html += '<td style="padding:6px 8px">' + cells[4].textContent + '</td>';  // Operador = supervisor
-        html += '<td style="padding:6px 8px">' + cells[2].textContent + '</td>';  // Problema = incidencia
-        html += '<td style="padding:6px 8px">' + cells[3].textContent + '</td>';  // Solución
-        html += '<td style="padding:6px 8px">' + cells[0].textContent + '</td>';  // Área
-        html += '<td style="padding:6px 8px">' + cells[1].textContent + '</td>';  // Tipo
+        html += '<td style="padding:6px 8px">' + cells[4].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[2].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[3].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[0].textContent + '</td>';
+        html += '<td style="padding:6px 8px">' + cells[1].textContent + '</td>';
         html += '</tr>';
       }
     });
 
     html += '</tbody></table></div>';
 
-    const temp = document.createElement('div');
-    temp.innerHTML = html;
-    temp.style.position = 'fixed';
-    temp.style.left = '-9999px';
-    document.body.appendChild(temp);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = html;
+    wrapper.style.cssText = 'position:absolute;left:0;top:0;width:210mm;background:#fff;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(wrapper);
 
     const opt = {
       margin: [10, 10, 10, 10],
@@ -440,8 +440,11 @@ function activateTab(tabId) {
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-    html2pdf().set(opt).from(temp).save();
-    setTimeout(() => { if (temp.parentNode) temp.parentNode.removeChild(temp); }, 3000);
+    html2pdf().set(opt).from(wrapper).save().then(function () {
+      wrapper.parentNode.removeChild(wrapper);
+    }, function () {
+      setTimeout(function () { if (wrapper.parentNode) wrapper.parentNode.removeChild(wrapper); }, 2000);
+    });
   });
 
   // ====================================
