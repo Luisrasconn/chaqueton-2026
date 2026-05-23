@@ -2910,15 +2910,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function attachVideoThumbClick(modal) {
+    var thumb = modal.querySelector('.training-video__thumb');
+    if (!thumb || thumb.dataset.listener) return;
+    thumb.dataset.listener = '1';
+    thumb.addEventListener('click', function () {
+      var container = thumb.closest('.training-video');
+      if (!container) return;
+      var iframe = container.querySelector('iframe');
+      if (!iframe) return;
+      var videoId = container.dataset.videoId;
+      iframe.src = 'https://www.youtube.com/embed/' + videoId + '?rel=0&autoplay=1';
+      iframe.style.display = 'block';
+      thumb.style.display = 'none';
+    });
+  }
+
   function openTrainingModal(courseId) {
     var map = { seguridad: 'safety-training-modal', optimizacion: 'optimization-training-modal' };
     var modal = document.getElementById(map[courseId]);
-    if (modal) modal.classList.add('open');
+    if (!modal) return;
+    modal.classList.add('open');
+    attachVideoThumbClick(modal);
   }
 
   function closeAllTrainingModals() {
     document.querySelectorAll('.modal-overlay').forEach(function (m) {
-      if (m.id.indexOf('training-modal') !== -1) m.classList.remove('open');
+      if (m.id.indexOf('training-modal') !== -1) {
+        m.classList.remove('open');
+        var container = m.querySelector('.training-video');
+        if (container) {
+          var iframe = container.querySelector('iframe');
+          if (iframe) { iframe.src = 'about:blank'; iframe.style.display = 'none'; }
+          var thumb = container.querySelector('.training-video__thumb');
+          if (thumb) thumb.style.display = 'flex';
+        }
+      }
     });
   }
 
