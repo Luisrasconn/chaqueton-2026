@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function activateTab(tabId) {
     if (currentUser) {
-      const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+      const allowedSupervisor = ['inicio', 'capacitacion', 'entrenamiento', 'retroalimentacion', 'almacen', 'realidadvirtual'];
       const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
       const allowed = currentUser.role === 'supervisor' ? allowedSupervisor : allowedOperador;
       if (!allowed.includes(tabId)) return;
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyRoleRestrictions(role) {
     const tabIds = document.querySelectorAll('.nav__tab');
-    const allowedSupervisor = ['inicio', 'capacitacion', 'retroalimentacion', 'almacen', 'realidadvirtual'];
+    const allowedSupervisor = ['inicio', 'capacitacion', 'entrenamiento', 'retroalimentacion', 'almacen', 'realidadvirtual'];
     const allowedOperador = ['capacitacion', 'entrenamiento', 'almacen', 'realidadvirtual'];
     const allowed = role === 'supervisor' ? allowedSupervisor : allowedOperador;
 
@@ -3004,9 +3004,233 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  bindExamButton('seguridad');
-  bindExamButton('optimizacion');
+  // ====================================
+  // MÓDULO 4 — EXAMEN DE CERTIFICACIÓN
+  // ====================================
+  const examQuestions = [
+    { q: '¿Cuál es el propósito principal del Módulo 1?', opts: ['Conocer las áreas y procesos de la planta', 'Operar maquinaria pesada', 'Diseñar nuevos productos', 'Gestionar el personal'], correct: 0 },
+    { q: '¿Cuál de las siguientes es un área clave en la planta?', opts: ['Ensamble', 'Marketing', 'Ventas', 'Recursos Humanos'], correct: 0 },
+    { q: '¿Qué significa EPP?', opts: ['Equipo de Protección Personal', 'Estación de Procesos Primarios', 'Equipo de Producción Primaria', 'Estación de Protección Principal'], correct: 0 },
+    { q: 'En el Módulo 2, ¿qué tipo de entorno se usa para practicar?', opts: ['Entorno virtual seguro', 'Planta real en funcionamiento', 'Simulador de escritorio sin VR', 'Manual impreso'], correct: 0 },
+    { q: '¿Cuál es la velocidad máxima de la banda transportadora en E1?', opts: ['0.5 m/s', '1.0 m/s', '0.2 m/s', '2.0 m/s'], correct: 0 },
+    { q: '¿Cuántos grados de libertad tiene el brazo robótico en E1?', opts: ['6', '4', '8', '3'], correct: 0 },
+    { q: 'En el Módulo 3, ¿qué tecnología se utiliza para superponer información técnica?', opts: ['Realidad Aumentada', 'Realidad Virtual', 'Impresión 3D', 'Internet de las Cosas'], correct: 0 },
+    { q: '¿Qué temperatura de soldadura es la óptima en E2?', opts: ['850°C', '650°C', '1050°C', '500°C'], correct: 0 },
+    { q: '¿Cuál es la tasa de aprobación del escáner 3D en E3?', opts: ['98.7%', '85.0%', '99.9%', '90.5%'], correct: 0 },
+    { q: '¿Qué acción es correcta al finalizar el ensamble en E4?', opts: ['Apilar la pieza en el pallet', 'Desechar la pieza', 'Devolver la pieza a E1', 'Ignorar la pieza'], correct: 0 }
+  ];
 
-  updateCourseBadge('seguridad');
-  updateCourseBadge('optimizacion');
+  var examState = {
+    current: 0,
+    answers: [],
+    timer: null,
+    timeLeft: 1800,
+    started: false,
+    finished: false
+  };
+
+  var examModal = document.getElementById('examModal');
+  var examStart = document.getElementById('examStart');
+  var examActive = document.getElementById('examActive');
+  var examResult = document.getElementById('examResult');
+
+  function openExam() {
+    examState = { current: 0, answers: new Array(examQuestions.length).fill(-1), timer: null, timeLeft: 1800, started: false, finished: false };
+    examStart.style.display = 'block';
+    examActive.style.display = 'none';
+    examResult.style.display = 'none';
+    document.getElementById('examPassActions').style.display = 'none';
+    document.getElementById('examFailActions').style.display = 'none';
+    examModal.classList.add('open');
+  }
+
+  function startExam() {
+    examState.started = true;
+    examStart.style.display = 'none';
+    examActive.style.display = 'block';
+    examState.timeLeft = 1800;
+    startTimer();
+    renderQuestion();
+  }
+
+  function startTimer() {
+    if (examState.timer) clearInterval(examState.timer);
+    examState.timer = setInterval(function () {
+      examState.timeLeft--;
+      updateTimerDisplay();
+      if (examState.timeLeft <= 0) {
+        clearInterval(examState.timer);
+        finishExam();
+      }
+    }, 1000);
+  }
+
+  function updateTimerDisplay() {
+    var m = Math.floor(examState.timeLeft / 60);
+    var s = examState.timeLeft % 60;
+    document.getElementById('examTimer').textContent = String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+
+  function renderQuestion() {
+    var i = examState.current;
+    var q = examQuestions[i];
+    document.getElementById('examProgress').textContent = 'Pregunta ' + (i + 1) + '/' + examQuestions.length;
+    document.getElementById('examFill').style.width = ((i / examQuestions.length) * 100) + '%';
+    document.getElementById('examQuestion').textContent = q.q;
+
+    var optsDiv = document.getElementById('examOptions');
+    optsDiv.innerHTML = '';
+    q.opts.forEach(function (opt, oi) {
+      var btn = document.createElement('button');
+      btn.className = 'exam-option';
+      if (examState.answers[i] === oi) btn.classList.add('selected');
+      btn.textContent = opt;
+      btn.addEventListener('click', function () {
+        examState.answers[i] = oi;
+        document.querySelectorAll('.exam-option').forEach(function (b) { b.classList.remove('selected'); });
+        btn.classList.add('selected');
+      });
+      optsDiv.appendChild(btn);
+    });
+
+    document.getElementById('examPrevBtn').disabled = i === 0;
+    document.getElementById('examNextBtn').textContent = i === examQuestions.length - 1 ? 'Finalizar' : 'Siguiente \u2192';
+  }
+
+  function nextQuestion() {
+    if (examState.answers[examState.current] === -1) return;
+    if (examState.current === examQuestions.length - 1) {
+      finishExam();
+    } else {
+      examState.current++;
+      renderQuestion();
+    }
+  }
+
+  function prevQuestion() {
+    if (examState.current > 0) {
+      examState.current--;
+      renderQuestion();
+    }
+  }
+
+  function finishExam() {
+    if (examState.finished) return;
+    examState.finished = true;
+    if (examState.timer) clearInterval(examState.timer);
+    examActive.style.display = 'none';
+    examResult.style.display = 'block';
+
+    var correct = 0;
+    examState.answers.forEach(function (ans, i) {
+      if (ans === examQuestions[i].correct) correct++;
+    });
+    var total = examQuestions.length;
+    var passed = correct >= 7;
+
+    document.getElementById('examResultIcon').innerHTML = passed ? '&#127891;' : '&#128170;';
+    document.getElementById('examResultTitle').textContent = passed ? '\u00a1Certificado obtenido!' : 'Sigue intent\u00e1ndolo';
+    document.getElementById('examResultScore').textContent = correct + '/' + total + ' respuestas correctas';
+    document.getElementById('examResultMsg').textContent = passed
+      ? 'Felicidades, has aprobado la evaluaci\u00f3n. Puedes descargar tu certificado.'
+      : 'Necesitas al menos 7/10 para aprobar. Estudia los M\u00f3dulos 1-3 e int\u00e9ntalo de nuevo.';
+
+    document.getElementById('examPassActions').style.display = passed ? 'block' : 'none';
+    document.getElementById('examFailActions').style.display = passed ? 'none' : 'block';
+
+    saveExamHistory(correct, total, passed);
+    renderHistory();
+  }
+
+  function saveExamHistory(correct, total, passed) {
+    var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+    history.push({
+      date: new Date().toISOString(),
+      correct: correct,
+      total: total,
+      passed: passed,
+      name: document.getElementById('reportOperator') ? document.getElementById('reportOperator').value || 'Operador' : 'Operador'
+    });
+    localStorage.setItem('mhub-exam-history', JSON.stringify(history));
+  }
+
+  function renderHistory() {
+    var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+    var list = document.getElementById('historyList');
+    var empty = document.getElementById('historyEmpty');
+    list.innerHTML = '';
+    if (history.length === 0) { empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    history.slice().reverse().forEach(function (h) {
+      var d = new Date(h.date);
+      var dateStr = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      var el = document.createElement('div');
+      el.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--card-bg);border-radius:8px;border:1px solid var(--border);font-size:0.85rem';
+      el.innerHTML = '<span>' + dateStr + '</span><span style="font-weight:600;color:' + (h.passed ? '#16a34a' : '#dc2626') + '">' + h.correct + '/' + h.total + ' ' + (h.passed ? '\u2705 Aprobado' : '\u274c Reprobado') + '</span>';
+      list.appendChild(el);
+    });
+  }
+
+  function downloadCertPDF() {
+    var history = JSON.parse(localStorage.getItem('mhub-exam-history') || '[]');
+    var lastPassed = history.slice().reverse().find(function (h) { return h.passed; });
+    if (!lastPassed) return;
+
+    var name = currentUser && currentUser.uid ? (currentUser.role || 'Operador') : 'Operador';
+    var d = new Date(lastPassed.date);
+    var dateStr = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    var certEl = document.createElement('div');
+    certEl.style.cssText = 'width:600px;padding:40px;background:white;font-family:Arial,sans-serif;text-align:center;border:4px solid #0d9488;border-radius:12px;position:absolute;left:-9999px';
+    certEl.innerHTML =
+      '<div style="font-size:3rem;margin-bottom:10px">&#127891;</div>' +
+      '<h1 style="color:#0d9488;font-size:1.8rem;margin:10px 0">CERTIFICADO DE CAPACITACI\u00d3N</h1>' +
+      '<p style="color:#555;font-size:1rem;margin:5px 0">MHub \u2014 Manufactura Inteligente</p>' +
+      '<hr style="border:1px solid #0d9488;margin:20px 50px">' +
+      '<p style="font-size:1rem;color:#333">Otorgado a</p>' +
+      '<h2 style="font-size:1.5rem;color:#1a1a2e;margin:5px 0">' + name + '</h2>' +
+      '<p style="font-size:0.95rem;color:#555;margin:15px 0">Por haber completado exitosamente la evaluaci\u00f3n del</p>' +
+      '<p style="font-size:1.1rem;font-weight:600;color:#0d9488;margin:5px 0">M\u00f3dulo 4: Evaluaci\u00f3n y Certificado</p>' +
+      '<p style="font-size:0.9rem;color:#888;margin:5px 0">Calificaci\u00f3n: ' + lastPassed.correct + '/' + lastPassed.total + '</p>' +
+      '<hr style="border:1px solid #ddd;margin:20px 50px">' +
+      '<p style="font-size:0.85rem;color:#aaa;margin:5px 0">Fecha: ' + dateStr + '</p>' +
+      '<p style="font-size:0.85rem;color:#aaa;margin:5px 0">V\u00e1lido como comprobante de capacitaci\u00f3n en la plataforma MHub</p>';
+
+    document.body.appendChild(certEl);
+
+    html2pdf().set({
+      margin: 0.5,
+      filename: 'certificado-mhub.pdf',
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'landscape' }
+    }).from(certEl).save().then(function () {
+      document.body.removeChild(certEl);
+    });
+  }
+
+  // Bind exam buttons
+  document.getElementById('openExamBtn').addEventListener('click', openExam);
+  document.getElementById('examStartBtn').addEventListener('click', startExam);
+  document.getElementById('examNextBtn').addEventListener('click', nextQuestion);
+  document.getElementById('examPrevBtn').addEventListener('click', prevQuestion);
+  document.getElementById('examCertBtn').addEventListener('click', downloadCertPDF);
+  document.getElementById('examRetryBtn').addEventListener('click', function () { examModal.classList.remove('open'); setTimeout(openExam, 300); });
+  document.getElementById('examCloseBtn').addEventListener('click', function () { examModal.classList.remove('open'); });
+
+  var examCloseBtn = document.getElementById('examModalClose');
+  if (examCloseBtn) examCloseBtn.addEventListener('click', function () { examModal.classList.remove('open'); });
+
+  examModal.addEventListener('click', function (e) {
+    if (e.target === examModal) examModal.classList.remove('open');
+  });
+
+  // Render history on load
+  renderHistory();
+
+  document.getElementById('clearHistoryBtn').addEventListener('click', function () {
+    if (confirm('¿Eliminar todo el historial de certificaciones?')) {
+      localStorage.removeItem('mhub-exam-history');
+      renderHistory();
+    }
+  });
 });
