@@ -1052,7 +1052,6 @@ document.addEventListener('DOMContentLoaded', () => {
         registerFaceCaptureBtn.disabled = true;
         console.warn('Register camera error:', err.name, err.message);
       });
-      });
   }
 
   function stopRegisterCamera(closeModal = true) {
